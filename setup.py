@@ -34,7 +34,7 @@ if sys.version[0] == '2':
     requirements.extend(["contextlib2", "future"])
 
 setup\
-        ( name="GPFlow_dist"
+        ( name="gptf"
         , description=
             ( "Distributed GPs using TensorFlow." )
         , packages=
