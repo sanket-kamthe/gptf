@@ -45,14 +45,14 @@ class Parentable(object):
         >>> p.child = p
         Traceback (most recent call last):
             ...
-        DuplicateParentableError: ...
+        gptf.parentable.DuplicateParentableError: ...
 
         >>> q = Parentable()
         >>> p.child_a = q
         >>> p.child_b = q
         Traceback (most recent call last):
             ...
-        DuplicateParentableError: ...
+        gptf.parentable.DuplicateParentableError: ...
 
     Attributes:
         fallback_name (str): The name that this object has when it is the
@@ -234,37 +234,26 @@ class Parentable(object):
             >>> p.other_child = r
             Traceback (most recent call last):
                 ...
-            DuplicateParentableError: ...
+            gptf.parentable.DuplicateParentableError: ...
 
         
         """
         # set the parent of an existing Parentable attribute to `None`
-        with suppress(AttributeError):
-            previous_value = self.__getattribute__(name)
-            if isinstance(previous_value, Parentable):
-                previous_value._parent = None
+        if name != "_parent":
+            with suppress(AttributeError):
+                previous_value = self.__getattribute__(name)
+                if isinstance(previous_value, Parentable):
+                    previous_value._parent = None
 
-        if name != "_parent" and isinstance(value, Parentable):
-            if self.highest_parent._in_subtree(value):
-                raise DuplicateParentableError('Cannot set {long_name}.{name} \
-to {value} because it is already in the tree.'
-                        .format(long_name=self.long_name
-                               ,name=name
-                               ,value=value
-                               ))
-            else:
-                value._parent = self
+            if isinstance(value, Parentable):
+                if self.highest_parent._in_subtree(value):
+                    raise DuplicateParentableError('Cannot set \
+{long_name}.{name} to {value} because it is already in the tree.'
+                            .format(long_name=self.long_name
+                                   ,name=name
+                                   ,value=value
+                                   ))
+                else:
+                    value._parent = self
 
         super().__setattr__(name, value)
-
-if __name__ == "__main__":
-    import doctest
-    flags = doctest.NORMALIZE_WHITESPACE \
-            | doctest.ELLIPSIS \
-            | doctest.REPORT_NDIFF \
-            #| doctest.REPORT_ONLY_FIRST_FAILURE
-    failed, total = doctest.testmod(optionflags=flags)
-    total_s = '' if total == 1 else 's'
-    failed_s = '' if failed == 1 else 's'
-    print("{} test{} ran, {} failure{}"
-            .format(total, total_s, failed, failed_s))
