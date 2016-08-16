@@ -40,9 +40,9 @@ setup\
         , description=
             ( "Distributed GPs using TensorFlow." )
         , packages=
-            [ "GPFlow_dist" ]
+            [ PACKAGE_NAME ]
         , package_dir=
-            { "GPFlow_dist" : "GPFlow_dist" }
+            { PACKAGE_NAME : PACKAGE_NAME }
         , setup_requires=['nose>=1.0']
         , install_requires=requirements
         , classifiers=
