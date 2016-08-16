@@ -5,13 +5,15 @@ from setuptools import setup
 import re
 import sys
 
+PACKAGE_NAME = "gptf"
+
 string_literal = r"""['"]((\"|\'|[^'"])*)['"]"""
 literal_line = r"^__(\w*)__\s*=\s*{}".format(string_literal)
 args_needed = ['version', 'author']
 kw_args = {}
 
 # load package info from __init__.py
-infofile = "GPFlow_dist/__init__.py"
+infofile = "{}/__init__.py".format(PACKAGE_NAME)
 with open(infofile) as f:
     for line in f:
         match = re.search(literal_line, line, re.M)
@@ -34,7 +36,7 @@ if sys.version[0] == '2':
     requirements.extend(["contextlib2", "future"])
 
 setup\
-        ( name="gptf"
+        ( name=PACKAGE_NAME
         , description=
             ( "Distributed GPs using TensorFlow." )
         , packages=
