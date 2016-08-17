@@ -1,4 +1,5 @@
 # standard library
+from builtins import super
 from functools import wraps
 try:  # in case of rogue Python 2.7, use contextlib2 instead of contextlib
     from contextlib import contextmanager, ExitStack
@@ -9,10 +10,30 @@ except ImportError:
 import tensorflow as tf
 
 # local
-from .parentable import Parentable
+from .trees import TreeWithCache
 
 
-class WrappedTF(Parentable):
+class ReusableContextSession(tf.Session):
+    """Monkey patches `tf.Session` so that it can be reused as a context."""
+    @wraps(tf.Session.__init__)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__context_manager_stack = []
+
+    @wraps(tf.Session.__enter__)
+    def __enter__(self):
+        context = self.as_default()
+        context.__enter__()
+        self.__context_manager_stack.append(context)
+        return self
+
+    @wraps(tf.Session.__exit__)
+    def __exit__(self, type_, value, traceback):
+        context = self.__context_manager_stack.pop(-1)
+        context.__exit__(type_, value, traceback)
+
+
+class WrappedTF(TreeWithCache):
     """Provides facilities for keeping TensorFlow behind the scenes.
 
     WARNING: `WrappedTF` assumes that its parent, and indeed all things
@@ -36,11 +57,12 @@ class WrappedTF(Parentable):
             `tf.device()`.
 
             Defaults to `None`.
-        tf_session_target (str | dict | None):
-            The target under which sessions should run. If this is `None`,
-            no arguments will be passed to `tf.session()`. If this is a 
-            dictionary, then its contents will be used as keyword arguments 
-            for `tf.session()`. Else, this will be the sole argument for
+        tf_graph (tf.Graph | None): The 
+        tf_session_target (str | dict | None): The target under which 
+            sessions should run. If this is `None`, no arguments will be 
+            passed to `tf.session()`. If this is a dictionary, then its 
+            contents will be used as keyword arguments for `tf.session()`. 
+            Else, this will be the sole argument for
             `tf.session()`. See `.get_session()`.
 
     Examples:
@@ -51,22 +73,43 @@ class WrappedTF(Parentable):
     _NO_DEVICE = object()
 
     def __init__(self):
-        Parentable.__init__(self)
-        self.tf_device = None
-        self.tf_session_target = None
-        self._tf_scope = None
+        super().__init__()
+        self._tf_device = None
+        self._tf_session_target = None
+        self._tf_session = None
 
     # This is an attempt to guard against assignement to _NO_DEVICE
     @property
     def NO_DEVICE(self):
         return self._NO_DEVICE
 
+    @property
+    def tf_device(self):
+        """Returns this object's tf_device"""
+        return self._tf_device
+
+    @tf_device.setter
+    def tf_device(self, value):
+        """Returns this object's tf_device"""
+        self.clear_subtree_cache()
+        self._tf_device = value
+
+    @property
+    def tf_session_target(self):
+        return self._tf_session_target
+
+    @tf_session_target.setter
+    def tf_session_target(self, value):
+        self._maybe_kill_session()
+        self._tf_session_target = value
+
     @staticmethod
     def tf_method(method):
         """Decorator version of `op_placement_context`.
         
-        Applies `instance.op_placement_context` to `instance.method(...)`.
-        See examples.
+        Applies `instance.op_placement_context(name_scope=False)` 
+        to `instance.method(...)`, and opens a name scope that matches the
+        method. See examples.
         
         Examples:
             In the following example, `Example.method_a` is equivalent 
@@ -74,14 +117,17 @@ class WrappedTF(Parentable):
             >>> class Example(WrappedTF):
             ...     def method_a(self):
             ...         with self.op_placement_context():
-            ...             a = tf.constant(2)
-            ...             b = tf.constant(3)
-            ...             return tf.add(a, b)
+            ...             with tf.name_scope(self.long_name + '.method_a/'):
+            ...                 a = tf.constant(2)
+            ...                 b = tf.constant(3)
+            ...                 return tf.add(a, b)
             ...     @WrappedTF.tf_method
             ...     def method_b(self):
             ...         a = tf.constant(2)
             ...         b = tf.constant(3)
             ...         return tf.add(a, b)
+
+            Devices are set properly in both methods:
             >>> e = Example()
             >>> e.tf_device = '/job:worker/task:0'
             >>> a = e.method_a()
@@ -90,16 +136,23 @@ class WrappedTF(Parentable):
             >>> b = e.method_b()
             >>> b.device == a.device
             True
+
+            The method name is appended to the name scope!
+            >>> print(a.name)
+            unnamed.method_a/Add:0
+            >>> print(b.name)
+            unnamed.method_b/Add:0
             
         """
         @wraps(method)
         def wrapper(instance, *args, **kwargs):
-            with instance.op_placement_context():
-                return method(instance, *args, **kwargs)
+            scope = "{}.{}/".format(instance.long_name, method.__name__)
+            with instance.op_placement_context(), tf.name_scope(scope):
+                    return method(instance, *args, **kwargs)
         return wrapper
 
-    @contextmanager  # this also gives us context decorator power
-    def op_placement_context(self):
+    @contextmanager
+    def op_placement_context(self, name_scope=True):
         """Applies op placement rules based on the object hierarchy.
 
         Examples:
@@ -153,7 +206,6 @@ class WrappedTF(Parentable):
             ...     print(tf.constant(0).name)
             unnamed.child.child/Const...
 
-
         """
         with ExitStack() as stack:
             if self.parent is not None:
@@ -171,17 +223,23 @@ class WrappedTF(Parentable):
             yield
 
     def get_session(self):
-        """Gets a TensorFlow session in which ops should be run.
+        """Gets a TensorFlow session in which ops can be run.
         
-        Creates a new session, using the session_target of the highest parent.
-        This, when combined with hierachical op placement, allows for
-        cluster-aware AutoFlow, amongst other things.
+        Returns a persistent session using the session target of the 
+        highest parent.
 
         Returns:
-            (tf.Session): A new session, using the session target of the
+            (tf.Session): A session matching the session target of the
             highest parent.
 
         Examples:
+            Returns the same session across multiple calls:
+            >>> w = WrappedTF()
+            >>> sess = w.get_session()
+            >>> sess is w.get_session()
+            True
+            >>> sess.close()
+            
             >>> class Example(WrappedTF):
             ...     def op(self):
             ...         with self.op_placement_context():
@@ -243,4 +301,94 @@ class WrappedTF(Parentable):
             `self.get_session()` should work without fuss.
         
         """
-        return tf.Session(self.highest_parent.tf_session_target)
+        if self.parent is None:
+            self._maybe_create_session()
+            return self._tf_session
+        else:
+            return self.highest_parent.get_session()
+
+    def on_session_birth(self):
+        """Called just after the session of the highest parent is created."""
+        pass
+
+    def on_session_death(self):
+        """Called just before the session of the highest parent is closed."""
+        pass
+
+    def _maybe_create_session(self):
+        """Handles session creation if necessary.
+        
+        If no session already exists, creates a session, then calls 
+        `on_session_birth` for all objects lower in the tree.
+
+        Examples:
+            >>> class Example(WrappedTF):
+            ...     def on_session_birth(self):
+            ...         print('{}.on_session_birth called!'\
+                .format(self.long_name))
+            >>> w = Example()
+            >>> w.child = Example()
+            >>> w.child.child = Example()
+
+            >>> w.child._maybe_create_session()
+            unnamed.child.on_session_birth called!
+            unnamed.child.child.on_session_birth called!
+        
+        """
+        def new_session():
+            if self.tf_session_target is None:
+                return ReusableContextSession()
+            elif isinstance(self.tf_session_target, dict):
+                return ReusableContextSession(**self.tf_session_target)
+            else:
+                return ReusableContextSession(self.tf_session_target)
+
+        if self._tf_session is None:
+            self._tf_session = new_session()
+            for node in self:
+                node.on_session_birth()
+
+
+    def _maybe_kill_session(self): 
+        """Handles session destruction if necessary.
+
+        If a session already exists, kills it then calls 
+        `on_session_death` for all objects in the tree.
+
+        Examples:
+            >>> class Example(WrappedTF):
+            ...     def on_session_death(self):
+            ...         print('{}.on_session_death called!'\
+                            .format(self.long_name))
+            >>> w = Example()
+            >>> w.child = Example()
+            >>> w.child.child = Example()
+
+            >>> w.child._tf_session = tf.Session()
+            >>> w.child._maybe_kill_session()
+            unnamed.child.on_session_death called!
+            unnamed.child.child.on_session_death called!
+        
+        """
+        if self._tf_session is not None:
+            for node in self:
+                node.on_session_death()
+            self._tf_session.close()
+            self._tf_session = None
+
+    def __setattr__(self, name, value):
+        """Deals with cache invalidations etc that happen when tree anatomy
+        changes.
+        
+        If a `WrappedTF` acquires a new ancestor, its op placement context
+        will change. When the op placement context changes, 
+        """
+        #TODO: this
+        NotImplemented
+        super().__setattr__(name, value)
+
+    def __delattr__(self, name):
+        """Deals with ca"""
+        #TODO: this
+        NotImplemented
+        super().__delattr__(name)
