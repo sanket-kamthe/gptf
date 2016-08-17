@@ -31,9 +31,10 @@ with open(infofile) as f:
 if not all(kw_args.get(arg, None) for arg in args_needed):
     raise RuntimeError("Unable to find required info in {}".format(infofile))
 
-requirements = []
+kw_args['install_requires'] = []
+kw_args['tests_require'] = []
 if sys.version[0] == '2':
-    requirements.extend(["contextlib2", "future"])
+    kw_args['install_requires'].extend(["contextlib2", "future"])
 
 setup\
         ( name=PACKAGE_NAME
@@ -45,7 +46,6 @@ setup\
             { PACKAGE_NAME : PACKAGE_NAME }
         , setup_requires=
             [ 'nose>=1.0' ]
-        , install_requires=requirements
         , classifiers=
             [ "Natural Language :: English"
             , "Programming Language :: Python :: 2.7"
