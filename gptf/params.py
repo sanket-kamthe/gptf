@@ -1,8 +1,11 @@
 from builtins import super
+
+import tensorflow as tf
+
 from .wrappedtf import WrappedTF
 
-class UninitialisedParameterError(Exception):
-    """Raised when an attempt is made to use an uninitialised parameter."""
+#class UninitialisedParameterError(Exception):
+#    """Raised when an attempt is made to use an uninitialised parameter."""
 
 class Param(WrappedTF):
     """A parameter of a model.
@@ -17,22 +20,6 @@ class Param(WrappedTF):
             variable into a free state where it can be optimised.
 
     Examples:
-        Initialisation
-        --------------
-
-        A `Param` must be initialised before it can be used. This should
-        happen after it is installed in a model and the correct device
-        placement and session target is set.
-
-        >>> p = Param(1.0)
-        >>> p.value
-        Traceback (most recent call last):
-            ...
-        gptf.params.UninitialisedParameterError: ...
-        >>> p.initialise()
-        >>> p.value
-        1.0
-
         Getting and setting values
         --------------------------
 
@@ -45,15 +32,41 @@ class Param(WrappedTF):
         >>> p.value
         2.0
 
-        A tensor value can be acquired using the `tensor` attribute.
+        A tensor representing the paremeter can be acquired using the 
+        `tensor` attribute.
         >>> isinstance(p.tensor, tf.Tensor)
         True
 
-        The variable cannot be set, however.
+        Behind the scenes, this creates a `tf.Variable`, accessible using the
+        `free_state` attribute. We can use this variable in a session like so:
+        >>> with p.get_session() as sess:
+        ...     print(sess.run(p.free_state))
+        ...     # assigning to p.value changes p.free_state
+        ...     p.value += 1.0
+        ...     print(sess.run(p.free_state))
+        ...     # assigning to p.free_state changes p.value
+        ...     _ = sess.run(p.free_state.assign_add(1.0))
+        ...     print(p.value)
+        2.0
+        3.0
+        4.0
+
+        The session returned by `p.get_session()` maintains the value of 
+        `p.free_state` across uses:
+        >>> with p.get_session() as sess:
+        ...     print(sess.run(p.free_state))
+        4.0
+
+        Note also that we did not have to run an initializer for `p.free_state`.
+        If we use `tf.Session()` instead of `p.get_session()`, we get a 
+        different story entirely.
+
         >>> p.tensor = tf.Variable(1)
         Traceback (most recent call last):
             ...
         AttributeError: can't set attribute
+        `p.get_session()`
+
 
         Transforms
         ----------
@@ -66,48 +79,54 @@ class Param(WrappedTF):
     """
     def __init__(self, initial_value):
         super().__init__()
-        self._variable = None
-        self._value = initial_value
+        self._numpy_value = initial_value
         
     @property
     def value(self):
-        return self._value
+        if "variable" in self.cache:
+            with self.get_session() as sess:
+                return sess.run(self.cache["variable"])
+        else:
+            return self._numpy_value
 
     @value.setter
     def value(self, value):
-        self._value = value
+        if "variable" in self.cache:
+            with self.get_session() as sess:
+                sess.run(self.cache["variable"].assign(value))
+        else:
+            self._numpy_value = value
 
-    def _assert_variable(self):
-        """Asserts that the variable has been created.
-        
-        Raises:
-            UninitialisedParameterError: if no variable exists.
+    def on_session_birth(self):
+        self._ensure_variable()
+        with self.get_session() as sess:
+            sess.run(self.cache["variable"].initializer)
+            sess.run(self.cache["variable"].assign(self._numpy_value))
 
-        """
-        if self._variable is None:
-            raise UninitialisedParameterError('paremeter {long_name} must be \
-initialised before use'.format(long_name=self.long_name))
+    def on_session_death(self):
+        assert 'variable' in self.cache
+        with self.get_session() as sess:
+            self._numpy_value = sess.run(self.cache["variable"])
 
+    def clear_cache(self):
+        #TODO: Overwrite this method to save the value of "variable" to
+        # the numpy value before clearing. be sensible.
+        NotImplemented
+            
     @WrappedTF.tf_method
-    def get_variable(self):
-        """Initialises the parameter."""
-        #TODO: add object caching to WrappedTF
-        # then store the variable in the WrappedTF cache
-        # now WrappedTF can deal with clearing the cache if the 
-        # architecture changes etc.
-        self._variable = tf.Variable(self._value)
-
-    @WrappedTF.tf_method
-    def initialiser(self):
-        self._assert_variable()
-        return self._variable.initializer
+    def _ensure_variable(self):
+        """Creates a variable if necessary."""
+        if "variable" not in self.cache:
+            self.cache["variable"] = tf.Variable(self._numpy_value)
     
     @property
     @WrappedTF.tf_method
     def tensor(self):
-        return tf.Identity(self._variable)
+        self._ensure_variable()
+        return tf.identity(self.cache["variable"])
 
     @property
     @WrappedTF.tf_method
     def free_state(self):
-        return self._variable
+        self._ensure_variable()
+        return self.cache["variable"]
