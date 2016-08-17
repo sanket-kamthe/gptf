@@ -24,7 +24,7 @@ class Parentable(object):
     attributes:
         
         >>> p = Parentable()
-        >>> p.fallback_name = 'root'  # give p a name
+        >>> p.fallback_name = "root"  # give p a name
         >>> p.child_a = Parentable()
         >>> p.child_b = Parentable()
         >>> p.child_b.leaf = Parentable()
@@ -32,10 +32,10 @@ class Parentable(object):
     The `long_name()` method may then be used to get a `Parentable`'s full
     path within the tree.
 
-        >>> p.child_a.long_name
-        'root.child_a'
-        >>> p.child_b.leaf.long_name
-        'root.child_b.leaf'
+        >>> print(p.child_a.long_name)
+        root.child_a
+        >>> print(p.child_b.leaf.long_name)
+        root.child_b.leaf
     
     Objects in the tree must be unique. No object may be its own ancestor
     or sibling. Attempting to construct such a graph results in a
@@ -117,8 +117,8 @@ class Parentable(object):
             >>> q = Parentable()
             >>> p.child = Parentable()
             >>> p.child.leaf = q
-            >>> q.long_name
-            'unnamed.child.leaf'
+            >>> print(q.long_name)
+            unnamed.child.leaf
         
         """
         if self._parent is None:
@@ -143,8 +143,8 @@ class Parentable(object):
             if said parent's `.name_of()` has not been overloaded.
             >>> q = Parentable()
             >>> p.child = q
-            >>> q.name
-            '.child'
+            >>> print(q.name)
+            .child
             
         """
         if self._parent is None:
@@ -168,8 +168,8 @@ class Parentable(object):
 
             If `q` is a child of `p`, we return the name of `q` in the
             `p`'s `.__dict__`.
-            >>> p.name_of(q)
-            '.child'
+            >>> print(p.name_of(q))
+            .child
 
             We are contractually obliged to return a string that when appended
             to `'p'` evaluates to `q`.

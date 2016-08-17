@@ -85,8 +85,8 @@ class WrappedTF(Parentable):
             >>> e = Example()
             >>> e.tf_device = '/job:worker/task:0'
             >>> a = e.method_a()
-            >>> a.device
-            '/job:worker/task:0'
+            >>> print(a.device)
+            /job:worker/task:0
             >>> b = e.method_b()
             >>> b.device == a.device
             True
@@ -116,42 +116,42 @@ class WrappedTF(Parentable):
             of its parent.
             >>> a.child = c
             >>> with a.op_placement_context():
-            ...     tf.constant(0).device
-            '/job:worker'
+            ...     print(tf.constant(0).device)
+            /job:worker
             >>> with c.op_placement_context():
-            ...     tf.constant(0).device
-            '/job:worker'
+            ...     print(tf.constant(0).device)
+            /job:worker
 
             `d.tf_device` is `WrappedTF.NO_DEVICE`, so it resets the device
             context.
             >>> a.child = d
             >>> with d.op_placement_context():
-            ...     tf.constant(0).device
-            ''
+            ...     print(tf.constant(0).device)
+            <BLANKLINE>
 
             Other device contexts combine the way you would expect them to.
             >>> a.child = b
             >>> b.child = e
             >>> with b.op_placement_context():
             ...     # get job from a
-            ...     tf.constant(0).device
-            '/job:worker/device:GPU:0'
+            ...     print(tf.constant(0).device)
+            /job:worker/device:GPU:0
             >>> with e.op_placement_context():
             ...     # get device from b, overwrite job from a
-            ...     tf.constant(0).device
-            '/job:spoon/device:GPU:0'
+            ...     print(tf.constant(0).device)
+            /job:spoon/device:GPU:0
 
             In addition, a name scope is opened that matches the object
             hierachy:
             >>> with a.op_placement_context():
-            ...     tf.constant(0).name
-            'unnamed/Const...'
+            ...     print(tf.constant(0).name)
+            unnamed/Const...
             >>> with b.op_placement_context():
-            ...     tf.constant(0).name
-            'unnamed.child/Const...'
+            ...     print(tf.constant(0).name)
+            unnamed.child/Const...
             >>> with e.op_placement_context():
-            ...     tf.constant(0).name
-            'unnamed.child.child/Const...'
+            ...     print(tf.constant(0).name)
+            unnamed.child.child/Const...
 
 
         """
@@ -207,11 +207,11 @@ class WrappedTF(Parentable):
             `Example.op()` places its op based on the hierachical device 
             context. If we change `a`'s device context, we also change
             `a.child`'s.
-            >>> a.child.op().device
-            ''
+            >>> print(a.child.op().device)
+            
             >>> a.tf_device = '/job:worker/task:0'
-            >>> a.child.op().device
-            '/job:worker/task:0'
+            >>> print(a.child.op().device)
+            /job:worker/task:0
 
             `a.child.depth()` will now result in an error:
             >>> a.child.depth()

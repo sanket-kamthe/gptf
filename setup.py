@@ -43,7 +43,8 @@ setup\
             [ PACKAGE_NAME ]
         , package_dir=
             { PACKAGE_NAME : PACKAGE_NAME }
-        , setup_requires=['nose>=1.0']
+        , setup_requires=
+            [ 'nose>=1.0' ]
         , install_requires=requirements
         , classifiers=
             [ "Natural Language :: English"
