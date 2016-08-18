@@ -68,7 +68,7 @@ class Tree(object):
         """Creates a new parentable with no parent."""
         super().__init__()
         self.fallback_name = "unnamed"
-        self._parent = None
+        self.__parent = None
 
     @property
     def parent(self):
@@ -82,7 +82,43 @@ class Tree(object):
             True
 
         """
-        return self._parent
+        return self.__parent
+
+    @parent.setter
+    def parent(self, value):
+        """Sets the parent of a `Tree`.
+
+        If we already had a parent, unlinks `self` from its previous parent
+        before linking it to the new one.
+
+        NB: It is _highly unlikely_ that you will need to set this property
+        yourself. Setting this property, unless overridden in some parent 
+        class, does not register `self` as a child of `value`, which could
+        cause unexpected behaviour.
+
+        Examples:
+            >>> p = Tree()
+            >>> q = Tree()
+            >>> r = Tree()
+
+            Changing the parent of `q` unlinks it from its previous parent:
+            >>> p.child = q
+            >>> q.parent = r
+            >>> p.child
+            Traceback (most recent call last):
+                ...
+            AttributeError: message
+            >>> q in p.children
+            False
+
+            It does not make it appear in `r`'s list of children:
+            >>> q in r.children
+            False
+
+        """
+        if self.parent is not None:
+            self.parent.__unregister_child(self)
+        self.on_new_parent(value)
 
     @property
     def children(self):
@@ -104,7 +140,8 @@ class Tree(object):
 
         """
         dict_ = dict(self.__dict__)
-        del dict_['_parent']
+        with suppress(KeyError):
+            del dict_['_Tree__parent']
         return tuple(filter(lambda x: isinstance(x, Tree), dict_.values()))
 
     @property
@@ -127,10 +164,10 @@ class Tree(object):
             see that function's
             documentation for how argumewnt
         """
-        if self._parent is None:
+        if self.parent is None:
             return self
         else:
-            return self._parent.highest_parent
+            return self.parent.highest_parent
 
     @property
     def long_name(self):
@@ -151,10 +188,10 @@ class Tree(object):
             unnamed.child.leaf
         
         """
-        if self._parent is None:
+        if self.parent is None:
             return self.name
         else:
-            return self._parent.long_name + self.name
+            return self.parent.long_name + self.name
 
     @property
     def name(self):
@@ -186,7 +223,7 @@ class Tree(object):
             .child
             
         """
-        if self._parent is None:
+        if self.parent is None:
             # did someone say namespace hacking?
             globals_ = {}
             if __name__ == '__main__':
@@ -197,7 +234,7 @@ class Tree(object):
             aliases = tuple(filter(lambda x: x[1] is self, globals_.items()))
             return aliases[0][0] if len(aliases) == 1 else self.fallback_name
         else:
-            return self._parent.name_of(self)
+            return self.parent.name_of(self)
 
     def name_of(self, value):
         """Gets the name of `value`.
@@ -236,25 +273,20 @@ class Tree(object):
         assert len(matches) == 1  # no duplicate children!
         return '.' + matches[0]
 
-    def _in_subtree(self, value):
-        """Checks if `value` is in the tree formed when `self` is the root.
-    
-        Args:
-            value (Tree): the value to check for.
-
-        Returns:
-            (bool): True iff `value` is present in the subtree.
+    def __unregister_child(self, child):
+        """Removes any links between `self` and `child`.
+        
+        Raises:
+            BadParentError: if `child` is not a child of this `Tree`.
 
         """
-        if self is value:
-            return True
+        matches = tuple(k for k, v in self.__dict__.items() if v is child)
+        if len(matches) == 0:
+            raise BadParentError('{value} is not a child of {self}'
+                    .format(value=child, self=self))
+        assert len(matches) == 1  # no duplicate children!
+        self.__delattr__(matches[0])
 
-        for p in self.children:
-            if p._in_subtree(value):
-                return True
-
-        return False
-        
     def __setattr__(self, name, value):
         """Sets the parent of any new `Tree` attributes appropriately.
 
@@ -283,23 +315,53 @@ class Tree(object):
                 ...
             gptf.trees.DuplicateNodeError: message
 
+            Attempting to add a `Tree` to two different graphs causes it
+            to be removed from the first one.
+            >>> s = Tree()
+            >>> s.child = r
+            >>> r in p.children
+            False
+            >>> p.child
+            Traceback (most recent call last):
+                ...
+            AttributeError: message
+            >>> p.child = s.child
+            >>> r in s.children
+            False
+            >>> r.child
+            Traceback (most recent call last):
+                ...
+            AttributeError: message
         
         """
-        # set the parent of an existing Tree attribute to `None`
-        if name != "_parent":
-            self._maybe_unlink_child(name)
-            if isinstance(value, Tree):
-                if self.highest_parent._in_subtree(value):
+        if name not in ("_Tree__parent", "parent"):
+            self.__maybe_unlink_child(name)  # unlink any existing child
+
+            if isinstance(value, Tree):      
+                if value in self.highest_parent:
                     raise DuplicateNodeError('Cannot set \
 {long_name}.{name} to {value} because it is already in the tree.'
                             .format(long_name=self.long_name
                                    ,name=name
                                    ,value=value
                                    ))
-                else:
-                    value._parent = self
 
-        super().__setattr__(name, value)
+        super().__setattr__(name, value)  # actually set the attribute
+
+        if name not in ("_Tree__parent", "parent"):
+            if isinstance(value, Tree):
+                value.parent = self
+                #if value.parent is not None:
+                #    value.parent.__unregister_child(value)
+                #value.on_new_parent(self)  # set value.parent accordingly
+
+    def on_new_parent(self, new_parent):
+        """Called when an object's direct parent is set.
+        
+        Sets `self.parent` to `new_parent`.
+        
+        """
+        self.__parent = new_parent
 
     def __delattr__(self, name):
         """Sets the parent of any removed `Tree` attributes appropriately.
@@ -315,15 +377,15 @@ class Tree(object):
             True
         
         """
-        if name != '_parent':
-            self._maybe_unlink_child(name)
+        if name != '_Tree__parent':  # this check might not be necessary
+            self.__maybe_unlink_child(name)
         super().__delattr__(name)
 
-    def _maybe_unlink_child(self, name):
+    def __maybe_unlink_child(self, name):
         with suppress(AttributeError):
             value = self.__getattribute__(name)
             if isinstance(value, Tree):
-                value._parent = None
+                value.on_new_parent(None)
 
     def __iter__(self):
         return BreadthFirstTreeIterator(self)
@@ -373,13 +435,13 @@ class TreeWithCache(Tree):
             >>> t.clear_cache()
             >>> t.cache[0]
             Traceback (most recent call last):
-                ...
+                ..
             KeyError: message
             
         """
-        self.cache = {}
+        self.cache.clear()
 
-    def clear_tree_cache(self):
+    def clear_tree_caches(self):
         """Clears every cache in the tree.
         
         Examples:
@@ -391,7 +453,7 @@ class TreeWithCache(Tree):
 
             Clearing a parent's cache clears its child's cache:
             >>> fill_cache()
-            >>> t.clear_tree_cache()
+            >>> t.clear_tree_caches()
             >>> t.cache[0]
             Traceback (most recent call last):
                 ...
@@ -403,7 +465,7 @@ class TreeWithCache(Tree):
         
             Clearing a child's cache clears its parent's cache:
             >>> fill_cache()
-            >>> t.child.clear_tree_cache()
+            >>> t.child.clear_tree_caches()
             >>> t.cache[0]
             Traceback (most recent call last):
                 ...
@@ -417,7 +479,7 @@ class TreeWithCache(Tree):
         for node in self.highest_parent:
             node.clear_cache()
 
-    def clear_subtree_cache(self):
+    def clear_subtree_caches(self):
         """Clears the cache of this node and every node lower than it.
         
         Examples:
@@ -429,7 +491,7 @@ class TreeWithCache(Tree):
 
             Clearing a parent's cache clears its child's cache:
             >>> fill_cache()
-            >>> t.clear_subtree_cache()
+            >>> t.clear_subtree_caches()
             >>> t.cache[0]
             Traceback (most recent call last):
                 ...
@@ -441,7 +503,7 @@ class TreeWithCache(Tree):
         
             Clearing a child's cache does not clear its parent's cache:
             >>> fill_cache()
-            >>> t.child.clear_subtree_cache()
+            >>> t.child.clear_subtree_caches()
             >>> t.cache[0]
             123
             >>> t.child.cache[0]
@@ -452,3 +514,40 @@ class TreeWithCache(Tree):
         """
         for node in self:
             node.clear_cache()
+
+    def clear_ancestor_caches(self):
+        """Clears the caches of direct ancestors.
+        
+        Examples:
+            >>> t = TreeWithCache()
+            >>> t.child_0 = TreeWithCache()
+            >>> t.child_1 = TreeWithCache()
+            >>> t.child_0.child = TreeWithCache()
+            >>> def fill_cache():
+            ...     t.cache[0] = '123'
+            ...     t.child_0.cache[0] = '456'
+            ...     t.child_1.cache[0] = '789'
+            ...     t.child_0.child.cache[0] = 'ABC'
+
+            Clearing `t.child_0.child`'s ancestor's cache clears
+            `t`'s cache and `t.child_0`'s cache, but not `t.child_1`'s or
+            `t.child_0.child`'s.
+            >>> fill_cache()
+            >>> t.child_0.child.clear_ancestor_caches()
+            >>> t.cache[0]
+            Traceback (most recent call last):
+                ...
+            KeyError: message
+            >>> t.child_0.cache[0]
+            Traceback (most recent call last):
+                ...
+            KeyError: message
+            >>> t.child_1.cache[0]
+            '789'
+            >>> t.child_0.child.cache[0]
+            'ABC'
+
+        """
+        if self.parent is not None:
+            self.parent.clear_cache()
+            self.parent.clear_ancestor_caches()

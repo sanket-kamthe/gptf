@@ -2,9 +2,9 @@
 from builtins import super
 from functools import wraps
 try:  # in case of rogue Python 2.7, use contextlib2 instead of contextlib
-    from contextlib import contextmanager, ExitStack
+    from contextlib import contextmanager, ExitStack, suppress
 except ImportError:
-    from contextlib2 import contextmanager, ExitStack
+    from contextlib2 import contextmanager, ExitStack, suppress
 
 # nonstandard library
 import tensorflow as tf
@@ -57,7 +57,11 @@ class WrappedTF(TreeWithCache):
             `tf.device()`.
 
             Defaults to `None`.
-        tf_graph (tf.Graph | None): The 
+        tf_graph (tf.Graph | None): The graph to place ops in. If `None`,
+            the graph an op is placed in is the lowest defined `.tf_graph` 
+            above this one in the tree. If all objects in the `Tree` have
+            `.tf_graph` set to `None`, the default graph is used.
+            Defaults to `None`.
         tf_session_target (str | dict | None): The target under which 
             sessions should run. If this is `None`, no arguments will be 
             passed to `tf.session()`. If this is a dictionary, then its 
@@ -74,6 +78,7 @@ class WrappedTF(TreeWithCache):
 
     def __init__(self):
         super().__init__()
+        self._tf_graph = None
         self._tf_device = None
         self._tf_session_target = None
         self._tf_session = None
@@ -85,14 +90,21 @@ class WrappedTF(TreeWithCache):
 
     @property
     def tf_device(self):
-        """Returns this object's tf_device"""
         return self._tf_device
 
     @tf_device.setter
     def tf_device(self, value):
-        """Returns this object's tf_device"""
-        self.clear_subtree_cache()
+        self._on_op_placement_context_change()
         self._tf_device = value
+
+    @property
+    def tf_graph(self):
+        return self._tf_graph
+
+    @tf_graph.setter
+    def tf_graph(self, value):
+        self._on_op_placement_context_change()
+        self._tf_graph = value
 
     @property
     def tf_session_target(self):
@@ -194,6 +206,19 @@ class WrappedTF(TreeWithCache):
             ...     print(tf.constant(0).device)
             /job:spoon/device:GPU:0
 
+            The graph is also set appropriately:
+            >>> a.tf_graph = tf.Graph()
+            >>> b.tf_graph = tf.Graph()
+            >>> with a.op_placement_context():
+            ...     tf.constant(0).graph is a.tf_graph
+            True
+            >>> with b.op_placement_context():
+            ...     tf.constant(0).graph is b.tf_graph
+            True
+            >>> with e.op_placement_context():
+            ...     tf.constant(0).graph is b.tf_graph
+            True
+
             In addition, a name scope is opened that matches the object
             hierachy:
             >>> with a.op_placement_context():
@@ -217,6 +242,9 @@ class WrappedTF(TreeWithCache):
                     dev = None
                 stack.enter_context(tf.device(dev))
             
+            if self.tf_graph is not None:
+                stack.enter_context(self.tf_graph.as_default())
+
             # enter "absolute" name scope by appending "/"
             stack.enter_context(tf.name_scope(self.long_name + "/"))
 
@@ -348,7 +376,6 @@ class WrappedTF(TreeWithCache):
             for node in self:
                 node.on_session_birth()
 
-
     def _maybe_kill_session(self): 
         """Handles session destruction if necessary.
 
@@ -376,19 +403,130 @@ class WrappedTF(TreeWithCache):
             self._tf_session.close()
             self._tf_session = None
 
-    def __setattr__(self, name, value):
-        """Deals with cache invalidations etc that happen when tree anatomy
-        changes.
+    def _on_op_placement_context_change(self):
+        """Called when the op placement context changes.
         
-        If a `WrappedTF` acquires a new ancestor, its op placement context
-        will change. When the op placement context changes, 
-        """
-        #TODO: this
-        NotImplemented
-        super().__setattr__(name, value)
+        When the op placement context changes, its cached TensorFlow ops are 
+        no longer valid. This means that all cached ops created with the 
+        `WrappedTF`'s device context and any ops that use ops created with the 
+        `WrappedTF`'s device context are invalid.
 
-    def __delattr__(self, name):
-        """Deals with ca"""
-        #TODO: this
-        NotImplemented
-        super().__delattr__(name)
+        To deal with this, we clear the cache of any `WrappedTF` that is a
+        direct ancestor, and any `WrappedTF` in the subtree.
+
+        """
+        self.clear_ancestor_caches()
+        self.clear_subtree_caches()
+
+    def on_new_parent(self, new_parent):
+        """Deals with cache clearing that happens when tree anatomy changes.
+        
+        If a `WrappedTF`'s ancestry changes, its op placement context
+        will change, so we need to clear the appropriate caches. Note that
+        since this involves clearing the caches of everything lower in the
+        subtree, it is enough to clear the cache only when a node's direct
+        parent changes.
+
+        If a `WrappedTF` stops being the highest parent, i.e. it becomes the
+        child of another `WrappedTF`, it should kill its session. If the new
+        highest parent has a session, we should call `on_session_birth`
+        across the subtree of the new child once it has been added to the
+        tree.
+
+        Examples:
+            >>> class Example(WrappedTF):
+            ...     def __init__(self, name):
+            ...         super().__init__()
+            ...         self.fallback_name = name
+            ...         self.print = True
+            ...     def on_session_death(self):
+            ...         if self.print:
+            ...             name = self.long_name
+            ...             print('{}.on_session_death called!'.format(name))
+            ...     def on_session_birth(self):
+            ...         if self.print:
+            ...             name = self.long_name
+            ...             print('{}.on_session_birth called!'.format(name))
+            >>> w = Example('w')
+            >>> x = Example('x')
+            >>> y = Example('y')
+            >>> z = Example('z')
+            >>> w.child_0 = x
+            >>> y.child = z
+            >>> def setup():
+            ...     objs = [w, x, y, z]
+            ...     # create sessions
+            ...     for o in objs: o.print = False
+            ...     for o in objs: o.get_session()
+            ...     for o in objs: o.print = True
+            ...     # fill caches
+            ...     for o in objs: o.cache['tf'] = 'compiled tf function'
+
+            When `y` gets a parent, it should close its session and 
+            clear its subtree's cache. `w`, which knows nothing about `y` so
+            should not have any ops that depend on `y`'s device context,
+            should not have its cache cleared; the same goes for `x`.
+            >>> setup()
+            >>> w.child_1 = y
+            y.on_session_death called!
+            y.child.on_session_death called!
+            w.child_1.on_session_birth called!
+            w.child_1.child.on_session_birth called!
+            >>> 'tf' in w.cache and 'tf' in w.child_0.cache
+            True
+            >>> 'tf' in w.child_1.cache or 'tf' in w.child_1.child.cache
+            False
+
+            There is now only one tree, of which `w` is the highest parent,
+            so only `w` should be have a session.
+            >>> def has_session(node):
+            ...     # NB: ._tf_session is not a part of the public API.
+            ...     return node._tf_session is not None
+            >>> has_session(w)
+            True
+            >>> not any(has_session(i) for i in [x, y, z])
+            True
+            
+            Deleting `w.child_1` means that `y` loses a parent. `w` knows
+            about `y` and might have ops that depend on `y`'s device context,
+            so we should clear its cache. `w.child_0` still knows nothing
+            about `y`, so its cache should still not be cleared.
+            >>> setup()
+            >>> del w.child_1
+            w.child_1.on_session_death called!
+            w.child_1.child.on_session_death called!
+            >>> 'tf' in w.child_0.cache
+            True
+            >>> 'tf' in w.cache 
+            False
+            >>> 'tf' in y.cache or 'tf' in y.child.cache
+            False
+
+            When a `WrappedTF` is moved between trees, the caches in the old
+            tree are cleared and session births are registered in the subtree
+            of the moving `WrappedTF`.
+            >>> setup()
+            >>> y.child_1 = w.child_0
+            w.child_0.on_session_death called!
+            y.child_1.on_session_birth called!
+            >>> 'tf' in y.cache and 'tf' in y.child.cache
+            True
+            >>> 'tf' in w.cache or 'tf' in y.child_1.cache
+            False
+
+        """
+        if self._tf_session is not None:
+            self._maybe_kill_session()
+        elif self.highest_parent._tf_session is not None:
+            for node in self:
+                node.on_session_death()
+        self.clear_ancestor_caches()
+        self.clear_subtree_caches()
+
+        super().on_new_parent(new_parent)  # move to new tree
+
+        if self.highest_parent._tf_session is not None:
+            for node in self:
+                node.on_session_birth()
+
+        
