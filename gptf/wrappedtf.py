@@ -1,5 +1,5 @@
 # standard library
-from builtins import super
+from builtins import super, object
 from functools import wraps
 try:  # in case of rogue Python 2.7, use contextlib2 instead of contextlib
     from contextlib import contextmanager, ExitStack, suppress
@@ -14,24 +14,46 @@ from .trees import TreeWithCache
 
 
 class ReusableContextSession(tf.Session):
-    """Monkey patches `tf.Session` so that it can be reused as a context."""
+    """Monkey patches `tf.Session` so that it can be reused as a context.
+
+    Note that this means that the session is not closed when its context ends.
+    This makes `with ReusableContextSession():` equivalent to
+    `with tf.Session().as_default():`.
+    
+    Examples:
+        >>> sess = ReusableContextSession()
+
+        The context is _reusable_, not reentrant. This is fine:
+        >>> with sess:
+        ...     pass
+        >>> with sess:
+        ...     pass
+
+        This is not:
+        >>> with sess:
+        ...     with sess:    
+        ...         pass
+        Traceback (most recent call last):
+            ...
+        RuntimeError: generator didn't yield
+    
+    """
     @wraps(tf.Session.__init__)
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.__context_manager_stack = []
+        self.__context_manager = None
 
     @wraps(tf.Session.__enter__)
     def __enter__(self):
-        context = self.as_default()
-        context.__enter__()
-        self.__context_manager_stack.append(context)
+        if self.__context_manager is None:
+            self.__context_manager = self.as_default()
+        self.__context_manager.__enter__()
         return self
 
     @wraps(tf.Session.__exit__)
     def __exit__(self, type_, value, traceback):
-        context = self.__context_manager_stack.pop(-1)
-        context.__exit__(type_, value, traceback)
-
+        self.__context_manager.__exit__(type_, value, traceback)
+        self.__context_manager = None
 
 class WrappedTF(TreeWithCache):
     """Provides facilities for keeping TensorFlow behind the scenes.
@@ -253,20 +275,28 @@ class WrappedTF(TreeWithCache):
     def get_session(self):
         """Gets a TensorFlow session in which ops can be run.
         
-        Returns a persistent session using the session target of the 
-        highest parent.
+        Returns the default session if there is one. Else, returns a 
+        persistent session using the session target of the highest parent.
 
         Returns:
-            (tf.Session): A session matching the session target of the
-            highest parent.
+            (tf.Session): The default session if there is one, else a session 
+            matching the session target of the highest parent.
 
         Examples:
-            Returns the same session across multiple calls:
             >>> w = WrappedTF()
-            >>> sess = w.get_session()
-            >>> sess is w.get_session()
+
+            If there is already a default session, returns that one:
+            >>> with tf.Session() as sess:
+            ...     w.get_session() is sess
             True
-            >>> sess.close()
+            
+            Else, returns the same session across multiple calls:
+            >>> sess2 = w.get_session()
+            >>> sess2 is sess
+            False
+            >>> sess2 is w.get_session()
+            True
+            >>> sess2.close()
             
             >>> class Example(WrappedTF):
             ...     def op(self):
@@ -329,11 +359,15 @@ class WrappedTF(TreeWithCache):
             `self.get_session()` should work without fuss.
         
         """
-        if self.parent is None:
-            self._maybe_create_session()
-            return self._tf_session
+        default = tf.get_default_session()
+        if default is not None:
+            return default
         else:
-            return self.highest_parent.get_session()
+            if self.parent is None:
+                self._maybe_create_session()
+                return self._tf_session
+            else:
+                return self.highest_parent.get_session()
 
     def on_session_birth(self):
         """Called just after the session of the highest parent is created."""
@@ -352,8 +386,9 @@ class WrappedTF(TreeWithCache):
         Examples:
             >>> class Example(WrappedTF):
             ...     def on_session_birth(self):
-            ...         print('{}.on_session_birth called!'\
-                .format(self.long_name))
+            ...         name = self.long_name
+            ...         print('{}.on_session_birth called!'.format(name))
+            ...         super().on_session_birth()
             >>> w = Example()
             >>> w.child = Example()
             >>> w.child.child = Example()
@@ -385,8 +420,9 @@ class WrappedTF(TreeWithCache):
         Examples:
             >>> class Example(WrappedTF):
             ...     def on_session_death(self):
-            ...         print('{}.on_session_death called!'\
-                            .format(self.long_name))
+            ...         name = self.long_name
+            ...         print('{}.on_session_death called!'.format(name))
+            ...         super().on_session_death()
             >>> w = Example()
             >>> w.child = Example()
             >>> w.child.child = Example()
@@ -438,15 +474,17 @@ class WrappedTF(TreeWithCache):
             ...     def __init__(self, name):
             ...         super().__init__()
             ...         self.fallback_name = name
-            ...         self.print = True
-            ...     def on_session_death(self):
-            ...         if self.print:
-            ...             name = self.long_name
-            ...             print('{}.on_session_death called!'.format(name))
+            ...         self.should_print = True
             ...     def on_session_birth(self):
-            ...         if self.print:
+            ...         if self.should_print:
             ...             name = self.long_name
             ...             print('{}.on_session_birth called!'.format(name))
+            ...         super().on_session_birth()
+            ...     def on_session_death(self):
+            ...         if self.should_print:
+            ...             name = self.long_name
+            ...             print('{}.on_session_death called!'.format(name))
+            ...         super().on_session_death()
             >>> w = Example('w')
             >>> x = Example('x')
             >>> y = Example('y')
@@ -456,9 +494,9 @@ class WrappedTF(TreeWithCache):
             >>> def setup():
             ...     objs = [w, x, y, z]
             ...     # create sessions
-            ...     for o in objs: o.print = False
+            ...     for o in objs: o.should_print = False
             ...     for o in objs: o.get_session()
-            ...     for o in objs: o.print = True
+            ...     for o in objs: o.should_print = True
             ...     # fill caches
             ...     for o in objs: o.cache['tf'] = 'compiled tf function'
 
@@ -520,13 +558,10 @@ class WrappedTF(TreeWithCache):
         elif self.highest_parent._tf_session is not None:
             for node in self:
                 node.on_session_death()
-        self.clear_ancestor_caches()
-        self.clear_subtree_caches()
+        self._on_op_placement_context_change()
 
         super().on_new_parent(new_parent)  # move to new tree
 
         if self.highest_parent._tf_session is not None:
             for node in self:
                 node.on_session_birth()
-
-        
