@@ -3,6 +3,7 @@ from builtins import super
 import numpy as np
 import tensorflow as tf
 
+from .trees import Leaf
 from .transforms import Transform, Identity
 from .wrappedtf import WrappedTF
 
