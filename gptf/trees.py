@@ -570,11 +570,11 @@ class Leaf(Tree):
         >>> t = Tree()
         >>> t.fallback_name = 't'
         >>> t.leaf = Leaf()
-        >>> leaf.parent is t
+        >>> t.leaf.parent is t
         True
-        >>> leaf.name
+        >>> t.leaf.name
         '.leaf'
-        >>> leaf.long_name
+        >>> t.leaf.long_name
         't.leaf'
 
     """
