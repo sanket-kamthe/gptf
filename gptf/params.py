@@ -1,13 +1,20 @@
 from builtins import super
 
+import numpy as np
 import tensorflow as tf
 
 from .transforms import Transform, Identity
 from .wrappedtf import WrappedTF
 
+
 class FixedParameterError(Exception):
     """Raised when the free state of a fixed parameter is accessed."""
 
+class ShapeChangeError(Exception):
+    """Raised when the shape of a DataHolder changes."""
+
+
+#TODO: type/shape checking for assignments
 class Param(WrappedTF):
     """A parameter of a model.
 
@@ -30,10 +37,10 @@ class Param(WrappedTF):
         `value` attribute:
         >>> p = Param(1.0)
         >>> p.value
-        1.0
+        array(1.0)
         >>> p.value = 2.0
         >>> p.value
-        2.0
+        array(2.0)
 
         A tensor representing the paremeter can be acquired using the 
         `tensor` attribute.
@@ -76,6 +83,11 @@ class Param(WrappedTF):
         >>> w = WrappedTF()
         >>> w.p = Param(1.0)
         >>> w.q = Param(2.0)
+        >>> with w.p.get_session() as sess:
+        ...     print(sess.run(w.p.free_state))
+        ...     print(sess.run(w.q.free_state))
+        1.0
+        2.0
         >>> with w.p.get_session() as sess:
         ...     print(sess.run(w.p.free_state))
         ...     print(sess.run(w.q.free_state))
@@ -163,9 +175,9 @@ class Param(WrappedTF):
         >>> p = Param(1.0, transform=Exp())
         >>> with p.get_session() as sess:
         ...     print(p.value)
-        ...     print(sess.run(p.free_state))
+        ...     print("{:.3e}".format(sess.run(p.free_state)))
         1.0
-        -1e-06
+        -1.000e-06
 
         The free state can then be freely optimised, and `p.value` and 
         `p.tensor` will remain constrained by the transform.
@@ -193,8 +205,16 @@ class Param(WrappedTF):
 
     """
     def __init__(self, initial_value, transform=Identity()):
+        """Initialiser.
+
+        Args:
+            initial_value (np.array_like): The initial value of the parameter.
+            transform (gptf.transforms.Transform): The transform of the
+                paramter. Defaults to `gptf.transforms.Identity()`.
+
+        """
         super().__init__()
-        self._numpy_value = initial_value
+        self._numpy_value = np.array(initial_value)
         self.fixed = False
         self._transform = transform
         
@@ -202,19 +222,18 @@ class Param(WrappedTF):
     def value(self):
         if self._variable:
             sess = self.get_session()
-            return sess.run(self.tensor)
+            return np.array(sess.run(self.tensor))
         else:
-            return self._numpy_value
+            return self._numpy_value.copy()
 
     @value.setter
     def value(self, value):
         if self._variable:
             sess = self.get_session()
             free_state = self.transform.np_backward(value)
-            self._numpy_value = sess.run(self._variable.assign(free_state))
-            return self._numpy_value
+            self._numpy_value[...] = sess.run(self._variable.assign(free_state))
         else:
-            self._numpy_value = value
+            self._numpy_value[...] = value
 
     @property
     @WrappedTF.tf_method
@@ -241,10 +260,30 @@ class Param(WrappedTF):
 
     @property
     def transform(self):
+        """The transform between the free space and value space."""
         return self._transform
 
     @transform.setter
     def transform(self, value):
+        """Sets the transform of the parameter.
+
+        If the parameter is in a variable, clears the cache of anything
+        higher in the tree that might rely on `self.tensor`.
+        
+        Examples:
+            >>> from .transforms import Identity, Exp
+            >>> w = WrappedTF()
+            >>> w.p = Param(1.)
+            >>> w.cache[0] = 123
+            >>> w.p.transform = Exp()
+            >>> 0 in w.cache  # p has no variable, so no cache is cleared
+            True
+            >>> w.p.free_state  # force p to move into variable
+            >>> w.p.transform = Identity
+            >>> 0 in w.cache  # cache is cleared
+            False
+
+        """
         if self._variable:
             # anything that caches anything that relies on self.tensor needs
             # to clear its cache.
@@ -263,13 +302,13 @@ class Param(WrappedTF):
 
     def on_session_death(self):
         assert self._variable
-        self._numpy_value = self.value
+        self._numpy_value[...] = self.value
         super().on_session_death()
 
     def clear_cache(self):
         """Save the variable value before it is cleared from the cache."""
         if self._variable:
-            self._numpy_value = self.value
+            self._numpy_value[...] = self.value
         super().clear_cache()
 
     @property
@@ -307,3 +346,150 @@ class Param(WrappedTF):
     def _variable(self, value):
         """Sets the variable."""
         self.cache["_Param__variable"] = value
+
+
+class DataHolder(WrappedTF):
+    """Holds data to be fed into TensorFlow for computation.
+
+    Attributes:
+        value (np.ndarray): The value of the data.
+        placeholder (tf.Placeholder): A placeholder for the data, 
+            suitable for passing to TensorFlow ops.
+        feed_dict (Dict[tf.Placeholder, np.array_like]): A feed dictionary
+            that feeds the value of the data into the placeholder op.
+        on_shape_change ('raise' | 'pass' | 'recompile'): The action to take
+            when the shape of the data changes; see the setter for `.value`.
+
+    Examples:
+        Getting and setting values
+        --------------------------
+
+        To get and set the value of the data, use the `.value` property:
+        >>> a = np.array([1,2,3])
+        >>> b = np.array([4,5,6])
+        >>> d = DataHolder(a)
+        >>> d.value
+        array([1, 2, 3])
+        >>> d.value = b
+        >>> d.value
+        array([4, 5, 6])
+
+        See the documentation for the setter for `.value` for more details.
+        
+        To access the value from TensorFlow, first build an op that relies
+        on the `.placeholder` attribute:
+        >>> d = DataHolder(a)
+        >>> op = tf.add(d.placeholder, 1)
+
+        Then evaluate the op in a session, passing in the feed dictionary
+        to `tf.Session.run()`:
+        >>> with d.get_session() as sess:
+        ...     sess.run(op, feed_dict=d.feed_dict)
+        array([2, 3, 4])
+        
+    """
+
+    def __init__(self, initial_value, on_shape_change='raise'):
+        """Initialiser.
+
+        Args:
+            initial_value (np.array_like): The initial value of the data.
+            on_shape_change ('raise' | 'pass' | 'recompile'): The action to
+                take when the shape of the data changes; see the setter for
+                `.value`.
+
+        """
+        super().__init__()
+        self._numpy_value = np.array(initial_value)
+        self._placeholder = None
+        self.on_shape_change = on_shape_change
+
+    @property
+    def value(self):
+        return self._numpy_value.copy()
+
+    @value.setter
+    def value(self, value):
+        """Sets the value of the data.
+
+        If the shape of the data changes, take one of the following actions
+        depending on the value of `self.on_shape_change`:
+          - on 'raise', raise a `gptf.params.ShapeChangeError`.
+          - on 'recompile', clear the cache of everything higher in the tree.
+          - on 'pass', do nothing.
+
+        Examples:
+            On 'raise', we raise an error on shape change:
+            >>> a = np.array([1,2,3])
+            >>> b = np.array([1,2])
+            >>> d = DataHolder(a, on_shape_change='raise')
+            >>> d.value = b
+            Traceback (most recent call last):
+                ...
+            gptf.params.ShapeChangeError: message
+
+            On 'recompile', we clear the compiled function cache of everything
+            higher in the tree:
+            >>> w = WrappedTF()
+            >>> w.d = d
+            >>> w.cache[0] = 123
+            >>> w.d.on_shape_change = 'recompile'
+            >>> w.d.value = b
+            >>> 0 in w.cache
+            False
+
+            On 'pass', we do nothing and assign the new value anyway.
+            >>> w.cache[0] = 123
+            >>> w.d.value = a
+            >>> 0 in w.cache
+            True
+
+        """
+        if self._numpy_value.shape == np.shape(value):
+            self._numpy_value[...] = value
+        elif self.on_shape_change == 'raise':
+            raise ShapeChangeError("cannot change shape of {}"\
+                    .format(self.long_name))
+        elif self.on_shape_change == 'recompile':
+            self.clear_ancestor_caches()
+            self._numpy_value[...] = value
+        elif self.on_shape_change == 'pass':
+            self._numpy_value[...] = value
+        else:
+            # this is more of a sanity check than anything else.
+            raise ValueError("bad value of on_shape_change in value.setter???")
+
+    @property
+    def placeholder(self):
+        self._assert_placeholder()
+        return self._placeholder
+
+    @property
+    def feed_dict(self):
+        self._assert_placeholder()
+        return { self._placeholder: self._numpy_value }
+
+    @property
+    def on_shape_change(self):
+        return self._on_shape_change
+
+    @on_shape_change.setter
+    def on_shape_change(self, value):
+        """Checks that the new value of on_shape_change is valid."""
+        if value not in ('raise', 'pass', 'recompile'):
+            raise ValueError("on_shape_change must be one of 'raise', 'pass', \
+'recompile'")
+        self._on_shape_change = value
+
+    @property
+    def _placeholder(self):
+        return self.cache.get('_DataHolder__placeholder', None)
+
+    @_placeholder.setter
+    def _placeholder(self, value):
+        self.cache['_DataHolder__placeholder'] = value
+
+    def _assert_placeholder(self):
+        if self._placeholder is None:
+            dtype = tf.as_dtype(self._numpy_value.dtype)
+            self._placeholder = tf.placeholder(dtype) #self._numpy_value.shape)
