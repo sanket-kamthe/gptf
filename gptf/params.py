@@ -15,7 +15,7 @@ class ShapeChangeError(Exception):
 
 
 #TODO: type/shape checking for assignments
-class Param(WrappedTF):
+class Param(WrappedTF, Leaf):
     """A parameter of a model.
 
     Attributes:
@@ -348,7 +348,7 @@ class Param(WrappedTF):
         self.cache["_Param__variable"] = value
 
 
-class DataHolder(WrappedTF):
+class DataHolder(WrappedTF, Leaf):
     """Holds data to be fed into TensorFlow for computation.
 
     Attributes:
