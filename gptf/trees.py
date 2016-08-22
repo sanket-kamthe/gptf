@@ -18,6 +18,7 @@ class BadParentError(Exception):
     """Raised when a parent does not have a reference to a requested child."""
 
 
+#TODO: Let trees have multiple parents?
 class Tree(object):
     """A tree with support for name fetching.
     
@@ -551,3 +552,43 @@ class TreeWithCache(Tree):
         if self.parent is not None:
             self.parent.clear_cache()
             self.parent.clear_ancestor_caches()
+
+
+class Leaf(Tree):
+    """A `Tree` that cannot have any children.
+    
+    Examples:
+        A `Leaf` will not automatically add children on attribute assignment:
+        >>> l = Leaf()
+        >>> l.child = Tree()
+        >>> l.children
+        ()
+        >>> l.child.parent is None
+        True
+
+        Leaves still know who their parent is and what their name is:
+        >>> t = Tree()
+        >>> t.fallback_name = 't'
+        >>> t.leaf = Leaf()
+        >>> leaf.parent is t
+        True
+        >>> leaf.name
+        '.leaf'
+        >>> leaf.long_name
+        't.leaf'
+
+    """
+    def __init__(self):
+        super().__init__()
+
+    @property
+    def children(self):
+        return ()
+    
+    def __setattr__(self, name, value):
+        """Sidestep `Tree.__setattr__` so no children are added."""
+        object.__setattr__(self, name, value)
+
+    def __delattr__(self, name):
+        """Sidestep `Tree.__delattr__` so no children are added."""
+        object.__delattr__(self, name)
