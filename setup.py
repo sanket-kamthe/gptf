@@ -31,7 +31,7 @@ with open(infofile) as f:
 if not all(kw_args.get(arg, None) for arg in args_needed):
     raise RuntimeError("Unable to find required info in {}".format(infofile))
 
-kw_args['install_requires'] = ['future']
+kw_args['install_requires'] = ['future', 'overrides']
 kw_args['tests_require'] = []
 if sys.version[0] == '2':
     kw_args['install_requires'].extend(["contextlib2"])
