@@ -4,6 +4,7 @@ from abc import ABCMeta, abstractmethod
 
 import numpy as np
 import tensorflow as tf
+from overrides import overrides
 
 from .trees import Leaf
 from .transforms import Transform, Identity
@@ -387,6 +388,7 @@ class Param(WrappedValue, Leaf):
         self.fixed = False
         self._transform = transform
         
+    @overrides
     def _get_value(self):
         if self._variable:
             sess = self.get_session()
@@ -394,6 +396,7 @@ class Param(WrappedValue, Leaf):
         else:
             return self._numpy_value.copy()
 
+    @overrides
     def _set_value(self, value):
         if self._variable:
             sess = self.get_session()
@@ -461,17 +464,20 @@ class Param(WrappedValue, Leaf):
         else:
             self._transform = value
 
+    @overrides
     def on_session_birth(self):
         self._ensure_variable()
         sess = self.get_session()
         sess.run(self.initializer)
         super().on_session_birth()
 
+    @overrides
     def on_session_death(self):
         assert self._variable
         self._numpy_value[...] = self.value
         super().on_session_death()
 
+    @overrides
     def clear_cache(self):
         """Save the variable value before it is cleared from the cache."""
         if self._variable:
@@ -568,9 +574,11 @@ class DataHolder(WrappedValue, Leaf):
         self._numpy_value = np.array(initial_value)
         self._placeholder = None
 
+    @overrides
     def _get_value(self):
         return self._numpy_value.copy()
 
+    @overrides
     def _set_value(self, value):
         self._numpy_value[...] = value
 

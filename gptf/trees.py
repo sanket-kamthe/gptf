@@ -5,6 +5,8 @@ try:  # in case of rogue Python 2.7, use contextlib2 instead of contextlib
 except ImportError:
     from contextlib2 import suppress
 
+from overrides import overrides
+
 class DuplicateNodeError(Exception):
    """Raised when an attempt is made to construct a bad tree.
     
@@ -582,13 +584,16 @@ class Leaf(Tree):
         super().__init__()
 
     @property
+    @overrides
     def children(self):
         return ()
     
+    @overrides
     def __setattr__(self, name, value):
         """Sidestep `Tree.__setattr__` so no children are added."""
         object.__setattr__(self, name, value)
 
+    @overrides
     def __delattr__(self, name):
         """Sidestep `Tree.__delattr__` so no children are added."""
         object.__delattr__(self, name)
