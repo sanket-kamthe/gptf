@@ -58,6 +58,9 @@ class Identity(Transform):
     def np_backward(x):
         return x
 
+    def __str__(self):
+        return "identity"
+
     def __repr__(self):
         return "{}.Identity()".format(__name__)
 
@@ -95,6 +98,9 @@ class Exp(Transform):
     @overrides
     def np_backward(self, y):
         return np.log(y - self._lower)
+
+    def __str__(self):
+        return "+ve (Exp)"
 
     def __repr__(self):
         return "{}.Exp(lower={})".format(__name__, self._lower)
