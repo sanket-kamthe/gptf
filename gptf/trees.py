@@ -1,10 +1,5 @@
 """Provides the `Tree` class for creating trees of objects."""
 from builtins import super, object
-try:  # in case of rogue Python 2.7, use contextlib2 instead of contextlib
-    from contextlib import suppress
-except ImportError:
-    from contextlib2 import suppress
-
 from overrides import overrides
 
 class DuplicateNodeError(Exception):
@@ -143,7 +138,7 @@ class Tree(object):
 
         """
         dict_ = dict(self.__dict__)
-        with suppress(KeyError):
+        if '_Tree__parent' in dict_:
             del dict_['_Tree__parent']
         return tuple(filter(lambda x: isinstance(x, Tree), dict_.values()))
 
@@ -385,7 +380,7 @@ class Tree(object):
         super().__delattr__(name)
 
     def __maybe_unlink_child(self, name):
-        with suppress(AttributeError):
+        if hasattr(self, name):
             value = self.__getattribute__(name)
             if isinstance(value, Tree):
                 value.on_new_parent(None)
