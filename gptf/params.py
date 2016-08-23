@@ -1,6 +1,8 @@
 from builtins import super
 from future.utils import with_metaclass
 from abc import ABCMeta, abstractmethod
+from functools import partial
+import os
 
 import numpy as np
 import tensorflow as tf
@@ -9,7 +11,7 @@ from overrides import overrides
 from .trees import Leaf
 from .transforms import Transform, Identity
 from .wrappedtf import WrappedTF
-
+from .utils import flip, isclassof, isattrof, construct_table, prefix_lines
 
 class FixedParameterError(Exception):
     """Raised when the free state of a fixed parameter is accessed."""
@@ -477,7 +479,6 @@ class Param(WrappedValue, Leaf):
         self._numpy_value[...] = self.value
         super().on_session_death()
 
-    @overrides
     def clear_cache(self):
         """Save the variable value before it is cleared from the cache."""
         if self._variable:
@@ -526,9 +527,9 @@ class DataHolder(WrappedValue, Leaf):
 
     Attributes:
         value (np.ndarray): The value of the data.
-        placeholder (tf.Placeholder): A placeholder for the data, 
+        placeholder (tf.placeholder): A placeholder for the data, 
             suitable for passing to TensorFlow ops.
-        feed_dict (Dict[tf.Placeholder, np.array_like]): A feed dictionary
+        feed_dict (Dict[tf.placeholder, np.array_like]): A feed dictionary
             that feeds the value of the data into the placeholder op.
         on_shape_change ('raise' | 'pass' | 'recompile'): The action to take
             when the shape of the data changes; see the setter for `.value`.
@@ -604,3 +605,168 @@ class DataHolder(WrappedValue, Leaf):
         if self._placeholder is None:
             dtype = tf.as_dtype(self._numpy_value.dtype)
             self._placeholder = tf.placeholder(dtype) #self._numpy_value.shape)
+
+
+class Parameterized(WrappedTF):
+    """An object that contains parameters and data.
+
+    This object is designed to be part of a tree, with `Param`s and 
+    `DataHolder`s at the leaves.
+
+    Attributes:
+        fixed (bool): A flag indicating whether or not any child `Param`s 
+            should be fixed. Setting this attribute also sets the `.fixed` 
+            attribute of anything lower in the tree.
+        feed_dict (Dict[tf.placeholder, np.array_like]): A feed dictionary
+            that feeds the values of DataHolders into their placeholder ops.
+        params (List[Param]): A list of all the `Param`s lower in the tree,
+            sorted by their long name.
+        data_holders (List[Param]): A list of all the `DataHolder`s lower in 
+            the tree, sorted by their long name.
+
+    Examples:
+
+    """
+    def __init__(self):
+        super().__init__()
+        self._fixed = False
+
+    @property
+    def fixed(self):
+        return self._fixed
+
+    @fixed.setter
+    def fixed(self, value):
+        for node in filter(isattrof('fixed'), self):
+            node.fixed = value
+
+    @property
+    def feed_dict(self):
+        result = {}
+        for node in self.data_holders:
+            result.update(node.feed_dict)
+        return result
+
+    @property
+    def params(self):
+        """A sorted list of the `Param`s lower in the tree."""
+        l = list(filter(isclassof(Param), self))
+        l.sort(key=lambda x: x.long_name)
+        return l
+
+    @property
+    def data_holders(self):
+        """A sorted list of the `DataHolder`s lower in the tree."""
+        l = list(filter(isclassof(DataHolder), self))
+        l.sort(key=lambda x: x.long_name)
+        return l
+
+    @property
+    def html(self):
+        """Returns an html table representing the object."""
+
+    def summary(self, array_len=5, fmt="fancy"):
+        """A string table summarizing `self`.
+        
+        Args:
+            array_len (int): The maximum number of elements to display
+                of each array value.
+            fmt ('fancy', 'plain', 'html'): The format for the table.
+                `'fancy'` returns a table with fancy formatting using box
+                drawing characters and ANSI terminal escape codes.
+                `'plain'` returns a table using only ascii characters.
+                `'html'` returns an html table.
+
+        Returns:
+            (str): A summary of this object's parameters and data.
+
+        """
+        lines = ["Parameterized object {}".format(self.long_name)]
+        params = self.param_summary(fmt)
+        if params:
+            lines.extend(["", "Params:"])
+            lines.append(prefix_lines("    ", params))
+        data = self.data_summary(fmt)
+        if data:
+            lines.extend(["", "Data:"])
+            lines.append(prefix_lines("    ", data))
+        return os.linesep.join(lines)
+
+    def param_summary(self, fmt="fancy"):
+        """A string table summarizing the parameters of `self`.
+        
+        Args:
+            fmt ('fancy', 'plain', 'html'): The format for the table.
+                `'fancy'` returns a table with fancy formatting using box
+                drawing characters and ANSI terminal escape codes.
+                `'plain'` returns a table using only ascii characters.
+                `'html'` returns an html table.
+
+        Returns:
+            (str): A string containing a table specifying the name,
+            value, transform and prior of each parameter.
+
+        """
+        params = self.params
+        if not params:
+            return ""
+
+        names = tuple(self._name_str(p.long_name) for p in params)
+        values = tuple(self._value_str(p.value) for p in params)
+        transforms = tuple(str(p.transform) for p in params)
+        priors = tuple("nyi" for p in params)
+
+        columns = (names, values, transforms, priors)
+        headers = ("name", "value", "transform", "prior")
+
+    def data_summary(self, array_len=5, fmt="fancy"):
+        """A string table summarizing the data of `self`.
+        
+        Args:
+            array_len (int): The maximum number of elements to display
+                of each array value.
+            fmt ('fancy', 'plain', 'html'): The format for the table.
+                `'fancy'` returns a table with fancy formatting using box
+                drawing characters and ANSI terminal escape codes.
+                `'plain'` returns a table using only ascii characters.
+                `'html'` returns an html table.
+
+        Returns:
+            (str): A string containing a table specifying the name,
+            value, transform and prior of each parameter.
+
+        """
+        data = self.data_holders
+        if not data:
+            return ""
+
+        names = tuple(self._name_str(d.long_name) for d in data)
+        values = tuple(self._value_str(d.value) for d in data)
+
+        columns = (names, values)
+        headers = ("name", "value")
+
+        return construct_table(columns, headers, fmt=fmt)
+
+    @staticmethod
+    def _name_str(name, fmt):
+        if fmt == "fancy" and os.name != "nt":
+            parts = name.split('.')
+            parts[-1] = "\033[1m" + parts[-1] + "\033[0m"
+            return '.'.join(parts)
+        else:
+            return name
+
+    @staticmethod
+    def _value_str(value, fmt):
+        """Constructs a string representation of a numpy value."""
+        if len(value.shape) > 1:
+            return "<np.ndarray>"
+        elif len(value.shape) == 1:
+            if value.shape[0] > array_len:
+                return "[" + ", ".join(map(str, value[:array_len])) \
+                        + ", ...]"
+            else:
+                return "[" + ", ".join(map(str, value)) + "]"
+        else:
+            return str(value)
