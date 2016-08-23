@@ -1,4 +1,6 @@
 from builtins import super
+from future.utils import with_metaclass
+from abc import ABCMeta, abstractmethod
 
 import numpy as np
 import tensorflow as tf
@@ -12,11 +14,174 @@ class FixedParameterError(Exception):
     """Raised when the free state of a fixed parameter is accessed."""
 
 class ShapeChangeError(Exception):
-    """Raised when the shape of a DataHolder changes."""
+    """Raised when the shape of a Param or DataHolder changes."""
+
+class ShapeChangeError(Exception):
+    """Raised when the shape of a Param or DataHolder changes."""
 
 
-#TODO: type/shape checking for assignments
-class Param(WrappedTF, Leaf):
+class WrappedValue(with_metaclass(ABCMeta, WrappedTF)):
+    """A class with a wrapped NumPy value, accessible through `.value`.
+
+    Attributes:
+        value (np.ndarray): The value of the parameter.
+        on_shape_change ('raise' | 'pass' | 'recompile'): The action to take
+            when the shape of the data changes; see the setter for `.value`.
+        on_shape_change ('raise' | 'pass' | 'recompile'): The action to take
+            when the shape of the data changes; see the setter for `.value`.
+
+    """
+    __ON_SHAPE_CHANGE_VALUES = ('raise', 'pass', 'recompile')
+    __ON_DTYPE_CHANGE_VALUES = ('raise', 'pass', 'recompile')
+
+    def __init__(self, on_shape_change='raise', on_dtype_change='raise'):
+        """Initialiser.
+
+        Args:
+            on_shape_change ('raise' | 'pass' | 'recompile'): The initial
+                value for `.on_shape_change`. Defaults to 'raise'.
+            on_dtype_change ('raise' | 'pass' | 'recompile'): The initial
+                value for `.on_dtype_change`. Defaults to 'raise'.
+
+        """
+        super().__init__()
+        self.on_shape_change = on_shape_change
+        self.on_dtype_change = on_dtype_change
+
+    @abstractmethod
+    def _get_value(self):
+        """Gets (a copy of) the hidden numpy value."""
+        NotImplemented
+
+    @abstractmethod
+    def _set_value(self, value):
+        """Sets the hidden numpy value."""
+        NotImplemented
+
+    @property
+    def value(self):
+        return self._get_value()
+
+    @value.setter
+    def value(self, value):
+        """Sets the value of the data.
+
+        If the shape of the data changes, take one of the following actions
+        depending on the value of `self.on_shape_change`:
+          - on 'raise', raise a `gptf.params.ShapeChangeError`.
+          - on 'recompile', clear the cache of everything higher in the tree.
+          - on 'pass', do nothing.
+
+        Examples:
+            >>> class Example(WrappedValue):
+            ...     def __init__(self, initial_value, **kwargs):
+            ...         super().__init__(**kwargs)
+            ...         self._numpy_value = initial_value
+            ...     def _get_value(self):
+            ...         return self._numpy_value.copy()
+            ...     def _set_value(self, value):
+            ...         self._numpy_value[...] = value
+
+            Shape changes
+            -------------
+
+            On 'raise', we raise an error on shape change:
+            >>> a = np.array([1,2,3])
+            >>> b = np.array([1,2])
+            >>> e = Example(a, on_shape_change='raise')
+            >>> e.value = b
+            Traceback (most recent call last):
+                ...
+            gptf.params.ShapeChangeError: message
+
+            On 'recompile', we clear the compiled function cache of everything
+            higher in the tree:
+            >>> w = WrappedTF()
+            >>> w.e = e
+            >>> w.cache[0] = 123
+            >>> w.e.on_shape_change = 'recompile'
+            >>> w.e.value = b
+            >>> 0 in w.cache
+            False
+
+            On 'pass', we do nothing and assign the new value anyway.
+            >>> w.cache[0] = 123
+            >>> w.e.value = a
+            >>> 0 in w.cache
+            True
+
+        """
+        self._new_shape_action(value)
+        self._new_dtype_action(value)
+        self._set_value(value)
+
+    def _new_shape_action(self, value):
+        """Performs the appropriate action given a new shape for `.value`."""
+        if self._numpy_value.shape == np.shape(value):
+            pass
+        elif self.on_shape_change == 'raise':
+            raise ShapeChangeError("cannot change shape of {}"\
+                    .format(self.long_name))
+        elif self.on_shape_change == 'recompile':
+            self.clear_ancestor_caches()
+            self.clear_cache()
+        elif self.on_shape_change == 'pass':
+            self.clear_cache()  # our variable has the wrong shape
+        else:
+            # this is more of a sanity check than anything else.
+            raise ValueError("bad value of on_shape_change in value.setter???")
+
+    def _new_dtype_action(self, value):
+        """Performs the appropriate action given a new dtype for `.value`."""
+        try:
+            dtype = value.dtype
+        except AttributeError as e:
+            try:
+                dtype = np.dtype(type(value))
+            except TypeError:
+                raise e
+        if self._numpy_value.dtype == dtype:
+            pass
+        elif self.on_dtype_change == 'raise':
+            raise DTypeChangeError("cannot change shape of {}"\
+                    .format(self.long_name))
+        elif self.on_dtype_change == 'recompile':
+            self.clear_ancestor_caches()
+            self.clear_cache()
+        elif self.on_dtype_change == 'pass':
+            self.clear_cache()  # our tensorflow object has the wrong shape
+        else:
+            # this is more of a sanity check than anything else.
+            raise ValueError("bad value of on_shape_change in value.setter???")
+
+    @property
+    def on_shape_change(self):
+        return self._on_shape_change
+
+    @on_shape_change.setter
+    def on_shape_change(self, value):
+        """Checks that the new value of on_shape_change is valid."""
+        if value not in self.__ON_SHAPE_CHANGE_VALUES:
+            valuestr = ', '.join(map(repr, self.__ON_SHAPE_CHANGE_VALUES))
+            raise ValueError("on_shape_change must be one of {}"
+                    .format(valuestr))
+        self._on_shape_change = value
+
+    @property
+    def on_dtype_change(self):
+        return self._on_dtype_change
+
+    @on_dtype_change.setter
+    def on_dtype_change(self, value):
+        """Checks that the new value of on_dtype_change is valid."""
+        if value not in self.__ON_DTYPE_CHANGE_VALUES:
+            valuestr = ', '.join(map(repr, self.__ON_DTYPE_CHANGE_VALUES))
+            raise ValueError("on_shape_change must be one of {}"
+                    .format(valuestr))
+        self._on_dtype_change = value
+
+
+class Param(WrappedValue, Leaf):
     """A parameter of a model.
 
     Attributes:
@@ -29,6 +194,8 @@ class Param(WrappedTF, Leaf):
             Fixed parameters will not be optimised.
         transform (.transforms.Transform): The transform used to move the
             variable into a free state where it can be optimised.
+        on_shape_change ('raise' | 'pass' | 'recompile'): The action to take
+            when the shape of the data changes; see the setter for `.value`.
 
     Examples:
         Getting and setting values
@@ -205,30 +372,29 @@ class Param(WrappedTF, Leaf):
         2.718
 
     """
-    def __init__(self, initial_value, transform=Identity()):
+    def __init__(self, initial_value, transform=Identity(), **kwargs):
         """Initialiser.
 
         Args:
             initial_value (np.array_like): The initial value of the parameter.
             transform (gptf.transforms.Transform): The transform of the
                 paramter. Defaults to `gptf.transforms.Identity()`.
+            **kwargs: passed through to the constructor of WrappedValue.
 
         """
-        super().__init__()
+        super().__init__(**kwargs)
         self._numpy_value = np.array(initial_value)
         self.fixed = False
         self._transform = transform
         
-    @property
-    def value(self):
+    def _get_value(self):
         if self._variable:
             sess = self.get_session()
             return np.array(sess.run(self.tensor))
         else:
             return self._numpy_value.copy()
 
-    @value.setter
-    def value(self, value):
+    def _set_value(self, value):
         if self._variable:
             sess = self.get_session()
             free_state = self.transform.np_backward(value)
@@ -349,7 +515,7 @@ class Param(WrappedTF, Leaf):
         self.cache["_Param__variable"] = value
 
 
-class DataHolder(WrappedTF, Leaf):
+class DataHolder(WrappedValue, Leaf):
     """Holds data to be fed into TensorFlow for computation.
 
     Attributes:
@@ -375,7 +541,7 @@ class DataHolder(WrappedTF, Leaf):
         >>> d.value
         array([4, 5, 6])
 
-        See the documentation for the setter for `.value` for more details.
+        See the docs for `gptf.params.WrappedValue` for more info.
         
         To access the value from TensorFlow, first build an op that relies
         on the `.placeholder` attribute:
@@ -390,75 +556,23 @@ class DataHolder(WrappedTF, Leaf):
         
     """
 
-    def __init__(self, initial_value, on_shape_change='raise'):
+    def __init__(self, initial_value, **kwargs):
         """Initialiser.
 
         Args:
             initial_value (np.array_like): The initial value of the data.
-            on_shape_change ('raise' | 'pass' | 'recompile'): The action to
-                take when the shape of the data changes; see the setter for
-                `.value`.
+            **kwargs: passed through to the constructor of WrappedValue.
 
         """
-        super().__init__()
+        super().__init__(**kwargs)
         self._numpy_value = np.array(initial_value)
         self._placeholder = None
-        self.on_shape_change = on_shape_change
 
-    @property
-    def value(self):
+    def _get_value(self):
         return self._numpy_value.copy()
 
-    @value.setter
-    def value(self, value):
-        """Sets the value of the data.
-
-        If the shape of the data changes, take one of the following actions
-        depending on the value of `self.on_shape_change`:
-          - on 'raise', raise a `gptf.params.ShapeChangeError`.
-          - on 'recompile', clear the cache of everything higher in the tree.
-          - on 'pass', do nothing.
-
-        Examples:
-            On 'raise', we raise an error on shape change:
-            >>> a = np.array([1,2,3])
-            >>> b = np.array([1,2])
-            >>> d = DataHolder(a, on_shape_change='raise')
-            >>> d.value = b
-            Traceback (most recent call last):
-                ...
-            gptf.params.ShapeChangeError: message
-
-            On 'recompile', we clear the compiled function cache of everything
-            higher in the tree:
-            >>> w = WrappedTF()
-            >>> w.d = d
-            >>> w.cache[0] = 123
-            >>> w.d.on_shape_change = 'recompile'
-            >>> w.d.value = b
-            >>> 0 in w.cache
-            False
-
-            On 'pass', we do nothing and assign the new value anyway.
-            >>> w.cache[0] = 123
-            >>> w.d.value = a
-            >>> 0 in w.cache
-            True
-
-        """
-        if self._numpy_value.shape == np.shape(value):
-            self._numpy_value[...] = value
-        elif self.on_shape_change == 'raise':
-            raise ShapeChangeError("cannot change shape of {}"\
-                    .format(self.long_name))
-        elif self.on_shape_change == 'recompile':
-            self.clear_ancestor_caches()
-            self._numpy_value[...] = value
-        elif self.on_shape_change == 'pass':
-            self._numpy_value[...] = value
-        else:
-            # this is more of a sanity check than anything else.
-            raise ValueError("bad value of on_shape_change in value.setter???")
+    def _set_value(self, value):
+        self._numpy_value[...] = value
 
     @property
     def placeholder(self):
@@ -469,18 +583,6 @@ class DataHolder(WrappedTF, Leaf):
     def feed_dict(self):
         self._assert_placeholder()
         return { self._placeholder: self._numpy_value }
-
-    @property
-    def on_shape_change(self):
-        return self._on_shape_change
-
-    @on_shape_change.setter
-    def on_shape_change(self, value):
-        """Checks that the new value of on_shape_change is valid."""
-        if value not in ('raise', 'pass', 'recompile'):
-            raise ValueError("on_shape_change must be one of 'raise', 'pass', \
-'recompile'")
-        self._on_shape_change = value
 
     @property
     def _placeholder(self):
