@@ -405,6 +405,11 @@ class BreadthFirstTreeIterator(object):
         
     def __iter__(self):
         return self
+    
+    def __repr__(self):
+        return "<{module}.{classname} object {long_name}, id {memory}>"\
+                .format(module=__name__, classname=self.__class__,
+                        long_name=self.long_name, memory=hex(id(self)))
 
 
 class TreeWithCache(Tree):
