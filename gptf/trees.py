@@ -381,7 +381,7 @@ class Tree(object):
 
     def __maybe_unlink_child(self, name):
         if hasattr(self, name):
-            value = self.__getattribute__(name)
+            value = getattr(self, name)
             if isinstance(value, Tree):
                 value.on_new_parent(None)
 
