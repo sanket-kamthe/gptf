@@ -770,3 +770,6 @@ class Parameterized(WrappedTF):
                 return "[" + ", ".join(map(str, value)) + "]"
         else:
             return str(value)
+
+    def __str__(self):
+        return self.summary()
