@@ -1,4 +1,5 @@
-from builtins import super
+# -*- encoding: utf-8 -*-
+from builtins import super, filter, map, range
 from future.utils import with_metaclass
 from abc import ABCMeta, abstractmethod
 from functools import partial
@@ -11,7 +12,9 @@ from overrides import overrides
 from .trees import Leaf
 from .transforms import Transform, Identity
 from .wrappedtf import WrappedTF
-from .utils import flip, isclassof, isattrof, construct_table, prefix_lines
+from .utils import flip, isclassof, isattrof
+from .utils import construct_table, combine_fancy_tables, prefix_lines
+
 
 class FixedParameterError(Exception):
     """Raised when the free state of a fixed parameter is accessed."""
@@ -21,7 +24,6 @@ class ShapeChangeError(Exception):
 
 class ShapeChangeError(Exception):
     """Raised when the shape of a Param or DataHolder changes."""
-
 
 class WrappedValue(with_metaclass(ABCMeta, WrappedTF)):
     """A class with a wrapped NumPy value, accessible through `.value`.
@@ -129,7 +131,7 @@ class WrappedValue(with_metaclass(ABCMeta, WrappedTF)):
             self.clear_ancestor_caches()
             self.clear_cache()
         elif self.on_shape_change == 'pass':
-            self.clear_cache()  # our variable has the wrong shape
+            pass 
         else:
             # this is more of a sanity check than anything else.
             raise ValueError("bad value of on_shape_change in value.setter???")
@@ -182,7 +184,6 @@ class WrappedValue(with_metaclass(ABCMeta, WrappedTF)):
             raise ValueError("on_shape_change must be one of {}"
                     .format(valuestr))
         self._on_dtype_change = value
-
 
 class Param(WrappedValue, Leaf):
     """A parameter of a model.
@@ -390,6 +391,7 @@ class Param(WrappedValue, Leaf):
         self.fixed = False
         self._transform = transform
         
+    @WrappedTF.tf_method
     @overrides
     def _get_value(self):
         if self._variable:
@@ -398,6 +400,7 @@ class Param(WrappedValue, Leaf):
         else:
             return self._numpy_value.copy()
 
+    @WrappedTF.tf_method
     @overrides
     def _set_value(self, value):
         if self._variable:
@@ -521,7 +524,6 @@ class Param(WrappedValue, Leaf):
         """Sets the variable."""
         self.cache["_Param__variable"] = value
 
-
 class DataHolder(WrappedValue, Leaf):
     """Holds data to be fed into TensorFlow for computation.
 
@@ -606,7 +608,6 @@ class DataHolder(WrappedValue, Leaf):
             dtype = tf.as_dtype(self._numpy_value.dtype)
             self._placeholder = tf.placeholder(dtype) #self._numpy_value.shape)
 
-
 class Parameterized(WrappedTF):
     """An object that contains parameters and data.
 
@@ -627,6 +628,8 @@ class Parameterized(WrappedTF):
     Examples:
 
     """
+    ARRAY_DISPLAY_LENGTH = 5
+
     def __init__(self):
         super().__init__()
         self._fixed = False
@@ -681,18 +684,51 @@ class Parameterized(WrappedTF):
             (str): A summary of this object's parameters and data.
 
         """
-        lines = ["Parameterized object {}".format(self.long_name)]
-        params = self.param_summary(fmt)
-        if params:
-            lines.extend(["", "Params:"])
-            lines.append(prefix_lines("    ", params))
-        data = self.data_summary(fmt)
-        if data:
-            lines.extend(["", "Data:"])
-            lines.append(prefix_lines("    ", data))
-        return os.linesep.join(lines)
+        heading = "Parameterized object {}".format(self.long_name)
+        params = self.param_summary(array_len, fmt)
+        data = self.data_summary(array_len, fmt)
 
-    def param_summary(self, fmt="fancy"):
+        if fmt == "fancy":
+            headinglength = len(heading)
+            if os.name != "nt":
+                heading = "\033[1m" + heading + "\033[0m"
+            headingtable = "┍━" + "━" * headinglength + "━┑\n"
+            headingtable += "│ " + heading + " │\n"
+            headingtable += "┕━" + "━" * headinglength + "━┙"
+            tables = [headingtable]
+            if params:
+                tables.append("┌─────────┐" + os.linesep\
+                            + "│ Params: │" + os.linesep\
+                            + "└─────────┘")
+                tables.append(params)
+            if data:
+                tables.append("┌───────┐" + os.linesep\
+                            + "│ Data: │" + os.linesep\
+                            + "└───────┘")
+                tables.append(data)
+            return combine_fancy_tables(*tables)
+        elif fmt == "plain":
+            lines = [heading]
+            if params:
+                lines.extend(["", "Params:"])
+                lines.append(prefix_lines("    ", params))
+            if data:
+                lines.extend(["", "Data:"])
+                lines.append(prefix_lines("    ", data))
+            return os.linesep.join(lines)
+        elif fmt == "html":
+            lines = ["<table id='parameterized' width=100%>",
+                     "  <tr><th>{}</th></tr>".format(heading)]
+            if params:
+                lines.append("  <tr><td><b>Params</b></td></tr>")
+                lines.append("  <tr><td>{}</td></tr>".format(params))
+            if data:
+                lines.append("  <tr><td><b>Data</b></td></tr>")
+                lines.append("  <tr><td>{}</td></tr>".format(data))
+            lines.append("</table>")
+            return os.linesep.join(lines)
+
+    def param_summary(self, array_len=ARRAY_DISPLAY_LENGTH, fmt="fancy"):
         """A string table summarizing the parameters of `self`.
         
         Args:
@@ -706,20 +742,37 @@ class Parameterized(WrappedTF):
             (str): A string containing a table specifying the name,
             value, transform and prior of each parameter.
 
+        Examples:
+            >>> from gptf.transforms import Exp
+            >>> p = Parameterized()
+            >>> p.fallback_name = 'p'
+            >>> p.child = Parameterized()
+            >>> p.param = Param(1.)
+            >>> p.child.a = Param([1., 2., 3.])
+            >>> p.child.b = Param([[1.]], transform=Exp())
+            >>> print(p.param_summary(fmt='plain'))  # doctest:-NORMALIZE_WHITESPACE
+            name      | value           | transform | prior
+            ----------+-----------------+-----------+------
+            p.child.a | [1.0, 2.0, 3.0] | identity  | nyi  
+            p.child.b | <np.ndarray>    | +ve (Exp) | nyi  
+            p.param   | 1.0             | identity  | nyi  
+            
         """
         params = self.params
         if not params:
             return ""
 
-        names = tuple(self._name_str(p.long_name) for p in params)
-        values = tuple(self._value_str(p.value) for p in params)
+        names = tuple(self._name_str(p.long_name, fmt) for p in params)
+        values = tuple(self._value_str(p.value, array_len, fmt) for p in params)
         transforms = tuple(str(p.transform) for p in params)
         priors = tuple("nyi" for p in params)
 
         columns = (names, values, transforms, priors)
         headers = ("name", "value", "transform", "prior")
 
-    def data_summary(self, array_len=5, fmt="fancy"):
+        return construct_table(columns, headers, fmt=fmt)
+
+    def data_summary(self, array_len=ARRAY_DISPLAY_LENGTH, fmt="fancy"):
         """A string table summarizing the data of `self`.
         
         Args:
@@ -735,13 +788,27 @@ class Parameterized(WrappedTF):
             (str): A string containing a table specifying the name,
             value, transform and prior of each parameter.
 
+        Examples:
+            >>> p = Parameterized()
+            >>> p.fallback_name = 'p'
+            >>> p.child = Parameterized()
+            >>> p.data = DataHolder(1.)
+            >>> p.child.a = DataHolder([1., 2., 3.])
+            >>> p.child.b = DataHolder([[1.]])
+            >>> print(p.data_summary(fmt='plain'))  # doctest:-NORMALIZE_WHITESPACE
+            name      | value          
+            ----------+----------------
+            p.child.a | [1.0, 2.0, 3.0]
+            p.child.b | <np.ndarray>   
+            p.data    | 1.0            
+
         """
         data = self.data_holders
         if not data:
             return ""
 
-        names = tuple(self._name_str(d.long_name) for d in data)
-        values = tuple(self._value_str(d.value) for d in data)
+        names = tuple(self._name_str(d.long_name, fmt) for d in data)
+        values = tuple(self._value_str(d.value, array_len, fmt) for d in data)
 
         columns = (names, values)
         headers = ("name", "value")
@@ -750,21 +817,63 @@ class Parameterized(WrappedTF):
 
     @staticmethod
     def _name_str(name, fmt):
+        """Maybe add ANSI escape codes to prettify a name.
+        
+        Args:
+            name (str): The name to prettify.
+            fmt ('fancy' | 'plain' | 'html'): The style to format with.
+                If 'fancy' and not Windows, emboldens the last part of the
+                name.
+                
+        """
         if fmt == "fancy" and os.name != "nt":
-            parts = name.split('.')
+            parts = name.split(".")
             parts[-1] = "\033[1m" + parts[-1] + "\033[0m"
-            return '.'.join(parts)
+            return ".".join(parts)
+        elif fmt == "html":
+            parts = name.split(".")
+            parts[-1] = "<b>" + parts[-1] + "</b>"
+            return ".".join(parts)
         else:
             return name
 
     @staticmethod
-    def _value_str(value, fmt):
-        """Constructs a string representation of a numpy value."""
+    def _value_str(value, max_len, fmt):
+        """Constructs a string representation of a numpy value.
+
+        Args:
+            value (np.ndarray): The array to represent.
+            max_len (np.ndarray): The maximum length a 1d array can be before
+                it is truncated.
+            fmt ('fancy' | 'plain' | 'html'): The style to format with.
+                Currently ignored.
+        
+        Examples:
+            >>> a = np.array(1.)
+            >>> b = np.arange(5)
+            >>> c = np.arange(6)
+            >>> d = np.array([[1.]])
+
+            A zero-dimensional array produces a scalar representation:
+            >>> Parameterized._value_str(a, 5, '')
+            '1.0'
+
+            One dimensional arrays are repreduced up to `max_len`:
+            >>> Parameterized._value_str(b, 5, '')
+            '[0, 1, 2, 3, 4]'
+            >>> Parameterized._value_str(c, 5, '')
+            '[0, 1, 2, 3, ...]'
+
+            Multidemensional arrays appears as a placeholder value.
+            >>> Parameterized._value_str(d, 5, '')
+            '<np.ndarray>'
+          
+        """
         if len(value.shape) > 1:
             return "<np.ndarray>"
         elif len(value.shape) == 1:
-            if value.shape[0] > array_len:
-                return "[" + ", ".join(map(str, value[:array_len])) \
+            if value.shape[0] > max_len:
+                return "[" + ", ".join(map(str, value[:max_len - 1])) \
                         + ", ...]"
             else:
                 return "[" + ", ".join(map(str, value)) + "]"
@@ -773,3 +882,6 @@ class Parameterized(WrappedTF):
 
     def __str__(self):
         return self.summary()
+
+# en-gb compatibility patch
+Parameterised = Parameterized
