@@ -5,6 +5,26 @@ from functools import wraps, partial
 import re
 import os
 import html
+import numbers
+
+import numpy as np
+
+def is_array_like(obj):
+    """Tests if an object is array_like.
+
+    Returns:
+        (bool): True if `obj` is a number, a string, a numpy array or a
+        sequence.
+
+    """
+    if (isinstance(obj, numbers.Number) or isinstance(obj, str) or
+        isinstance(obj, np.ndarray) or hasattr(obj, '__array_interface__') 
+        or hasattr(obj, '__array__')):
+        return True
+    elif isinstance(obj, list) or isinstance(obj, tuple):
+        if all(is_array_like(o) for o in obj):
+            return True
+    return False
 
 def flip(func):
     """Reverses the arguments of `func`.

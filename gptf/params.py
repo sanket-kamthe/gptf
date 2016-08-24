@@ -4,6 +4,7 @@ from future.utils import with_metaclass
 from abc import ABCMeta, abstractmethod
 from functools import partial
 import os
+import numbers
 
 import numpy as np
 import tensorflow as tf
@@ -12,7 +13,7 @@ from overrides import overrides
 from .trees import Leaf
 from .transforms import Transform, Identity
 from .wrappedtf import WrappedTF
-from .utils import flip, isclassof, isattrof
+from .utils import flip, isclassof, isattrof, is_array_like
 from .utils import construct_table, combine_fancy_tables, prefix_lines
 
 
@@ -22,8 +23,8 @@ class FixedParameterError(Exception):
 class ShapeChangeError(Exception):
     """Raised when the shape of a Param or DataHolder changes."""
 
-class ShapeChangeError(Exception):
-    """Raised when the shape of a Param or DataHolder changes."""
+class DTypeChangeError(Exception):
+    """Raised when the dtype of a Param or DataHolder changes."""
 
 class WrappedValue(with_metaclass(ABCMeta, WrappedTF)):
     """A class with a wrapped NumPy value, accessible through `.value`.
@@ -116,13 +117,14 @@ class WrappedValue(with_metaclass(ABCMeta, WrappedTF)):
             True
 
         """
+        value = np.asanyarray(value)
         self._new_shape_action(value)
         self._new_dtype_action(value)
         self._set_value(value)
 
     def _new_shape_action(self, value):
         """Performs the appropriate action given a new shape for `.value`."""
-        if self._numpy_value.shape == np.shape(value):
+        if self._numpy_value.shape == value.shape:
             pass
         elif self.on_shape_change == 'raise':
             raise ShapeChangeError("cannot change shape of {}"\
@@ -138,17 +140,10 @@ class WrappedValue(with_metaclass(ABCMeta, WrappedTF)):
 
     def _new_dtype_action(self, value):
         """Performs the appropriate action given a new dtype for `.value`."""
-        try:
-            dtype = value.dtype
-        except AttributeError as e:
-            try:
-                dtype = np.dtype(type(value))
-            except TypeError:
-                raise e
-        if self._numpy_value.dtype == dtype:
+        if self._numpy_value.dtype == value.dtype:
             pass
         elif self.on_dtype_change == 'raise':
-            raise DTypeChangeError("cannot change shape of {}"\
+            raise DTypeChangeError("cannot change dtype of {}"\
                     .format(self.long_name))
         elif self.on_dtype_change == 'recompile':
             self.clear_ancestor_caches()
@@ -157,7 +152,7 @@ class WrappedValue(with_metaclass(ABCMeta, WrappedTF)):
             self.clear_cache()  # our tensorflow object has the wrong shape
         else:
             # this is more of a sanity check than anything else.
-            raise ValueError("bad value of on_shape_change in value.setter???")
+            raise ValueError("bad value of on_dtype_change in value.setter???")
 
     @property
     def on_shape_change(self):
@@ -626,6 +621,31 @@ class Parameterized(WrappedTF):
             the tree, sorted by their long name.
 
     Examples:
+        >>> from gptf.transforms import Exp
+        >>> m = Parameterized()
+        >>> m.param = Param(1.)
+        >>> m.child = Parameterized()
+        >>> m.child.a = Param([2., 3., 4.], transform=Exp())
+        >>> m.child.b = Param([[1.0]])
+        >>> m.X = DataHolder([1., 2., 3., 4., 5.])
+        >>> m.Y = DataHolder([10., 23.3, 3., 42., .1])
+        >>> m.child.data = DataHolder(23)
+
+        The `.params` and `.data` attributes return all instances of their
+        associated types lower in the tree.
+        >>> set(m.params) == {m.param, m.child.a, m.child.b}
+        True
+        >>> set(m.data_holders) == {m.X, m.Y, m.child.data}
+        True
+
+        You can assign a value to a `Param` or `DataHolder` by assigning to
+        its attribute:
+        >>> m.param = 3.7
+        >>> m.param.value
+        array(3.7)
+        >>> m.X = [6., 7., 8., 9., 10.]
+        >>> m.X.value
+        array([ 6., 7., 8., 9., 10.])
 
     """
     ARRAY_DISPLAY_LENGTH = 5
@@ -663,10 +683,6 @@ class Parameterized(WrappedTF):
         l = list(filter(isclassof(DataHolder), self))
         l.sort(key=lambda x: x.long_name)
         return l
-
-    @property
-    def html(self):
-        """Returns an html table representing the object."""
 
     def summary(self, array_len=5, fmt="fancy"):
         """A string table summarizing `self`.
@@ -882,6 +898,57 @@ class Parameterized(WrappedTF):
                 return "[" + ", ".join(map(str, value)) + "]"
         else:
             return str(value)
+
+    @overrides
+    def __setattr__(self, name, value):
+        """Set the value of `Param`s and `DataHolder`s on assignment.
+        
+        Args:
+            name (str): The name of the attribute.
+            value: The value to set.
+        
+        Examples:
+            Assigning a numerical, numpy or string value to a `Param` or 
+            `DataHolder` child assigns to that child's value instead.
+            >>> p = Parameterized()
+            >>> p.param = Param(1.0)
+            >>> p.param = 2.0
+            >>> isinstance(p.param, Param)
+            True
+            >>> p.param.value
+            array(2.0)
+            >>> p.data = DataHolder(1.0)
+            >>> p.data = 2.0
+            >>> isinstance(p.data, DataHolder)
+            True
+            >>> p.data.value
+            array(2.0)
+
+            Assigning anything else overwrites the attribute:
+            >>> class Example():
+            ...     pass
+            >>> p.param = Example()
+            >>> isinstance(p.param, Example)
+            True
+            >>> p.data = Example()
+            >>> isinstance(p.data, Example)
+            True
+
+            Children still know who their parents are.
+            >>> p.param = Param(1.0)
+            >>> p.param.parent is p
+            True
+
+        """
+        if hasattr(self, name):
+            curr = self.__getattribute__(name) 
+            if ((isinstance(curr, Param) or isinstance(curr, DataHolder)) and 
+                is_array_like(value)):
+                # okay to assign to curr.value
+                curr.value = value
+                return
+        super().__setattr__(name, value)
+
 
 # en-gb compatibility patch
 Parameterised = Parameterized
