@@ -692,6 +692,8 @@ class Parameterized(WrappedTF):
             headinglength = len(heading)
             if os.name != "nt":
                 heading = "\033[1m" + heading + "\033[0m"
+            if not (params or data):
+                return heading
             headingtable = "┍━" + "━" * headinglength + "━┑\n"
             headingtable += "│ " + heading + " │\n"
             headingtable += "┕━" + "━" * headinglength + "━┙"
@@ -715,6 +717,7 @@ class Parameterized(WrappedTF):
             if data:
                 lines.extend(["", "Data:"])
                 lines.append(prefix_lines("    ", data))
+            if params or data: lines.append("")
             return os.linesep.join(lines)
         elif fmt == "html":
             lines = ["<table id='parameterized' width=100%>",
@@ -879,9 +882,6 @@ class Parameterized(WrappedTF):
                 return "[" + ", ".join(map(str, value)) + "]"
         else:
             return str(value)
-
-    def __str__(self):
-        return self.summary()
 
 # en-gb compatibility patch
 Parameterised = Parameterized
