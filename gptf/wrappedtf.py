@@ -92,6 +92,8 @@ class WrappedTF(TreeWithCache):
             `tf.session()`. See `.get_session()`.
 
     Examples:
+        self._on_op_placement_context_change()
+        self._tf_graph = value
         `op_placement_context` and `tf_method` can be used to apply
         the appropriate contexts to tensorflow methods. In the following
         
@@ -228,17 +230,18 @@ class WrappedTF(TreeWithCache):
             ...     print(tf.constant(0).device)
             /job:spoon/device:GPU:0
 
-            The graph is also set appropriately:
+            The root node of the tree may define a `.tf_graph`. Child ops will
+            be placed in the `.tf_graph` of their highest parent.
             >>> a.tf_graph = tf.Graph()
             >>> b.tf_graph = tf.Graph()
             >>> with a.op_placement_context():
             ...     tf.constant(0).graph is a.tf_graph
             True
             >>> with b.op_placement_context():
-            ...     tf.constant(0).graph is b.tf_graph
+            ...     tf.constant(0).graph is a.tf_graph
             True
             >>> with e.op_placement_context():
-            ...     tf.constant(0).graph is b.tf_graph
+            ...     tf.constant(0).graph is a.tf_graph
             True
 
             In addition, a name scope is opened that matches the object
@@ -255,7 +258,9 @@ class WrappedTF(TreeWithCache):
 
         """
         with ExitStack() as stack:
-            if self.parent is not None:
+            if self.parent is None and self.tf_graph is not None:
+                stack.enter_context(self.tf_graph.as_default())
+            elif self.parent is not None:
                 stack.enter_context(self.parent.op_placement_context())
 
             if self.tf_device is not None:
@@ -263,9 +268,6 @@ class WrappedTF(TreeWithCache):
                 if dev is self.NO_DEVICE:
                     dev = None
                 stack.enter_context(tf.device(dev))
-            
-            if self.tf_graph is not None:
-                stack.enter_context(self.tf_graph.as_default())
 
             # enter "absolute" name scope by appending "/"
             stack.enter_context(tf.name_scope(self.long_name + "/"))
@@ -311,6 +313,10 @@ class WrappedTF(TreeWithCache):
             ...             tot += sess.run(self.op())
             ...         return tot
             >>> a = Example()
+            >>> # we're about to do weird things with op placement, and we
+            >>> # don't want it in the default graph where it can mess with
+            >>> # other doctests.
+            >>> a.tf_graph = tf.Graph()
             >>> a.child = Example()
 
             `Example` is a simple class that provides a method, `.depth()`,
@@ -400,11 +406,15 @@ class WrappedTF(TreeWithCache):
         """
         def new_session():
             if self.tf_session_target is None:
-                return ReusableContextSession()
+                kwargs = {'graph': self.tf_graph}
             elif isinstance(self.tf_session_target, dict):
-                return ReusableContextSession(**self.tf_session_target)
+                kwargs = self.tf_session_target
             else:
-                return ReusableContextSession(self.tf_session_target)
+                kwargs =\
+                        { 'target': self.tf_session_target
+                        , 'graph': self.tf_graph
+                        }
+            return ReusableContextSession(**kwargs)
 
         if self._tf_session is None:
             self._tf_session = new_session()
