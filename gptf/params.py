@@ -10,7 +10,7 @@ import numpy as np
 import tensorflow as tf
 from overrides import overrides
 
-from .trees import Leaf
+from .trees import Leaf, ListTree
 from .transforms import Transform, Identity
 from .wrappedtf import WrappedTF
 from .utils import isclassof, isattrof, is_array_like
@@ -1070,3 +1070,52 @@ class Parameterized(WrappedTF):
 
 # en-gb compatibility patch
 Parameterised = Parameterized
+
+
+class ParamList(Parameterized, ListTree):
+    """A list of `Param` or `DataHolder` objects.
+
+    Examples:
+        You can set the value of children by assigning to their index:
+        >>> p = ParamList()
+        >>> p.append(Param(1.))
+        >>> p.append(DataHolder(1.))
+        >>> p[0] = 3.
+        >>> isinstance(p[0], Param)
+        True
+        >>> p[0].value
+        array(3.0)
+        >>> p[1] = 5.
+        >>> isinstance(p[1], DataHolder)
+        True
+        >>> p[1].value
+        array(5.0)
+
+        You can still overwrite parameters etc with new ones:
+        >>> p[0] = Parameterized()
+        >>> isinstance(p[0], Param)
+        False
+
+    """
+    def __init__(self, initial_values=()):
+        """Initialiser.
+
+        Args:
+            initial_values (Sequence[Tree], optional): The initial 
+                value for the children of this paramlist.
+        
+        """
+        super().__init__()
+        super(ListTree, self).extend(initial_values)
+
+    @overrides
+    def __setitem__(self, key, value):
+        """If `self[key]` is `Param` or `DataHolder` and value is 
+        `np.array_like`, set `self[key].value` instead."""
+        curr = self[key]
+        if ((isinstance(curr, Param) or isinstance(curr, DataHolder)) and 
+            is_array_like(value)):
+            # okay to assign to curr.value
+            curr.value = value
+            return
+        super().__setitem__(key, value)
