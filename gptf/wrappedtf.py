@@ -464,6 +464,7 @@ class WrappedTF(TreeWithCache):
         self.clear_ancestor_caches()
         self.clear_subtree_caches()
 
+    @overrides
     def on_new_parent(self, new_parent):
         """Deals with cache clearing that happens when tree anatomy changes.
         
