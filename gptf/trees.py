@@ -1,6 +1,8 @@
 """Provides the `Tree` class for creating trees of objects."""
 from builtins import super, object
+from collections import MutableSequence, Iterable
 from overrides import overrides
+
 
 class DuplicateNodeError(Exception):
    """Raised when an attempt is made to construct a bad tree.
@@ -16,7 +18,7 @@ class BadParentError(Exception):
 
 
 #TODO: Let trees have multiple parents?
-class Tree(object):
+class Tree(Iterable):
     """A tree with support for name fetching.
     
     A tree can be constructed by simply assigning `Tree`s to each other's
@@ -115,8 +117,30 @@ class Tree(object):
 
         """
         if self.parent is not None:
-            self.parent.__unregister_child(self)
-        self.on_new_parent(value)
+            self.parent._unregister_child(self)
+        self._on_new_parent(value)
+
+    def _on_new_parent(self, new_parent):
+        """Called when an object's direct parent is set.
+        
+        Sets `self.parent` to `new_parent`.
+        
+        """
+        self.__parent = new_parent
+
+    def _unregister_child(self, child):
+        """Removes any links between `self` and `child`.
+        
+        Raises:
+            BadParentError: if `child` is not a child of this `Tree`.
+
+        """
+        matches = tuple(k for k, v in self.__dict__.items() if v is child)
+        if len(matches) == 0:
+            raise BadParentError('{value} is not a child of {self}'
+                    .format(value=child, self=self))
+        assert len(matches) == 1  # no duplicate children!
+        delattr(self, matches[0])
 
     @property
     def children(self):
@@ -271,20 +295,6 @@ class Tree(object):
         assert len(matches) == 1  # no duplicate children!
         return '.' + matches[0]
 
-    def __unregister_child(self, child):
-        """Removes any links between `self` and `child`.
-        
-        Raises:
-            BadParentError: if `child` is not a child of this `Tree`.
-
-        """
-        matches = tuple(k for k, v in self.__dict__.items() if v is child)
-        if len(matches) == 0:
-            raise BadParentError('{value} is not a child of {self}'
-                    .format(value=child, self=self))
-        assert len(matches) == 1  # no duplicate children!
-        self.__delattr__(matches[0])
-
     def __setattr__(self, name, value):
         """Sets the parent of any new `Tree` attributes appropriately.
 
@@ -334,7 +344,6 @@ class Tree(object):
         """
         if name not in ("_Tree__parent", "parent"):
             self.__maybe_unlink_child(name)  # unlink any existing child
-
             if isinstance(value, Tree):      
                 if value in self.highest_parent:
                     raise DuplicateNodeError('Cannot set \
@@ -349,17 +358,6 @@ class Tree(object):
         if name not in ("_Tree__parent", "parent"):
             if isinstance(value, Tree):
                 value.parent = self
-                #if value.parent is not None:
-                #    value.parent.__unregister_child(value)
-                #value.on_new_parent(self)  # set value.parent accordingly
-
-    def on_new_parent(self, new_parent):
-        """Called when an object's direct parent is set.
-        
-        Sets `self.parent` to `new_parent`.
-        
-        """
-        self.__parent = new_parent
 
     def __delattr__(self, name):
         """Sets the parent of any removed `Tree` attributes appropriately.
@@ -378,12 +376,12 @@ class Tree(object):
         if name != '_Tree__parent':  # this check might not be necessary
             self.__maybe_unlink_child(name)
         super().__delattr__(name)
-
+        
     def __maybe_unlink_child(self, name):
         if hasattr(self, name):
             value = getattr(self, name)
             if isinstance(value, Tree):
-                value.on_new_parent(None)
+                value._on_new_parent(None)
 
     def __iter__(self):
         return BreadthFirstTreeIterator(self)
@@ -590,10 +588,124 @@ class Leaf(Tree):
     
     @overrides
     def __setattr__(self, name, value):
-        """Sidestep `Tree.__setattr__` so no children are added."""
+        """Sidestep `Tree.__setattr__` so parents aren't fiddled with."""
         object.__setattr__(self, name, value)
 
     @overrides
     def __delattr__(self, name):
-        """Sidestep `Tree.__delattr__` so no children are added."""
+        """Sidestep `Tree.__delattr__` so parents aren't fiddled with."""
+        object.__delattr__(self, name)
+
+
+class ListTree(Tree, MutableSequence):
+    """A `Tree` that uses numeric indexes to track its children.
+    
+    Examples:
+        `ListTree`s know their parent and their name:
+        >>> root = Tree()
+        >>> root.fallback_name = "root"
+        >>> root.list = ListTree()
+        >>> root.list.parent is root
+        True
+        >>> print(root.list.long_name)
+        root.list
+
+        Children can be assigned to the list through normal sequence
+        assignment:
+        >>> child = Tree()
+        >>> root.list.append(child)
+        >>> child in root.list.children
+        True
+
+        The name of the child of a `ListTree` is its index:
+        >>> print(child.name)
+        [0]
+        >>> print(child.long_name)
+        root.list[0]
+
+        Assigning a child to another tree removes it from the list:
+        >>> t = Tree()
+        >>> t.child = child
+        >>> child.parent is t
+        True
+        >>> root.list[0]
+        Traceback (most recent call last):
+            ...
+        IndexError: message
+        >>> root.list.children
+        ()
+
+        Overwriting a child doesn't cause a dangling parent:
+        >>> child_a = Tree()
+        >>> child_b = Tree()
+        >>> root.list.append(child_a)
+        >>> root.list[0] = child_b
+        >>> child_a.parent is None
+        True
+
+    """
+    def __init__(self):
+        super().__init__()
+        self._children = []
+
+    @property
+    @overrides
+    def children(self):
+        return tuple(self._children)
+
+    @overrides
+    def name_of(self, child):
+        if child in self._children:
+            return "[{:d}]".format(self._children.index(child))
+        else:
+            raise BadParentError("{} is not a child of {}"
+                    .format(child.long_name, self.long_name))
+
+    @overrides
+    def _unregister_child(self, child):
+        if child in self._children:
+            self._children.remove(child)
+        else:
+            raise BadParentError("{} is not a child of {}"
+                    .format(child.long_name, self.long_name))
+
+    @overrides
+    def insert(self, index, value):
+        self.__type_check(value)
+        self._children.insert(index, value)
+        value.parent = self
+
+    @overrides
+    def __getitem__(self, key):
+        return self._children[key]
+
+    @overrides
+    def __setitem__(self, key, value):
+        self.__type_check(value)
+        self._children[key]._on_new_parent(None)
+        self._children[key] = value
+        value.parent = self
+
+    @overrides
+    def __delitem__(self, key):
+        self._children[key]._on_new_parent(None)
+        del self._children[key]
+
+    def __type_check(self, value):
+        if not isinstance(value, Tree):
+            raise TypeError("ListTree may only contain Tree objects, not {}"
+                    .format(type(value)))
+
+    @overrides
+    def __len__(self):
+        return len(self._children)
+
+    @overrides
+    def __setattr__(self, name, value):
+        """Sidestep `Tree.__setattr__` so parents aren't fiddled with."""
+        object.__setattr__(self, name, value)
+
+    @overrides
+    def __delattr__(self, name):
+        """Sidestep `Tree.__delattr__` so parents aren't fiddled with."""
         object.__delattr__(self, name)

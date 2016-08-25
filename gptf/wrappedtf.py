@@ -8,6 +8,7 @@ except ImportError:
 
 # nonstandard library
 import tensorflow as tf
+from overrides import overrides
 
 # local
 from .trees import TreeWithCache
@@ -107,7 +108,7 @@ class WrappedTF(TreeWithCache):
         self._tf_session_target = None
         self._tf_session = None
 
-    # This is an attempt to guard against assignement to _NO_DEVICE
+    # This is an attempt to guard against assignment to _NO_DEVICE
     @property
     def NO_DEVICE(self):
         return self._NO_DEVICE
@@ -465,7 +466,7 @@ class WrappedTF(TreeWithCache):
         self.clear_subtree_caches()
 
     @overrides
-    def on_new_parent(self, new_parent):
+    def _on_new_parent(self, new_parent):
         """Deals with cache clearing that happens when tree anatomy changes.
         
         If a `WrappedTF`'s ancestry changes, its op placement context
@@ -571,7 +572,7 @@ class WrappedTF(TreeWithCache):
                 node.on_session_death()
         self._on_op_placement_context_change()
 
-        super().on_new_parent(new_parent)  # move to new tree
+        super()._on_new_parent(new_parent)  # move to new tree
 
         if self.highest_parent._tf_session is not None:
             for node in self:
