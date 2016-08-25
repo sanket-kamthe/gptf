@@ -1,10 +1,11 @@
 # standard library
 from builtins import super, object
 from functools import wraps
+import re
 try:  # in case of rogue Python 2.7, use contextlib2 instead of contextlib
-    from contextlib import contextmanager, ExitStack, suppress
+    from contextlib import contextmanager, ExitStack
 except ImportError:
-    from contextlib2 import contextmanager, ExitStack, suppress
+    from contextlib2 import contextmanager, ExitStack
 
 # nonstandard library
 import tensorflow as tf
@@ -13,6 +14,8 @@ from overrides import overrides
 # local
 from .trees import TreeWithCache
 
+
+INVALID_NAME_SCOPE_CHAR = re.compile(r"[^\w.\\\-/]")
 
 class ReusableContextSession(tf.Session):
     """Monkey patches `tf.Session` so that it can be reused as a context.
@@ -184,6 +187,7 @@ class WrappedTF(TreeWithCache):
         @wraps(method)
         def wrapper(instance, *args, **kwargs):
             scope = "{}.{}/".format(instance.long_name, method.__name__)
+            scope = INVALID_NAME_SCOPE_CHAR.sub("", scope)
             with instance.op_placement_context(), tf.name_scope(scope):
                     return method(instance, *args, **kwargs)
         return wrapper
@@ -271,7 +275,9 @@ class WrappedTF(TreeWithCache):
                 stack.enter_context(tf.device(dev))
 
             # enter "absolute" name scope by appending "/"
-            stack.enter_context(tf.name_scope(self.long_name + "/"))
+            scope = self.long_name + "/"
+            scope = INVALID_NAME_SCOPE_CHAR.sub("", scope)
+            stack.enter_context(tf.name_scope(scope))
 
             yield
 
