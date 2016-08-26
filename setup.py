@@ -31,10 +31,11 @@ with open(infofile) as f:
 if not all(kw_args.get(arg, None) for arg in args_needed):
     raise RuntimeError("Unable to find required info in {}".format(infofile))
 
-kw_args['install_requires'] = ['future', 'overrides']
+kw_args['install_requires'] = ['tensorflow>=0.9', 'future', 'overrides']
+kw_args['dependency_links'] = []
 kw_args['tests_require'] = []
-if sys.version[0] == '2':
-    kw_args['install_requires'].extend(["contextlib2"])
+if sys.version[:1] == '2':
+    kw_args['install_requires'].extend(["contextlib2>=0.5"])
 
 setup\
         ( name=PACKAGE_NAME
@@ -49,7 +50,8 @@ setup\
         , classifiers=
             [ "Natural Language :: English"
             , "Programming Language :: Python :: 2.7"
-            , "Programming Language :: Python :: 3"
+            , "Programming Language :: Python :: 3.4"
+            , "Programming Language :: Python :: 3.5"
             , "Topic :: Scientific/Engineering :: Artificial Intelligence"
             ]
         , **kw_args
