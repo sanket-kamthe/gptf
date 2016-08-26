@@ -9,12 +9,12 @@ GPflow include:
 - Autoflow that plays nicely with the distributed runtime.
 - Better trees for a better world.
 
-# Installation
+## Installation
 
 1. [Install TensorFlow manually][install tensorflow] (at least version 0.9).
 2. Run `python setup.py develop`.
 
-# Running tests
+## Running tests
 
 Tests can be run using `python setup.py nosetests`.
 
