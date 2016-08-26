@@ -31,7 +31,13 @@ with open(infofile) as f:
 if not all(kw_args.get(arg, None) for arg in args_needed):
     raise RuntimeError("Unable to find required info in {}".format(infofile))
 
-kw_args['install_requires'] = ['tensorflow>=0.9', 'future', 'overrides']
+kw_args['install_requires'] =\
+        [ 'tensorflow>=0.9'
+        , 'scipy'
+        , 'numpy'
+        , 'future'
+        , 'overrides'
+        ]
 kw_args['dependency_links'] = []
 kw_args['tests_require'] = []
 if sys.version[:1] == '2':
