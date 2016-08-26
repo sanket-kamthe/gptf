@@ -11,11 +11,8 @@ GPflow include:
 
 # Installation
 
-If you are running Python 2.7, 3.4 or 3.5 on Linux or OS X, and you only
-need the CPU version of TensorFlow, installing is as simple as 
-`python setup.py develop`. For other use cases, you will need to 
-[install TensorFlow manually][install tensorflow] (at least version 0.9).
-Once TensorFlow is installed, run `python setup.py develop`.
+1. [Install TensorFlow manually][install tensorflow] (at least version 0.9).
+2. Run `python setup.py develop`.
 
 # Running tests
 
