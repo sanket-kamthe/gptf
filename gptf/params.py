@@ -12,7 +12,7 @@ from overrides import overrides
 
 from .trees import Leaf, ListTree
 from .transforms import Transform, Identity
-from .wrappedtf import WrappedTF
+from .wrappedtf import WrappedTF, tf_method
 from .utils import isclassof, isattrof, is_array_like
 from .utils import construct_table, combine_fancy_tables, prefix_lines
 
@@ -388,7 +388,7 @@ class Param(WrappedValue, Leaf):
         self.fixed = False
         self._transform = transform
         
-    @WrappedTF.tf_method
+    @tf_method
     @overrides
     def _get_value(self):
         if self._variable:
@@ -397,7 +397,7 @@ class Param(WrappedValue, Leaf):
         else:
             return self._numpy_value.copy()
 
-    @WrappedTF.tf_method
+    @tf_method
     @overrides
     def _set_value(self, value):
         if self._variable:
@@ -408,7 +408,7 @@ class Param(WrappedValue, Leaf):
             self._numpy_value[...] = value
 
     @property
-    @WrappedTF.tf_method
+    @tf_method
     def tensor(self):
         """Returns a tensor representing the value of the parameter.
         
@@ -421,7 +421,7 @@ class Param(WrappedValue, Leaf):
         return self.transform.tf_forward(self._variable)
 
     @property
-    @WrappedTF.tf_method
+    @tf_method
     def free_state(self):
         """Returns a variable that maps to the free state of the parameter."""
         if not self.fixed:
@@ -475,7 +475,7 @@ class Param(WrappedValue, Leaf):
 
     @overrides
     def on_session_death(self):
-        assert self._variable
+        #assert self._variable
         self._numpy_value[...] = self.value
         super().on_session_death()
 
@@ -486,7 +486,7 @@ class Param(WrappedValue, Leaf):
         super().clear_cache()
 
     @property
-    @WrappedTF.tf_method
+    @tf_method
     def initializer(self):
         """Initialises the internal `tf.Variable` to the correct value.
         
@@ -499,7 +499,7 @@ class Param(WrappedValue, Leaf):
             free_state = self.transform.np_backward(self._numpy_value)
             return self._variable.assign(free_state)
             
-    @WrappedTF.tf_method
+    @tf_method
     def _ensure_variable(self):
         """Creates a variable if necessary."""
         if not self._variable:
@@ -686,121 +686,6 @@ class Parameterized(WrappedTF):
         l = list(filter(isclassof(DataHolder), self))
         l.sort(key=lambda x: x.long_name)
         return l
-
-    @staticmethod
-    def autoflow(*placeholder_specs):
-        """Wraps up a TensorFlow method so that it takes NumPy and gives NumPy.
-
-        When an autoflowed method is called, we construct placeholder to 
-        represent the passed arguments, apply `WrappedTF.tf_method` 
-        to the wrapped method and evaluate it on the placeholders to produce 
-        a TensorFlow op. We then evaluate the op in a session, passing in the 
-        appropriate feed dictionaries, and return the resulting NumPy array.
-
-        We also cache the op, so that multiple calls to the function construct
-        the op only once. This cache is cleared when device contexts change,
-        when transforms on `Param`s change, and any number of other similar
-        circumstances.
-
-        Args:
-            *placeholder_specs: some tuples that specify how the placeholders 
-                for the arguments of the decorated method should be 
-                constructed. Each tuple will be used as the arguments to a 
-                call to `tf.placeholder()`. The first tuple will be used to
-                construct the placeholder for the first argument of the
-                decorated function, the second for the second, and so on.
-
-        Returns:
-            A decorator that autoflows the decorated method.
-
-        Examples:
-            The decorator syntax looks like this:
-            >>> class MyClass(Parameterized):
-            ...     @Parameterized.autoflow((tf.float64,), (tf.float64,))
-            ...     def tf_add(self, a, b):
-            ...         return tf.add(a, b)
-            ...
-            ...     @Parameterized.autoflow((tf.float64, [3, None]))
-            ...     def tf_reduce_sum(self, a):
-            ...         return tf.reduce_sum(a, 1)
-
-            Now we can leverage the mighty power of tensorflow without ever
-            having to get our hands dirty:
-            >>> m = MyClass()
-            >>> m.tf_add(5, 9)
-            14.0
-            >>> a = np.array([1., 2., 3.])
-            >>> b = np.array([4., 5., 6.])
-            >>> m.tf_add(a, b)
-            array([ 5., 7., 9.])
-
-            `MyClass.tf_reduce_sum` will only allow arguments that match the
-            shape `[1, None]`; that is, rank 2 tensors whose first dimension
-            is `5`.
-            >>> # shape is (3, 2), compatible with [3, None]
-            >>> m.tf_reduce_sum([[1., 2.], [2., 3.], [3., 4.]])
-            array([ 3., 5., 7.])
-            >>> # shape is (2, 1), not compatible with [3, None]
-            >>> m.tf_reduce_sum([[1.], [2.]])
-            Traceback (most recent call last):
-                ...
-            ValueError: Cannot feed value of shape (2, 1)...
-
-            Autoflowed methods still work if the device context changes:
-            >>> # set up a distributed execution environment
-            >>> clusterdict = \\
-            ...     { 'worker': ['localhost:2224']
-            ...     , 'master': ['localhost:2225']
-            ...     }
-            >>> spec = tf.train.ClusterSpec(clusterdict)
-            >>> worker = tf.train.Server(spec, job_name='worker', task_index=0)
-            >>> worker.start()
-            >>> master = tf.train.Server(spec, job_name='master', task_index=0)
-            >>> # change m's device context
-            >>> # we're about to do weird things with op placement, and we
-            >>> # don't want it in the default graph where it can mess with
-            >>> # other doctests, so change m's tf_graph as well.
-            >>> m.tf_graph = tf.Graph()
-            >>> m.tf_device = '/job:worker/task:0'
-            >>> m.tf_session_target = master.target
-            >>> # autoflow
-            >>> m.tf_add(3, 2)
-            5.0
-            >>> m.tf_reduce_sum([[1., 2., 3.], [4., 5., 6.], [7., 8., 9.]])
-            array([  6., 15., 24.])
-
-        """
-        def decorator(method):
-            """A decorator that autoflows a method.
-            
-            Args:
-                method (Callable[[Parameterized, ...], tf.Tensor]): A method 
-                    of a `Parameterized` that returns a TensorFlow op.
-
-            Returns:
-                (Callable[[Parameterized, ...], np.ndarray]): A method that
-                returns a NumPy array through autoflow magic.
-
-            """
-            @WrappedTF.tf_method
-            @wraps(method)
-            def wrapper(instance, *np_args):
-                name = '_Parameterized__autoflow__{}'.format(method.__name__)
-                if name in instance.cache:
-                    storage = instance.cache[name]
-                else:
-                    tf_args = [tf.placeholder(*s) for s in placeholder_specs]
-                    storage =\
-                            { 'op': method(instance, *tf_args)
-                            , 'tf_args': tf_args
-                            }
-                    instance.cache[name] = storage
-                feed_dict = dict(zip(storage['tf_args'], np_args))
-                feed_dict.update(instance.feed_dict)
-                sess = instance.get_session()
-                return sess.run(storage['op'], feed_dict=feed_dict)
-            return wrapper
-        return decorator
 
     def summary(self, array_len=5, fmt="fancy"):
         """A string table summarizing `self`.
@@ -1119,3 +1004,118 @@ class ParamList(Parameterized, ListTree):
             curr.value = value
             return
         super().__setitem__(key, value)
+
+def autoflow(*placeholder_specs):
+    """Wraps up a TensorFlow method so that it takes NumPy and gives NumPy.
+
+    When an autoflowed method is called, we construct placeholder to 
+    represent the passed arguments, apply `tf_method` 
+    to the wrapped method and evaluate it on the placeholders to produce 
+    a TensorFlow op. We then evaluate the op in a session, passing in the 
+    appropriate feed dictionaries, and return the resulting NumPy array.
+
+    We also cache the op, so that multiple calls to the function construct
+    the op only once. This cache is cleared when device contexts change,
+    when transforms on `Param`s change, and any number of other similar
+    circumstances.
+
+    Args:
+        *placeholder_specs: some tuples that specify how the placeholders 
+            for the arguments of the decorated method should be 
+            constructed. Each tuple will be used as the arguments to a 
+            call to `tf.placeholder()`. The first tuple will be used to
+            construct the placeholder for the first argument of the
+            decorated function, the second for the second, and so on.
+
+    Returns:
+        A decorator that autoflows the decorated method.
+
+    Examples:
+        The decorator syntax looks like this:
+        >>> class MyClass(Parameterized):
+        ...     @Parameterized.autoflow((tf.float64,), (tf.float64,))
+        ...     def tf_add(self, a, b):
+        ...         return tf.add(a, b)
+        ...
+        ...     @Parameterized.autoflow((tf.float64, [3, None]))
+        ...     def tf_reduce_sum(self, a):
+        ...         return tf.reduce_sum(a, 1)
+
+        Now we can leverage the mighty power of tensorflow without ever
+        having to get our hands dirty:
+        >>> m = MyClass()
+        >>> m.tf_add(5, 9)
+        14.0
+        >>> a = np.array([1., 2., 3.])
+        >>> b = np.array([4., 5., 6.])
+        >>> m.tf_add(a, b)
+        array([ 5., 7., 9.])
+
+        `MyClass.tf_reduce_sum` will only allow arguments that match the
+        shape `[1, None]`; that is, rank 2 tensors whose first dimension
+        is `5`.
+        >>> # shape is (3, 2), compatible with [3, None]
+        >>> m.tf_reduce_sum([[1., 2.], [2., 3.], [3., 4.]])
+        array([ 3., 5., 7.])
+        >>> # shape is (2, 1), not compatible with [3, None]
+        >>> m.tf_reduce_sum([[1.], [2.]])
+        Traceback (most recent call last):
+            ...
+        ValueError: Cannot feed value of shape (2, 1)...
+
+        Autoflowed methods still work if the device context changes:
+        >>> # set up a distributed execution environment
+        >>> clusterdict = \\
+        ...     { 'worker': ['localhost:2224']
+        ...     , 'master': ['localhost:2225']
+        ...     }
+        >>> spec = tf.train.ClusterSpec(clusterdict)
+        >>> worker = tf.train.Server(spec, job_name='worker', task_index=0)
+        >>> worker.start()
+        >>> master = tf.train.Server(spec, job_name='master', task_index=0)
+        >>> # change m's device context
+        >>> # we're about to do weird things with op placement, and we
+        >>> # don't want it in the default graph where it can mess with
+        >>> # other doctests, so change m's tf_graph as well.
+        >>> m.tf_graph = tf.Graph()
+        >>> m.tf_device = '/job:worker/task:0'
+        >>> m.tf_session_target = master.target
+        >>> # autoflow
+        >>> m.tf_add(3, 2)
+        5.0
+        >>> m.tf_reduce_sum([[1., 2., 3.], [4., 5., 6.], [7., 8., 9.]])
+        array([  6., 15., 24.])
+
+    """
+    def decorator(method):
+        """A decorator that autoflows a method.
+        
+        Args:
+            method (Callable[[Parameterized, ...], tf.Tensor]): A method 
+                of a `Parameterized` that returns a TensorFlow op.
+
+        Returns:
+            (Callable[[Parameterized, ...], np.ndarray]): A method that
+            returns a NumPy array through autoflow magic.
+
+        """
+        @tf_method
+        @wraps(method)
+        def wrapper(instance, *np_args):
+            name = '_Parameterized__autoflow__{}'.format(method.__name__)
+            if name in instance.cache:
+                storage = instance.cache[name]
+            else:
+                tf_args = [tf.placeholder(*s) for s in placeholder_specs]
+                storage =\
+                        { 'op': method(instance, *tf_args)
+                        , 'tf_args': tf_args
+                        }
+                instance.cache[name] = storage
+            feed_dict = dict(zip(storage['tf_args'], np_args))
+            feed_dict.update(instance.feed_dict)
+            sess = instance.get_session()
+            return sess.run(storage['op'], feed_dict=feed_dict)
+        return wrapper
+    return decorator
+

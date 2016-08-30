@@ -3,12 +3,13 @@ from builtins import super, range
 from future.utils import with_metaclass
 from abc import ABCMeta, abstractmethod
 
+import numpy as np
 import tensorflow as tf
 from tensorflow.contrib.opt import ScipyOptimizerInterface
 from scipy.optimize import OptimizeResult
 
-from .params import Parameterized
-from .wrappedtf import WrappedTF
+from .params import Parameterized, DataHolder, autoflow
+from .wrappedtf import tf_method
 
 
 class Model(with_metaclass(ABCMeta, Parameterized)):
@@ -28,7 +29,7 @@ class Model(with_metaclass(ABCMeta, Parameterized)):
         """
         NotImplemented
 
-    @Parameterized.autoflow()
+    @autoflow()
     def compute_log_likelihood(self):
         """Computes the likelihood of the model w.r.t. the data.
         
@@ -38,10 +39,11 @@ class Model(with_metaclass(ABCMeta, Parameterized)):
         """
         return self.build_log_likelihood()
 
-    @Parameterized.autoflow()
+    @autoflow()
     def compute_log_prior(self):
         NotImplemented
 
+    @tf_method
     def optimize(self, method='L-BFGS-B', callback=None, maxiter=1000, **kw):
         """Optimize the model by maximising the log likelihood.
 
@@ -85,7 +87,7 @@ class Model(with_metaclass(ABCMeta, Parameterized)):
             ...         super().__init__()
             ...         self.a = Param(a, transform=Exp(0.))
             ...         self.b = Param(b, transform=Exp(0.))
-            ...     @WrappedTF.tf_method
+            ...     @tf_method
             ...     @overrides
             ...     def build_log_likelihood(self):
             ...         return 10. - self.a.tensor - self.b.tensor
@@ -130,7 +132,7 @@ class Model(with_metaclass(ABCMeta, Parameterized)):
             optimizer by provided a string value for `method`:
             >>> m = Example(3., 4.)
             >>> m.optimize('L-BFGS-B', disp=False, ftol=.0001)
-            message: 'Finished iterations.'
+            message: 'SciPy optimizer completed successfully.'
             success: True
                   x: array([..., ...])
 
@@ -147,11 +149,55 @@ class Model(with_metaclass(ABCMeta, Parameterized)):
             >>> m.b = 1.
             >>> m.b.fixed = True
             >>> m.optimize('L-BFGS-B', disp=False, ftol=.0001)
-            message: 'Finished iterations.'
+            message: 'SciPy optimizer completed successfully.'
             success: True
                   x: array([...])
             >>> print("m.a: {:.3f}".format(np.asscalar(m.a.value)))
             m.a: 0.000
+            >>> print("m.b: {:.3f}".format(np.asscalar(m.b.value)))
+            m.b: 1.000
+
+            Miscellaneous
+            -------------
+
+            Optimisation still works, even with weird device contexts and
+            session targets.
+            >>> # set up a distributed execution environment
+            >>> clusterdict = \\
+            ...     { 'worker': ['localhost:2226']
+            ...     , 'master': ['localhost:2227']
+            ...     }
+            >>> spec = tf.train.ClusterSpec(clusterdict)
+            >>> worker = tf.train.Server(spec, job_name='worker', task_index=0)
+            >>> worker.start()
+            >>> master = tf.train.Server(spec, job_name='master', task_index=0)
+            >>> # change m's device context
+            >>> # we're about to do weird things with op placement, and we
+            >>> # don't want it in the default graph where it can mess with
+            >>> # other doctests, so change m's tf_graph as well.
+            >>> m.tf_graph = tf.Graph()
+            >>> m.tf_device = '/job:worker/task:0'
+            >>> m.tf_session_target = master.target
+
+            TensorFlow:
+            >>> m.a = 4.5
+            >>> m.optimize(opt)
+            message: 'Finished iterations.'
+            success: True
+                  x: array([...])
+            >>> print("m.a: {:.3f}".format(np.asscalar(m.a.value)))
+            m.a: 0.001
+            >>> print("m.b: {:.3f}".format(np.asscalar(m.b.value)))
+            m.b: 1.000
+            
+            SciPy:
+            >>> m.a = 4.5
+            >>> m.optimize('L-BFGS-B', disp=False, ftol=.0001)
+            message: 'SciPy optimizer completed successfully.'
+            success: True
+                  x: array([...])
+            >>> print("m.a: {:.3f}".format(np.asscalar(m.a.value)))
+            m.a: 0.001
             >>> print("m.b: {:.3f}".format(np.asscalar(m.b.value)))
             m.b: 1.000
 
@@ -165,6 +211,7 @@ class Model(with_metaclass(ABCMeta, Parameterized)):
 
         try:
             if type(method) is str:
+                success_message = "SciPy optimizer completed successfully."
                 options = {'maxiter': maxiter, 'disp': True}
                 options.update(kw)
                 optimizer = ScipyOptimizerInterface(loss, var_list=variables, 
@@ -173,6 +220,7 @@ class Model(with_metaclass(ABCMeta, Parameterized)):
                         step_callback=callback)
             else:
                 # treat method as TensorFlow optimizer.
+                success_message = "Finished iterations."
                 opt_step = method.minimize(loss, var_list=variables, **kw)
                 for _ in range(maxiter):
                     sess.run(opt_step, feed_dict=self.feed_dict)
@@ -188,9 +236,41 @@ class Model(with_metaclass(ABCMeta, Parameterized)):
         return OptimizeResult\
                 ( x=sess.run(free_state)
                 , success=True
-                , message="Finished iterations."
+                , message=success_message
                 )
 
     def _compile_loss(self):
         return -self.build_log_likelihood()
 
+class GPModel(with_metaclass(ABCMeta, Model)):
+    """A base class for Guassian Process models.
+
+    """
+    def __init__(self, X, Y, kernel, likelihood, mean_function, name='model'):
+        super().__init__()
+        self.fallback_name = name
+        self.kernel, self.likelihood, self.mean_function =\
+                kernel, likelihood, mean_function
+        if isinstance(X, np.ndarray):
+            X = DataHolder(X)
+        if isinstance(Y, np.ndarray):
+            Y = DataHolder(Y)
+        self.X, self.Y = X, Y
+
+    @abstractmethod
+    def build_predict(self, full_cov=False):
+        NotImplemented
+        
+    @autoflow((tf.float64, [None, None]))
+    def predict_f(self, test_points):
+        """Predicts"""
+        return self.build_predict(test_points)
+
+    @autoflow((tf.float64, [None, None]))
+    def predict_f_full_cov(self, test_points):
+        """Predicts"""
+        return self.build_predict(test_points, full_cov=True)
+
+    @autoflow((tf.float64, [None, None]), (tf.int32, []))
+    def predict_f_samples(self, Xnew, num_samples): 
+        pass

@@ -95,12 +95,6 @@ class WrappedTF(TreeWithCache):
             Else, this will be the sole argument for
             `tf.session()`. See `.get_session()`.
 
-    Examples:
-        self._on_op_placement_context_change()
-        self._tf_graph = value
-        `op_placement_context` and `tf_method` can be used to apply
-        the appropriate contexts to tensorflow methods. In the following
-        
     """
     _NO_DEVICE = object()
 
@@ -142,55 +136,6 @@ class WrappedTF(TreeWithCache):
     def tf_session_target(self, value):
         self._maybe_kill_session()
         self._tf_session_target = value
-
-    @staticmethod
-    def tf_method(method):
-        """Decorator version of `op_placement_context`.
-        
-        Applies `instance.op_placement_context(name_scope=False)` 
-        to `instance.method(...)`, and opens a name scope that matches the
-        method. See examples.
-        
-        Examples:
-            In the following example, `Example.method_a` is equivalent 
-            to `Example.method_b`.
-            >>> class Example(WrappedTF):
-            ...     def method_a(self):
-            ...         with self.op_placement_context():
-            ...             with tf.name_scope(self.long_name + '.method_a/'):
-            ...                 a = tf.constant(2)
-            ...                 b = tf.constant(3)
-            ...                 return tf.add(a, b)
-            ...     @WrappedTF.tf_method
-            ...     def method_b(self):
-            ...         a = tf.constant(2)
-            ...         b = tf.constant(3)
-            ...         return tf.add(a, b)
-
-            Devices are set properly in both methods:
-            >>> e = Example()
-            >>> e.tf_device = '/job:worker/task:0'
-            >>> a = e.method_a()
-            >>> print(a.device)
-            /job:worker/task:0
-            >>> b = e.method_b()
-            >>> b.device == a.device
-            True
-
-            The method name is appended to the name scope!
-            >>> print(a.name)
-            unnamed.method_a/Add:0
-            >>> print(b.name)
-            unnamed.method_b/Add:0
-            
-        """
-        @wraps(method)
-        def wrapper(instance, *args, **kwargs):
-            scope = "{}.{}/".format(instance.long_name, method.__name__)
-            scope = INVALID_NAME_SCOPE_CHAR.sub("", scope)
-            with instance.op_placement_context(), tf.name_scope(scope):
-                    return method(instance, *args, **kwargs)
-        return wrapper
 
     @contextmanager
     def op_placement_context(self, name_scope=True):
@@ -583,3 +528,52 @@ class WrappedTF(TreeWithCache):
         if self.highest_parent._tf_session is not None:
             for node in self:
                 node.on_session_birth()
+
+def tf_method(method):
+    """Decorator version of `WrappedTF.op_placement_context`.
+    
+    Applies `instance.op_placement_context(name_scope=False)` 
+    to `instance.method(...)`, and opens a name scope that matches the
+    method. See examples.
+    
+    Examples:
+        In the following example, `Example.method_a` is equivalent 
+        to `Example.method_b`.
+        >>> class Example(WrappedTF):
+        ...     def method_a(self):
+        ...         with self.op_placement_context():
+        ...             with tf.name_scope(self.long_name + '.method_a/'):
+        ...                 a = tf.constant(2)
+        ...                 b = tf.constant(3)
+        ...                 return tf.add(a, b)
+        ...     @tf_method
+        ...     def method_b(self):
+        ...         a = tf.constant(2)
+        ...         b = tf.constant(3)
+        ...         return tf.add(a, b)
+
+        Devices are set properly in both methods:
+        >>> e = Example()
+        >>> e.tf_device = '/job:worker/task:0'
+        >>> a = e.method_a()
+        >>> print(a.device)
+        /job:worker/task:0
+        >>> b = e.method_b()
+        >>> b.device == a.device
+        True
+
+        The method name is appended to the name scope!
+        >>> print(a.name)
+        unnamed.method_a/Add:0
+        >>> print(b.name)
+        unnamed.method_b/Add:0
+        
+    """
+    @wraps(method)
+    def wrapper(instance, *args, **kwargs):
+        scope = "{}.{}/".format(instance.long_name, method.__name__)
+        scope = INVALID_NAME_SCOPE_CHAR.sub("", scope)
+        with instance.op_placement_context(), tf.name_scope(scope):
+                return method(instance, *args, **kwargs)
+    return wrapper
+
