@@ -189,6 +189,7 @@ class Param(WrappedValue, Leaf):
         value (np.ndarray): The value of the parameter.
         tensor (tf.Tensor): A tensor representation of the parameter, 
             suitable for passing to TensorFlow ops.
+        feed_dict (Dict): Currently an empty dictionary.
         free_state (tf.Variable): The free state form of the parameter, that
             can be freely optimised.
         fixed (bool): A flag indicating whether or not the variable is fixed.
@@ -421,6 +422,10 @@ class Param(WrappedValue, Leaf):
         return self.transform.tf_forward(self._variable)
 
     @property
+    def feed_dict(self):
+        return {}
+
+    @property
     @tf_method
     def free_state(self):
         """Returns a variable that maps to the free state of the parameter."""
@@ -526,7 +531,7 @@ class DataHolder(WrappedValue, Leaf):
 
     Attributes:
         value (np.ndarray): The value of the data.
-        placeholder (tf.placeholder): A placeholder for the data, 
+        tensor (tf.placeholder): A placeholder for the data, 
             suitable for passing to TensorFlow ops.
         feed_dict (Dict[tf.placeholder, np.array_like]): A feed dictionary
             that feeds the value of the data into the placeholder op.
@@ -550,9 +555,9 @@ class DataHolder(WrappedValue, Leaf):
         See the docs for `gptf.params.WrappedValue` for more info.
         
         To access the value from TensorFlow, first build an op that relies
-        on the `.placeholder` attribute:
+        on the `.tensor` attribute:
         >>> d = DataHolder(a)
-        >>> op = tf.add(d.placeholder, 1)
+        >>> op = tf.add(d.tensor, 1)
 
         Then evaluate the op in a session, passing in the feed dictionary
         to `tf.Session.run()`:
@@ -583,7 +588,7 @@ class DataHolder(WrappedValue, Leaf):
         self._numpy_value[...] = value
 
     @property
-    def placeholder(self):
+    def tensor(self):
         self._assert_placeholder()
         return self._placeholder
 
@@ -600,6 +605,7 @@ class DataHolder(WrappedValue, Leaf):
     def _placeholder(self, value):
         self.cache['_DataHolder__placeholder'] = value
 
+    @tf_method
     def _assert_placeholder(self):
         if self._placeholder is None:
             dtype = tf.as_dtype(self._numpy_value.dtype)
@@ -667,9 +673,9 @@ class Parameterized(WrappedTF):
 
     @property
     def feed_dict(self):
-        """The union of the `.feed_dict`s of the data holders."""
+        """The union of the `.feed_dict`s of objects lower in the tree."""
         result = {}
-        for node in self.data_holders:
+        for node in filter(isattrof('feed_dict'), self):
             result.update(node.feed_dict)
         return result
 
@@ -1033,11 +1039,11 @@ def autoflow(*placeholder_specs):
     Examples:
         The decorator syntax looks like this:
         >>> class MyClass(Parameterized):
-        ...     @Parameterized.autoflow((tf.float64,), (tf.float64,))
+        ...     @autoflow((tf.float64,), (tf.float64,))
         ...     def tf_add(self, a, b):
         ...         return tf.add(a, b)
         ...
-        ...     @Parameterized.autoflow((tf.float64, [3, None]))
+        ...     @autoflow((tf.float64, [3, None]))
         ...     def tf_reduce_sum(self, a):
         ...         return tf.reduce_sum(a, 1)
 
