@@ -8,14 +8,34 @@ import tensorflow as tf
 from tensorflow.contrib.opt import ScipyOptimizerInterface
 from scipy.optimize import OptimizeResult
 
+from . import tfhacks
 from .params import Parameterized, DataHolder, autoflow
 from .wrappedtf import tf_method
-
 
 class Model(with_metaclass(ABCMeta, Parameterized)):
     """Base class for models. 
     
     Inheriting classes must define `.build_log_likelihood(self)`.
+
+    `Param` and `Parameterized` objects that are children of the model
+    can be used in the tensorflow expression. Children on the model are
+    defined like so:
+    >>> from gptf.params import Param
+    >>> class Example(Model):
+    ...     def __init__(self):
+    ...         super().__init__()
+    ...         self.x = Param(1.)  # create new Param child
+    ...
+    ...     @tf_method
+    ...     @overrides
+    ...     def build_log_likelihood(self):
+    ...         return 3 - self.x.tensor  # use Param in expression
+
+    The `.optimise` method can be used to optimise the parameters of the
+    model to minimise the likelihood. The loss function (the negative of
+    the sum of the likelihood and any priors) is cached in the WrappedTF
+    cache, and lazily recompiled when the cache is cleared, e.g. on 
+    recompile.
 
     """
     @abstractmethod
@@ -27,6 +47,10 @@ class Model(with_metaclass(ABCMeta, Parameterized)):
             likelihood of the model.
 
         """
+        NotImplemented
+
+    @tf_method
+    def build_log_prior(self):
         NotImplemented
 
     @autoflow()
@@ -245,32 +269,144 @@ class Model(with_metaclass(ABCMeta, Parameterized)):
 class GPModel(with_metaclass(ABCMeta, Model)):
     """A base class for Guassian Process models.
 
+    A Gaussian process model is a model of the form
+        theta ~ p(theta)
+        f ~ GP(m(x), k(x, x'; theta))
+        F = f(X)
+        Y|F ~ p(Y|F)
+
+    Adds functionality to compile various predictions. Inheriting 
+    classes must define `.build_predict()`, which is then used by this 
+    class's methods to provide various predictions. The mean and 
+    variance are pushed through the likelihood to obtain the means and 
+    variances of held out data.
+
+    Attributes:
+        likelihood (gptf.likelihoods.Likelihood): The likelihood to use
+            when making predictions.
+        num_latent_functions (int): The number of latent functions.
+        
     """
-    def __init__(self, X, Y, kernel, likelihood, mean_function, name='model'):
+    def __init__(self, likelihood, num_latent_functions):
+        """Initialiser.
+
+        Args:
+            likelihood (gptf.likelihoods.Likelihood): The likelihood to
+                use when making predictions.
+            num_latent_functions (int): The number of latent functions.
+
+        """
         super().__init__()
-        self.fallback_name = name
-        self.kernel, self.likelihood, self.mean_function =\
-                kernel, likelihood, mean_function
-        if isinstance(X, np.ndarray):
-            X = DataHolder(X)
-        if isinstance(Y, np.ndarray):
-            Y = DataHolder(Y)
-        self.X, self.Y = X, Y
+        self.likelihood = likelihood
+        self.num_latent_functions = num_latent_functions
 
     @abstractmethod
-    def build_predict(self, full_cov=False):
+    def build_predict(self, test_points, full_cov=False):
+        """Computes the mean and variance of the latent function(s).
+
+        In the returned tensors, the last index should always be the 
+        latent function index. Suppose `m` is some model with two
+        latent functions:
+
+            test_points = tf.constant([[1, 2], [3, 4]])
+            mean, var = m.build_predict([[1, 2], [3, 4]], True)
+            mean[:, 0]  # means for the 0th latent func
+            mean[:, 1]  # means for the 1st latent func
+            var[:, :, 0]  # full covariance matrix for latent func 0
+            var[:, :, 1]  # full covariance matrix for latent func 1
+
+        Args:
+            test_points (np.ndarray): The points from the sample
+                space for which to predict means and variances
+                of the latent functions. This array should be two 
+                dimensional such that `test_points[i]` retrieves the 
+                `i`th point.
+            full_cov (bool): If `False`, return an array of variances
+                at the test points. If `True`, return the full
+                covariance matrix of the posterior distribution.
+
+        Returns:
+            (tf.Tensor, tf.Tensor): A tensor that calculates the
+            mean at the test points, a tensor that calculates either 
+            the variances at the test points or the full covariance
+            matrix.
+
+        """
         NotImplemented
         
     @autoflow((tf.float64, [None, None]))
-    def predict_f(self, test_points):
-        """Predicts"""
+    def predict_fs(self, test_points):
+        """Computes the means and variances of the latent function(s).
+
+        This is just an autoflowed version of 
+        `.build_predict(test_points)`.
+
+        Args:
+            test_points (np.ndarray): The points from the sample
+                space for which to compute means and predictions.
+                This array should be two dimensional such that
+                `test_points[i]` retrieves the `i`th point.
+
+        Returns:
+            (np.ndarray, np.ndarray): The means at the test points,
+            the variances at the test points.
+
+        """
         return self.build_predict(test_points)
 
     @autoflow((tf.float64, [None, None]))
-    def predict_f_full_cov(self, test_points):
-        """Predicts"""
+    def predict_fs_full_cov(self, test_points):
+        """Computes the means and full covariance matrices.
+
+        This is just an autoflowed version of 
+        `.build_predict(test_points, full_cov=True)`.
+
+        Args:
+            test_points (np.ndarray): The points from the sample
+                space for which to compute means and predictions.
+                This array should be two dimensional such that
+                `test_points[i]` retrieves the `i`th point.
+
+        Returns:
+            (np.ndarray, np.ndarray): The means at the test points,
+            the full covriance matri(x|ces) for the posterior 
+            distribution(s).
+
+        """
         return self.build_predict(test_points, full_cov=True)
 
     @autoflow((tf.float64, [None, None]), (tf.int32, []))
-    def predict_f_samples(self, Xnew, num_samples): 
-        pass
+    def predict_fs_samples(self, test_points, num_samples): 
+        """Computes samples from the posterior distribution(s).
+
+        Args:
+            test_points (np.ndarray): The points from the sample
+                space for which to compute samples. This array should
+                be two dimensional such that `test_points[i]` 
+                should retrieve the `i`th point.
+            num_samples (int): The number of samples to take.
+
+        Returns:
+            (np.ndarray): An array of samples from the posterior
+            distributions, with dimensions 
+            `[sample, test_point, latent_func]`
+
+        """
+        mu, var = self.build_predict(Xnew, full_cov=True)
+        jitter = tfhacks.eye(tf.shape(mu)[0]) * 1e-06
+        samples = []
+        for i in range(self.num_latent_functions):
+            L = tf.cholesky(var[:, :, i] + jitter)
+            V = tf.random_normal([tf.shape(L)[0], num_samples], dtype=L.dtype)
+            samples.append(mu[:, i:i + 1] + tf.matmul(L, V))
+        return tf.transpose(tf.pack(samples))
+
+    @autoflow((tf.float64, [None, None]))
+    def predict_y(self, test_points):
+        """Computes the mean and variance of held-out data."""
+        NotImplemented
+
+    @autoflow((tf.float64, [None, None]), (tf.float64, [None, None]))
+    def predict_y(self, test_points, test_values):
+        """Computes the (log) density of the test values at the test points."""
+        NotImplemented
