@@ -20,6 +20,7 @@ class Model(with_metaclass(ABCMeta, Parameterized)):
     `Param` and `Parameterized` objects that are children of the model
     can be used in the tensorflow expression. Children on the model are
     defined like so:
+    >>> from overrides import overrides
     >>> from gptf.params import Param
     >>> class Example(Model):
     ...     def __init__(self):
@@ -284,21 +285,18 @@ class GPModel(with_metaclass(ABCMeta, Model)):
     Attributes:
         likelihood (gptf.likelihoods.Likelihood): The likelihood to use
             when making predictions.
-        num_latent_functions (int): The number of latent functions.
         
     """
-    def __init__(self, likelihood, num_latent_functions):
+    def __init__(self, likelihood):
         """Initialiser.
 
         Args:
             likelihood (gptf.likelihoods.Likelihood): The likelihood to
                 use when making predictions.
-            num_latent_functions (int): The number of latent functions.
 
         """
         super().__init__()
         self.likelihood = likelihood
-        self.num_latent_functions = num_latent_functions
 
     @abstractmethod
     def build_predict(self, test_points, full_cov=False):
@@ -329,7 +327,7 @@ class GPModel(with_metaclass(ABCMeta, Model)):
             (tf.Tensor, tf.Tensor): A tensor that calculates the
             mean at the test points, a tensor that calculates either 
             the variances at the test points or the full covariance
-            matrix.
+            matrix. Both tensors have the same dtype.
 
         """
         NotImplemented
@@ -352,7 +350,7 @@ class GPModel(with_metaclass(ABCMeta, Model)):
             the variances at the test points.
 
         """
-        return self.build_predict(test_points)
+        return self.build_predict(test_points, full_cov=False)
 
     @autoflow((tf.float64, [None, None]))
     def predict_fs_full_cov(self, test_points):
@@ -389,11 +387,60 @@ class GPModel(with_metaclass(ABCMeta, Model)):
         Returns:
             (np.ndarray): An array of samples from the posterior
             distributions, with dimensions 
-            `[sample, test_point, latent_func]`
+            `(sample, test_point, latent_func)`
 
+        Examples:
+            For testing purposes, we create an example model whose
+            likelihood is always `0` and whose `.build_predict()`
+            returns mean `0` and variance `1` for every test point,
+            or an independent covariance matrix.
+            >>> from overrides import overrides
+            >>> from gptf.tfhacks import eye
+            >>> class Example(GPModel):
+            ...     def __init__(self, likelihood, dtype):
+            ...         super().__init__(likelihood)
+            ...         self.dtype = dtype
+            ...     @property
+            ...     def dtype(self):
+            ...         return self._dtype
+            ...     @dtype.setter
+            ...     def dtype(self, value):
+            ...         self.clear_cache()
+            ...         self._dtype = value
+            ...     @tf_method
+            ...     @overrides
+            ...     def build_log_likelihood(self):
+            ...         return tf.constant(0)
+            ...     @tf_method
+            ...     @overrides
+            ...     def build_predict(self, test_points, full_cov=False):
+            ...         n = tf.shape(test_points)[0]
+            ...         mu = tf.zeros([n, 1], self.dtype)
+            ...         var = (tf.expand_dims(eye(n, self.dtype),-1) 
+            ...                if full_cov else tf.ones([n, 1], self.dtype))
+            ...         return mu, var
+            >>> m = Example(None, tf.float64)  # ignore the likelihood
+            >>> test_points = np.array([[0.], [1.], [2.], [3.]])
+
+            The shape of the returned array is `(a, b, c)`, where `a`
+            is the number of samples, `b` is the number of test points
+            and `c` is the number of latent functions.
+            >>> samples = m.predict_fs_samples(test_points, 2)
+            >>> samples.shape
+            (2, 4, 1)
+
+            `.predict_fs_samples()` respects the dtype of the tensors
+            returned by `.build_predict()`.
+            >>> samples.dtype
+            dtype('float64')
+            >>> m.dtype = tf.float32
+            >>> samples = m.predict_fs_samples(test_points, 2)
+            >>> samples.dtype
+            dtype('float32')
+            
         """
-        mu, var = self.build_predict(Xnew, full_cov=True)
-        jitter = tfhacks.eye(tf.shape(mu)[0]) * 1e-06
+        mu, var = self.build_predict(test_points, full_cov=True)
+        jitter = tfhacks.eye(tf.shape(mu)[0], var.dtype) * 1e-06
         L = tf.batch_cholesky(tf.transpose(var, (2, 0, 1)) + jitter)
         V_shape = [tf.shape(L)[0], tf.shape(L)[1], num_samples]
         V = tf.random_normal(V_shape, dtype=L.dtype)
