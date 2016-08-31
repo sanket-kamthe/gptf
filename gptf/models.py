@@ -394,12 +394,17 @@ class GPModel(with_metaclass(ABCMeta, Model)):
         """
         mu, var = self.build_predict(Xnew, full_cov=True)
         jitter = tfhacks.eye(tf.shape(mu)[0]) * 1e-06
-        samples = []
-        for i in range(self.num_latent_functions):
-            L = tf.cholesky(var[:, :, i] + jitter)
-            V = tf.random_normal([tf.shape(L)[0], num_samples], dtype=L.dtype)
-            samples.append(mu[:, i:i + 1] + tf.matmul(L, V))
-        return tf.transpose(tf.pack(samples))
+        L = tf.batch_cholesky(tf.transpose(var, (2, 0, 1)) + jitter)
+        V_shape = [tf.shape(L)[0], tf.shape(L)[1], num_samples]
+        V = tf.random_normal(V_shape, dtype=L.dtype)
+        samples = tf.expand_dims(tf.transpose(mu), -1) + tf.batch_matmul(L, V)
+        return tf.transpose(samples)
+        #samples = []
+        #for i in range(self.num_latent_functions):
+        #    L = tf.cholesky(var[:, :, i] + jitter)
+        #    V = tf.random_normal([tf.shape(L)[0], num_samples], dtype=L.dtype)
+        #    samples.append(mu[:, i:i + 1] + tf.matmul(L, V))  # broadcast
+        #return tf.transpose(tf.pack(samples))
 
     @autoflow((tf.float64, [None, None]))
     def predict_y(self, test_points):
@@ -407,6 +412,6 @@ class GPModel(with_metaclass(ABCMeta, Model)):
         NotImplemented
 
     @autoflow((tf.float64, [None, None]), (tf.float64, [None, None]))
-    def predict_y(self, test_points, test_values):
+    def predict_density(self, test_points, test_values):
         """Computes the (log) density of the test values at the test points."""
         NotImplemented
