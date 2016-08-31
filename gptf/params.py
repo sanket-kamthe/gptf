@@ -668,14 +668,18 @@ class Parameterized(WrappedTF):
 
     @fixed.setter
     def fixed(self, value):
-        for node in filter(isattrof('fixed'), self):
+        iterator = iter(self)
+        next(iterator)  # skip self to prevent recursion bugs
+        for node in filter(isattrof('fixed'), iterator):
             node.fixed = value
 
     @property
     def feed_dict(self):
         """The union of the `.feed_dict`s of objects lower in the tree."""
         result = {}
-        for node in filter(isattrof('feed_dict'), self):
+        iterator = iter(self)
+        next(iterator)  # skip self to prevent recursion bugs
+        for node in filter(isattrof('feed_dict'), iterator):
             result.update(node.feed_dict)
         return result
 
