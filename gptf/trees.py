@@ -714,7 +714,7 @@ class ListTree(Tree, MutableSequence):
         if value in self.highest_parent:
             raise DuplicateNodeError("Could not add {} as a child of {} \
 because it is already present in the tree.".format(value.long_name,
-self.long_name)
+self.long_name))
 
     @overrides
     def __len__(self):
