@@ -21,7 +21,7 @@ class Model(with_metaclass(ABCMeta, Parameterized)):
     can be used in the tensorflow expression. Children on the model are
     defined like so:
     >>> from overrides import overrides
-    >>> from gptf.params import Param
+    >>> from gptf import Param
     >>> class Example(Model):
     ...     def __init__(self):
     ...         super().__init__()
@@ -103,15 +103,14 @@ class Model(with_metaclass(ABCMeta, Parameterized)):
             >>> import numbers
             >>> import numpy as np
             >>> from overrides import overrides
-            >>> from gptf.transforms import Exp
-            >>> from gptf.params import Param
+            >>> from gptf import Param, transforms
             >>> class Example(Model):
             ...     def __init__(self, a, b):
             ...         assert isinstance(a, numbers.Number)
             ...         assert isinstance(b, numbers.Number)
             ...         super().__init__()
-            ...         self.a = Param(a, transform=Exp(0.))
-            ...         self.b = Param(b, transform=Exp(0.))
+            ...         self.a = Param(a, transform=transforms.Exp(0.))
+            ...         self.b = Param(b, transform=transforms.Exp(0.))
             ...     @tf_method
             ...     @overrides
             ...     def build_log_likelihood(self):
@@ -395,7 +394,7 @@ class GPModel(with_metaclass(ABCMeta, Model)):
             returns mean `0` and variance `1` for every test point,
             or an independent covariance matrix.
             >>> from overrides import overrides
-            >>> from gptf.tfhacks import eye
+            >>> from gptf import tfhacks
             >>> class Example(GPModel):
             ...     def __init__(self, likelihood, dtype):
             ...         super().__init__(likelihood)
@@ -416,7 +415,7 @@ class GPModel(with_metaclass(ABCMeta, Model)):
             ...     def build_predict(self, test_points, full_cov=False):
             ...         n = tf.shape(test_points)[0]
             ...         mu = tf.zeros([n, 1], self.dtype)
-            ...         var = (tf.expand_dims(eye(n, self.dtype),-1) 
+            ...         var = (tf.expand_dims(tfhacks.eye(n, self.dtype),-1) 
             ...                if full_cov else tf.ones([n, 1], self.dtype))
             ...         return mu, var
             >>> m = Example(None, tf.float64)  # ignore the likelihood

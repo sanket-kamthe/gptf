@@ -48,14 +48,14 @@ class Tree(Iterable):
         >>> p.child = p
         Traceback (most recent call last):
             ...
-        gptf.trees.DuplicateNodeError: message
+        gptf.core.trees.DuplicateNodeError: message
 
         >>> q = Tree()
         >>> p.child_a = q
         >>> p.child_b = q
         Traceback (most recent call last):
             ...
-        gptf.trees.DuplicateNodeError: message
+        gptf.core.trees.DuplicateNodeError: message
 
     Attributes:
         fallback_name (str): The name that this object has when it is the
@@ -321,7 +321,7 @@ class Tree(Iterable):
             >>> p.other_child = r
             Traceback (most recent call last):
                 ...
-            gptf.trees.DuplicateNodeError: message
+            gptf.core.trees.DuplicateNodeError: message
 
             However, repeated assignment is fine:
             >>> s = Tree()
@@ -630,7 +630,7 @@ class ListTree(Tree, MutableSequence):
         >>> root.list.append(child)
         Traceback (most recent call last):
             ...
-        gptf.trees.DuplicateNodeError: message
+        gptf.core.trees.DuplicateNodeError: message
 
         The name of the child of a `ListTree` is its index:
         >>> print(child.name)

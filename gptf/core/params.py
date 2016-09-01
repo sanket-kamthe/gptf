@@ -76,7 +76,7 @@ class WrappedValue(with_metaclass(ABCMeta, WrappedTF)):
 
         If the shape of the data changes, take one of the following actions
         depending on the value of `self.on_shape_change`:
-          - on 'raise', raise a `gptf.params.ShapeChangeError`.
+          - on 'raise', raise a `gptf.core.params.ShapeChangeError`.
           - on 'recompile', clear the cache of everything higher in the tree.
           - on 'pass', do nothing.
 
@@ -100,7 +100,7 @@ class WrappedValue(with_metaclass(ABCMeta, WrappedTF)):
             >>> e.value = b
             Traceback (most recent call last):
                 ...
-            gptf.params.ShapeChangeError: message
+            gptf.core.params.ShapeChangeError: message
 
             On 'recompile', we clear the compiled function cache of everything
             higher in the tree:
@@ -314,7 +314,7 @@ class Param(WrappedValue, Leaf):
         >>> p.free_state
         Traceback (most recent call last):
             ...
-        gptf.params.FixedParameterError: message
+        gptf.core.params.FixedParameterError: message
 
         Ultimately, however, it is the responsibility of the optimiser to 
         respect this flag. See the `Parameterised` and `Model` classes for
@@ -330,19 +330,19 @@ class Param(WrappedValue, Leaf):
         using the `.transform` attribute. The default transform is
         `gptf.transforms.Identity`.
         
-        >>> from gptf.transforms import Exp, Identity
+        >>> from gptf import transforms
         >>> Param(1.0).transform
-        gptf.transforms.Identity()
-        >>> p = Param(1.0, transform=Exp())
+        gptf.core.transforms.Identity()
+        >>> p = Param(1.0, transform=transforms.Exp())
         >>> p.transform
-        gptf.transforms.Exp(lower=1e-06)
+        gptf.core.transforms.Exp(lower=1e-06)
         >>> p.transform = Identity()
         >>> p.transform
-        gptf.transforms.Identity()
+        gptf.core.transforms.Identity()
 
         The associated free state can be obtained using the `.free_state`
         parameter.
-        >>> p = Param(1.0, transform=Exp())
+        >>> p = Param(1.0, transform=transforms.Exp())
         >>> with p.get_session() as sess:
         ...     print(p.value)
         ...     print("{:.3e}".format(sess.run(p.free_state)))
@@ -351,7 +351,7 @@ class Param(WrappedValue, Leaf):
 
         The free state can then be freely optimised, and `p.value` and 
         `p.tensor` will remain constrained by the transform.
-        >>> p = Param(1.0, transform=Exp())  # p.value > 0
+        >>> p = Param(1.0, transform=transforms.Exp())  # p.value > 0
         >>> with p.get_session() as sess:
         ...     _ = sess.run(p.free_state.assign(-100))
         ...     print(p.value == sess.run(p.tensor))
@@ -367,7 +367,7 @@ class Param(WrappedValue, Leaf):
         >>> with p.get_session() as sess:
         ...     print(sess.run(grad_identity))
         1.0
-        >>> p.transform = Exp()
+        >>> p.transform = transforms.Exp()
         >>> grad_exp = tf.gradients([p.tensor], [p.free_state])[0]
         >>> with p.get_session() as sess:
         ...     print("{:.3f}".format(sess.run(grad_exp)))
@@ -448,11 +448,11 @@ class Param(WrappedValue, Leaf):
         higher in the tree that might rely on `self.tensor`.
         
         Examples:
-            >>> from .transforms import Identity, Exp
+            >>> from .transforms import Identity, transforms.Exp
             >>> w = WrappedTF()
             >>> w.p = Param(1.)
             >>> w.cache[0] = 123
-            >>> w.p.transform = Exp()
+            >>> w.p.transform = transforms.Exp()
             >>> 0 in w.cache  # p has no variable, so no cache is cleared
             True
             >>> w.p.free_state  # force p to move into variable
@@ -552,7 +552,7 @@ class DataHolder(WrappedValue, Leaf):
         >>> d.value
         array([4, 5, 6])
 
-        See the docs for `gptf.params.WrappedValue` for more info.
+        See the docs for `gptf.core.params.WrappedValue` for more info.
         
         To access the value from TensorFlow, first build an op that relies
         on the `.tensor` attribute:
@@ -629,11 +629,11 @@ class Parameterized(WrappedTF):
             the tree, sorted by their long name.
 
     Examples:
-        >>> from gptf.transforms import Exp
+        >>> from gptf import transforms
         >>> m = Parameterized()
         >>> m.param = Param(1.)
         >>> m.child = Parameterized()
-        >>> m.child.a = Param([2., 3., 4.], transform=Exp())
+        >>> m.child.a = Param([2., 3., 4.], transform=transforms.Exp())
         >>> m.child.b = Param([[1.0]])
         >>> m.X = DataHolder([1., 2., 3., 4., 5.])
         >>> m.Y = DataHolder([10., 23.3, 3., 42., .1])
@@ -775,13 +775,13 @@ class Parameterized(WrappedTF):
             value, transform and prior of each parameter.
 
         Examples:
-            >>> from gptf.transforms import Exp
+            >>> from gptf import transforms
             >>> p = Parameterized()
             >>> p.fallback_name = 'p'
             >>> p.child = Parameterized()
             >>> p.param = Param(1.)
             >>> p.child.a = Param([1., 2., 3.])
-            >>> p.child.b = Param([[1.]], transform=Exp())
+            >>> p.child.b = Param([[1.]], transform=transforms.Exp())
             >>> print(p.param_summary(fmt='plain'))  # doctest:-NORMALIZE_WHITESPACE
             name      | value           | transform | prior
             ----------+-----------------+-----------+------
