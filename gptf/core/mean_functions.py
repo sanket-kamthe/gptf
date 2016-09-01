@@ -17,7 +17,6 @@ class MeanFunction(with_metaclass(ABCMeta, Parameterized)):
     Inheriting classes must define `.__call__()`.
 
     Examples:
-        >>> from __future__ import division
         >>> class Ones(MeanFunction):
         ...     @tf_method
         ...     @overrides
@@ -99,6 +98,12 @@ class MeanFunction(with_metaclass(ABCMeta, Parameterized)):
 
     def __rmul__(self, other):
         return Multiplicative(other, self)
+
+    def __div__(self, other):
+        return self.__truediv__(other)
+
+    def __rdiv__(self, other):
+        return self.__rtruediv__(other)
 
     def __truediv__(self, other):
         if isinstance(other, Divisive):
@@ -373,6 +378,9 @@ class Divisive(MeanFunction):
         m = self.clone()
         m.numerator = other * m.numerator
         return m
+
+    def __idiv__(self, other):
+        return self.__itruediv__(other)
 
     def __itruediv__(self, other):
         self.denominator *= other
