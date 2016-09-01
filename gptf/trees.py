@@ -323,6 +323,11 @@ class Tree(Iterable):
                 ...
             gptf.trees.DuplicateNodeError: message
 
+            However, repeated assignment is fine:
+            >>> s = Tree()
+            >>> p.s = s
+            >>> p.s = s
+
             Attempting to add a `Tree` to two different graphs causes it
             to be removed from the first one.
             >>> s = Tree()
@@ -343,15 +348,16 @@ class Tree(Iterable):
         
         """
         if name not in ("_Tree__parent", "parent"):
-            self.__maybe_unlink_child(name)  # unlink any existing child
             if isinstance(value, Tree):      
-                if value in self.highest_parent:
+                prev = (getattr(self, name) if hasattr(self, name) else None)
+                if value is not prev and value in self.highest_parent:
                     raise DuplicateNodeError('Cannot set \
 {long_name}.{name} to {value} because it is already in the tree.'
                             .format(long_name=self.long_name
                                    ,name=name
                                    ,value=value
                                    ))
+            self.__maybe_unlink_child(name)  # unlink any existing child
 
         super().__setattr__(name, value)  # actually set the attribute
 
@@ -617,6 +623,15 @@ class ListTree(Tree, MutableSequence):
         >>> child in root.list.children
         True
 
+        Overwriting a child with itself does nothing:
+        >>> root.list[0] = child
+
+        Attempting to insert a child twice causes an error.
+        >>> root.list.append(child)
+        Traceback (most recent call last):
+            ...
+        gptf.trees.DuplicateNodeError: message
+
         The name of the child of a `ListTree` is its index:
         >>> print(child.name)
         [0]
@@ -671,7 +686,7 @@ class ListTree(Tree, MutableSequence):
 
     @overrides
     def insert(self, index, value):
-        self.__type_check(value)
+        self.__check(value)
         self._children.insert(index, value)
         value.parent = self
 
@@ -681,20 +696,25 @@ class ListTree(Tree, MutableSequence):
 
     @overrides
     def __setitem__(self, key, value):
-        self.__type_check(value)
-        self._children[key]._on_new_parent(None)
-        self._children[key] = value
-        value.parent = self
+        if self._children[key] != value:
+            self.__check(value)
+            self._children[key]._on_new_parent(None)
+            self._children[key] = value
+            value.parent = self
 
     @overrides
     def __delitem__(self, key):
         self._children[key]._on_new_parent(None)
         del self._children[key]
 
-    def __type_check(self, value):
+    def __check(self, value):
         if not isinstance(value, Tree):
             raise TypeError("ListTree may only contain Tree objects, not {}"
                     .format(type(value)))
+        if value in self.highest_parent:
+            raise DuplicateNodeError("Could not add {} as a child of {} \
+because it is already present in the tree.".format(value.long_name,
+self.long_name)
 
     @overrides
     def __len__(self):
