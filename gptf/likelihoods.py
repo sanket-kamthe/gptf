@@ -8,7 +8,7 @@ import numpy as np
 import tensorflow as tf
 
 from . import densities, transforms
-from .param import Paramterized, Param
+from .params import Parameterized, Param
 from .wrappedtf import tf_method
 
 
