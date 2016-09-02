@@ -4,15 +4,6 @@ from collections import MutableSequence, Iterable
 from overrides import overrides
 
 
-class DuplicateNodeError(Exception):
-   """Raised when an attempt is made to construct a bad tree.
-    
-    A bad `Tree` graph is one where some `Tree` is its own
-    ancestor or sibling; that is, some `Tree` appears more than
-    once in the graph.
-    
-    """
-
 class BadParentError(Exception):
     """Raised when a parent does not have a reference to a requested child."""
 
@@ -41,21 +32,27 @@ class Tree(Iterable):
         root.child_b.leaf
     
     Objects in the tree must be unique. No object may be its own ancestor
-    or sibling. Attempting to construct such a graph results in a
-    `DuplicateNodeError`.
+    or sibling. Attempts to add a `Tree` attribute that would result in 
+    such a graph instead result in that `Tree` being shallow-copied.
 
         >>> p = Tree()
+        >>> p.attribute = object()
         >>> p.child = p
-        Traceback (most recent call last):
-            ...
-        gptf.core.trees.DuplicateNodeError: message
+        >>> p.child is p
+        False
+        >>> p.child.attribute is p.attribute  # true for non-Tree attributes
+        True
 
         >>> q = Tree()
+        >>> q.num = 1
         >>> p.child_a = q
+        >>> p.child_a is q
+        True
         >>> p.child_b = q
-        Traceback (most recent call last):
-            ...
-        gptf.core.trees.DuplicateNodeError: message
+        >>> p.child_b is q
+        False
+        >>> p.child_b.num
+        1
 
     Attributes:
         fallback_name (str): The name that this object has when it is the
@@ -317,34 +314,32 @@ class Tree(Iterable):
             >>> q.parent is None
             True
 
-            Attempting to add a `Tree` to the graph twice causes an error:
+            Attempting to add a `Tree` to the graph twice causes it to be
+            surreptitiously shallow-copied:
+            >>> r.some_attribute = object()
             >>> p.other_child = r
-            Traceback (most recent call last):
-                ...
-            gptf.core.trees.DuplicateNodeError: message
+            >>> p.other_child is r
+            False
+            >>> p.other_child.some_attribute is r.some_attribute
+            True
 
-            However, repeated assignment is fine:
+            However, repeated assignment does not shallow-copy:
             >>> s = Tree()
             >>> p.s = s
             >>> p.s = s
+            >>> p.s is s
+            True
 
             Attempting to add a `Tree` to two different graphs causes it
-            to be removed from the first one.
+            to be shallow-copied to the new graph.
             >>> s = Tree()
             >>> s.child = r
-            >>> r in p.children
+            >>> p.child is r
+            True
+            >>> s.child is r
             False
-            >>> p.child
-            Traceback (most recent call last):
-                ...
-            AttributeError: message
-            >>> p.child = s.child
-            >>> r in s.children
-            False
-            >>> r.child
-            Traceback (most recent call last):
-                ...
-            AttributeError: message
+            >>> s.child.some_attribute is r.some_attribute
+            True
         
         """
         if name not in ("_Tree__parent", "parent"):
@@ -391,6 +386,52 @@ class Tree(Iterable):
 
     def __iter__(self):
         return BreadthFirstTreeIterator(self)
+
+    def __copy__(self):
+        """Shallowly copies self, deeply copying any Tree children.
+        
+        Examples:
+            >>> from copy import copy
+            >>> t = Tree()
+            >>> t.a = object()
+            >>> t.child = Tree()
+
+            Shallow copy returns an entirely new tree, but non-tree
+            attributes are shallowly copied (as references).
+            >>> copy(t) is t
+            False
+            >>> copy(t).child is t.child
+            False
+            >>> copy(t).a is t.a
+            True
+            
+            This allows us to duplicate subtrees:
+            >>> t.child2 = copy(t.child)  # no error
+          
+            This behaviour is inherited correctly:
+            >>> class Example(Tree):
+            ...     pass
+            >>> e = Example()
+            >>> e.child = Example()
+            >>> e.a = object()
+            >>> isinstance(copy(e), Example)
+            True
+            >>> isinstance(copy(e).child, Example)
+            True
+            >>> copy(e) is e
+            False
+            >>> copy(e).child is e.child
+            False
+            >>> copy(e).a is e.a
+            True
+
+        """
+        copy = object.__new__(type(self))
+        copy.__dict__ = self.__dict__.copy()
+        for k, v in copy.__dict__.items():
+            if isinstance(v, Tree) and k != '_Tree__parent':
+                copy.__dict__[k] = v.__copy__()
+        return copy
 
 
 class BreadthFirstTreeIterator(object):
@@ -602,6 +643,22 @@ class Leaf(Tree):
         """Sidestep `Tree.__delattr__` so parents aren't fiddled with."""
         object.__delattr__(self, name)
 
+    @overrides
+    def __copy__(self):
+        """Shallowly copies self.
+
+        Examples:
+            >>> from copy import copy
+            >>> l = Leaf()
+            >>> l.child = Tree()
+            >>> copy(l).child is l.child  # attributes are not children
+            True
+
+        """
+        copy = object.__new__(type(self))
+        copy.__dict__ = self.__dict__.copy()
+        return copy
+
 
 class ListTree(Tree, MutableSequence):
     """A `Tree` that uses numeric indexes to track its children.
@@ -623,14 +680,19 @@ class ListTree(Tree, MutableSequence):
         >>> child in root.list.children
         True
 
+        Attempting to add a `Tree` to the graph twice causes it to be
+        surreptitiously shallow-copied:
+        >>> child.some_attribute = object()
+        >>> root.list.append(child)
+        >>> p[1] is child
+        False
+        >>> p[1].some_attribute is child.some_attribute
+        True
+
         Overwriting a child with itself does nothing:
         >>> root.list[0] = child
-
-        Attempting to insert a child twice causes an error.
-        >>> root.list.append(child)
-        Traceback (most recent call last):
-            ...
-        gptf.core.trees.DuplicateNodeError: message
+        >>> root.list[0] is child
+        True
 
         The name of the child of a `ListTree` is its index:
         >>> print(child.name)
@@ -638,17 +700,15 @@ class ListTree(Tree, MutableSequence):
         >>> print(child.long_name)
         root.list[0]
 
-        Assigning a child to another tree removes it from the list:
+        Assigning a child to another tree shallow-copies it to the other tree.
         >>> t = Tree()
         >>> t.child = child
-        >>> child.parent is t
+        >>> t.child is child
+        False
+        >>> t.child.some_attribute is child.some_attribute
         True
-        >>> root.list[0]
-        Traceback (most recent call last):
-            ...
-        IndexError: message
-        >>> root.list.children
-        ()
+        >>> child.parent is root.list
+        True
 
         Overwriting a child doesn't cause a dangling parent:
         >>> child_a = Tree()
@@ -729,3 +789,51 @@ self.long_name))
     def __delattr__(self, name):
         """Sidestep `Tree.__delattr__` so parents aren't fiddled with."""
         object.__delattr__(self, name)
+
+    @overrides
+    def __copy__(self):
+        """Shallowly copies the object but deeply copies children.
+
+        Examples:
+            >>> from copy import copy
+            >>> t = ListTree()
+            >>> t.a = object()
+            >>> t.child = Tree()
+            >>> t.append(Tree())
+
+            Shallow copy returns an entirely new tree, but non-tree
+            attributes are shallowly copied (as references).
+            >>> copy(t) is t
+            False
+            >>> copy(t)[0] is t[0]
+            False
+            >>> copy(t).a is t.a
+            True
+            >>> copy(t).child is t.child  # attributes are not children
+            True
+            
+            This allows us to duplicate subtrees:
+            >>> t.append(copy(t[0]))  # no error
+
+            This behaviour is inherited correctly:
+            >>> class Example(ListTree):
+            ...     pass
+            >>> e = Example()
+            >>> e.append(Example())
+            >>> e.a = object()
+            >>> isinstance(copy(e), Example)
+            True
+            >>> isinstance(copy(e)[0], Example)
+            True
+            >>> copy(e) is e
+            False
+            >>> copy(e)[0] is e[0]
+            False
+            >>> copy(e).a is e.a
+            True
+
+        """
+        copy = object.__new__(type(self))
+        copy.__dict__ = self.__dict__.copy()
+        copy._children = [tree.__copy__() for tree in self._children]
+        return copy
