@@ -70,9 +70,10 @@ class GPR(GPModel):
         L = tf.cholesky(K)
         A = tf.matrix_triangular_solve(L, Kx, lower=True)
         V = tf.matrix_triangular_solve(L, Y - self.meanfunction(X))
-        fmean = tf.matmul(tf.transpose(A), V) + self.mean_function(test_points)
+        fmean = tf.matmul(A, V, transpose_a=True)
+        fmean += self.mean_function(test_points)
         if full_cov:
-            fvar = self.kernel.K(test_points) - tf.matmul(tf.transpose(A), A)
+            fvar = self.kernel.K(test_points) - tf.matmul(A, A, transpose_a=1)
             fvar = tf.tile(tf.expand_dims(fvar, 2), (1, 1, tf.shape(Y)[1]))
         else:
             fvar = self.kernel.Kdiag(test_points)
