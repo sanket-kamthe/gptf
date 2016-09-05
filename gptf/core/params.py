@@ -10,7 +10,7 @@ import numpy as np
 import tensorflow as tf
 from overrides import overrides
 
-from .trees import Leaf, ListTree
+from .trees import AttributeTree, Leaf, ListTree
 from .transforms import Transform, Identity
 from .wrappedtf import WrappedTF, tf_method
 from .utils import isclassof, isattrof, is_array_like
@@ -81,7 +81,7 @@ class WrappedValue(with_metaclass(ABCMeta, WrappedTF)):
           - on 'pass', do nothing.
 
         Examples:
-            >>> class Example(WrappedValue):
+            >>> class Example(WrappedValue, AttributeTree):
             ...     def __init__(self, initial_value, **kwargs):
             ...         super().__init__(**kwargs)
             ...         self._numpy_value = initial_value
@@ -104,7 +104,7 @@ class WrappedValue(with_metaclass(ABCMeta, WrappedTF)):
 
             On 'recompile', we clear the compiled function cache of everything
             higher in the tree:
-            >>> w = WrappedTF()
+            >>> w = Example()
             >>> w.e = e
             >>> w.cache[0] = 123
             >>> w.e.on_shape_change = 'recompile'
@@ -182,6 +182,7 @@ class WrappedValue(with_metaclass(ABCMeta, WrappedTF)):
                     .format(valuestr))
         self._on_dtype_change = value
 
+#TODO: better copy for Param. Share variable!
 class Param(WrappedValue, Leaf):
     """A parameter of a model.
 
@@ -250,7 +251,9 @@ class Param(WrappedValue, Leaf):
         tree of `WrappedTF`, each `Param`'s `.get_session()` will return
         the same session, and every `Param` in the tree will have its free
         state maintained in that session.
-        >>> w = WrappedTF()
+        >>> class AttributeWrappedTF(WrappedTF, AttributeTree):
+        ...     pass
+        >>> w = AttributeWrappedTF()
         >>> w.p = Param(1.0)
         >>> w.q = Param(2.0)
         >>> with w.p.get_session() as sess:
@@ -270,7 +273,7 @@ class Param(WrappedValue, Leaf):
         just before the session closes.
         >>> p = Param(4.0)
         >>> with tf.Session() as sess:
-        ...     p.on_session_birth()
+        ...     p.on_session_birth(sess)
         ...     print(".free_state: {}".format(sess.run(p.free_state)))
         ...     print(".value: {}".format(p.value))
         ...     # assiging to p.value changes p.free_state
@@ -281,7 +284,7 @@ class Param(WrappedValue, Leaf):
         ...     _ = sess.run(p.free_state.assign_add(1.0))
         ...     print(".free_state: {}".format(sess.run(p.free_state)))
         ...     print(".value: {}".format(p.value))
-        ...     p.on_session_death()
+        ...     p.on_session_death(sess)
         .free_state: 4.0
         .value: 4.0
         .free_state: 0.0
@@ -394,7 +397,7 @@ class Param(WrappedValue, Leaf):
     def _get_value(self):
         if self._variable:
             sess = self.get_session()
-            return np.array(sess.run(self.tensor))
+            return sess.run(self.tensor)
         else:
             return self._numpy_value.copy()
 
@@ -449,7 +452,9 @@ class Param(WrappedValue, Leaf):
         
         Examples:
             >>> from .transforms import Identity, transforms.Exp
-            >>> w = WrappedTF()
+            >>> class AttributeWrappedTF(WrappedTF, AttributeTree):
+            ...     pass
+            >>> w = AttributeWrappedTF()
             >>> w.p = Param(1.)
             >>> w.cache[0] = 123
             >>> w.p.transform = transforms.Exp()
@@ -472,17 +477,16 @@ class Param(WrappedValue, Leaf):
             self._transform = value
 
     @overrides
-    def on_session_birth(self):
+    def on_session_birth(self, session):
         self._ensure_variable()
-        sess = self.get_session()
-        sess.run(self.initializer)
-        super().on_session_birth()
+        session.run(self.initializer)
+        super().on_session_birth(session)
 
     @overrides
-    def on_session_death(self):
-        #assert self._variable
-        self._numpy_value[...] = self.value
-        super().on_session_death()
+    def on_session_death(self, session):
+        if self._variable:
+            self._numpy_value[...] = session.run(self.tensor)
+        super().on_session_death(session)
 
     def clear_cache(self):
         """Save the variable value before it is cleared from the cache."""
@@ -630,6 +634,8 @@ class Parameterized(WrappedTF):
 
     Examples:
         >>> from gptf import transforms
+        >>> class Parameterized(Parameterized, AttributeTree):
+        ...     pass
         >>> m = Parameterized()
         >>> m.param = Param(1.)
         >>> m.child = Parameterized()
@@ -645,15 +651,6 @@ class Parameterized(WrappedTF):
         True
         >>> set(m.data_holders) == {m.X, m.Y, m.child.data}
         True
-
-        You can assign a value to a `Param` or `DataHolder` by assigning to
-        its attribute:
-        >>> m.param = 3.7
-        >>> m.param.value
-        array(3.7)
-        >>> m.X = [6., 7., 8., 9., 10.]
-        >>> m.X.value
-        array([ 6., 7., 8., 9., 10.])
 
     """
     ARRAY_DISPLAY_LENGTH = 5
@@ -776,6 +773,8 @@ class Parameterized(WrappedTF):
 
         Examples:
             >>> from gptf import transforms
+            >>> class Parameterized(Parameterized, AttributeTree):
+            ...     pass
             >>> p = Parameterized()
             >>> p.fallback_name = 'p'
             >>> p.child = Parameterized()
@@ -821,6 +820,8 @@ class Parameterized(WrappedTF):
             value, transform and prior of each parameter.
 
         Examples:
+            >>> class Parameterized(Parameterized, AttributeTree):
+            ...     pass
             >>> p = Parameterized()
             >>> p.fallback_name = 'p'
             >>> p.child = Parameterized()
@@ -912,6 +913,11 @@ class Parameterized(WrappedTF):
         else:
             return str(value)
 
+# en-gb compatibility patch
+Parameterised = Parameterized
+
+class ParamAttributes(Parameterized, AttributeTree):
+    """Parameters are accessed using attributes."""
     @overrides
     def __setattr__(self, name, value):
         """Set the value of `Param`s and `DataHolder`s on assignment.
@@ -923,7 +929,7 @@ class Parameterized(WrappedTF):
         Examples:
             Assigning a numerical, numpy or string value to a `Param` or 
             `DataHolder` child assigns to that child's value instead.
-            >>> p = Parameterized()
+            >>> p = ParamAttributes()
             >>> p.param = Param(1.0)
             >>> p.param = 2.0
             >>> isinstance(p.param, Param)
@@ -962,11 +968,6 @@ class Parameterized(WrappedTF):
                 return
         super().__setattr__(name, value)
 
-
-# en-gb compatibility patch
-Parameterised = Parameterized
-
-
 class ParamList(Parameterized, ListTree):
     """A list of `Param` or `DataHolder` objects.
 
@@ -987,7 +988,7 @@ class ParamList(Parameterized, ListTree):
         array(5.0)
 
         You can still overwrite parameters etc with new ones:
-        >>> p[0] = Parameterized()
+        >>> p[0] = ParamAttributes()
         >>> isinstance(p[0], Param)
         False
 
@@ -1012,8 +1013,8 @@ class ParamList(Parameterized, ListTree):
             is_array_like(value)):
             # okay to assign to curr.value
             curr.value = value
-            return
-        super().__setitem__(key, value)
+        else:
+            super().__setitem__(key, value)
 
 def autoflow(*placeholder_specs):
     """Wraps up a TensorFlow method so that it takes NumPy and gives NumPy.
@@ -1042,7 +1043,7 @@ def autoflow(*placeholder_specs):
 
     Examples:
         The decorator syntax looks like this:
-        >>> class MyClass(Parameterized):
+        >>> class MyClass(Parameterized, AttributeTree):
         ...     @autoflow((tf.float64,), (tf.float64,))
         ...     def tf_add(self, a, b):
         ...         return tf.add(a, b)

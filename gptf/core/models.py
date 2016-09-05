@@ -21,8 +21,8 @@ class Model(with_metaclass(ABCMeta, Parameterized)):
     can be used in the tensorflow expression. Children on the model are
     defined like so:
     >>> from overrides import overrides
-    >>> from gptf import Param
-    >>> class Example(Model):
+    >>> from gptf import Param, ParamAttributes
+    >>> class Example(Model, ParamAttributes):
     ...     def __init__(self):
     ...         super().__init__()
     ...         self.x = Param(1.)  # create new Param child
@@ -103,8 +103,8 @@ class Model(with_metaclass(ABCMeta, Parameterized)):
             >>> import numbers
             >>> import numpy as np
             >>> from overrides import overrides
-            >>> from gptf import Param, transforms
-            >>> class Example(Model):
+            >>> from gptf import Param, ParamAttributes, transforms
+            >>> class Example(Model, ParamAttributes):
             ...     def __init__(self, a, b):
             ...         assert isinstance(a, numbers.Number)
             ...         assert isinstance(b, numbers.Number)
@@ -394,8 +394,8 @@ class GPModel(with_metaclass(ABCMeta, Model)):
             returns mean `0` and variance `1` for every test point,
             or an independent covariance matrix.
             >>> from overrides import overrides
-            >>> from gptf import tfhacks
-            >>> class Example(GPModel):
+            >>> from gptf import ParamAttributes, tfhacks
+            >>> class Example(GPModel, ParamAttributes):
             ...     def __init__(self, likelihood, dtype):
             ...         super().__init__(likelihood)
             ...         self.dtype = dtype

@@ -7,7 +7,7 @@ from overrides import overrides
 import numpy as np
 import tensorflow as tf
 
-from .params import Parameterized, Param
+from .params import Parameterized, ParamAttributes, ParamList, Param
 from .wrappedtf import tf_method
 
 
@@ -17,7 +17,7 @@ class MeanFunction(with_metaclass(ABCMeta, Parameterized)):
     Inheriting classes must define `.__call__()`.
 
     Examples:
-        >>> class Ones(MeanFunction):
+        >>> class Ones(MeanFunction, ParamAttributes):
         ...     @tf_method
         ...     @overrides
         ...     def __call__(self, X):
@@ -116,7 +116,7 @@ class MeanFunction(with_metaclass(ABCMeta, Parameterized)):
             return Divisive(_one(), self)
         return Divisive(other, self)
 
-class Zero(MeanFunction):
+class Zero(MeanFunction, ParamAttributes):
     def __init__(self, num_latent_functions=0):
         """Initializer.
 
@@ -168,7 +168,7 @@ class Zero(MeanFunction):
     def __radd__(self, other):
         return other
 
-class Linear(MeanFunction):
+class Linear(MeanFunction, ParamAttributes):
     """y_i = A x_i + b"""
     def __init__(self, A=np.ones((1, 1)), b=np.zeros((1,))):
         """Initializer.
@@ -212,7 +212,7 @@ class Linear(MeanFunction):
         """
         return tf.matmul(X, self.A.tensor) + self.b.tensor
 
-class Constant(MeanFunction):
+class Constant(MeanFunction, ParamAttributes):
     """y_i = c,,"""
     def __init__(self, c=np.array([0])):
         """Initializer.
@@ -247,104 +247,93 @@ class Constant(MeanFunction):
         """
         return tf.tile(tf.expand_dims(self.c.tensor, 0), (tf.shape(X)[0], 1))
 
-
-class Negative(MeanFunction):
+class Negative(MeanFunction, ParamAttributes):
     """The negative of a mean function."""
     def __init__(self, function):
         super().__init__()
-        self.function = function
+        self.negated = function
 
     @tf_method
     @overrides
     def __call__(self, X):
-        return tf.neg(self.function(X))
+        return tf.neg(self.negated(X))
 
     @overrides
     def __neg__(self):
-        return self.function
+        return self.negated.copy()
 
-class Absolute(MeanFunction):
+class Absolute(MeanFunction, ParamAttributes):
     """The absolute value of a mean function."""
     def __init__(self, function):
         super().__init__()
-        self.function = function
+        self.absolute = function
 
     @tf_method
     @overrides
     def __call__(self, X):
-        return tf.abs(self.function(X))
+        return tf.abs(self.absolute(X))
 
     @overrides
     def __abs__(self):
-        return self
+        return self.copy()
 
-class Additive(MeanFunction):
+class Additive(MeanFunction, ParamList):
     """The addition of mean functions."""
     def __init__(self, *functions):
         super().__init__()
-        self.functions = list(functions)
-
-    def clone(self):
-        m = Additive()
-        m.functions.extend(self.functions)
-        return m
+        self.extend(functions)
 
     @tf_method
     @overrides
     def __call__(self, X):
-        vals = tf.pack([f(X) for f in self.functions])
+        vals = tf.pack([f(X) for f in self.children])
         return tf.reduce_sum(vals, 0)
 
     def __iadd__(self, other):
-        self.functions.append(other)
+        self.append(other)
         return self
 
     @overrides
     def __add__(self, other):
-        m = self.clone()
+        m = self.copy()
         m += other
         return m
 
     @overrides
     def __radd__(self, other):
-        m = self.clone()
-        m.functions.insert(0, other)
+        m = self.copy()
+        m.insert(0, other)
         return m
 
-class Multiplicative(MeanFunction):
+class Multiplicative(MeanFunction, ParamList):
     """The multiplication of mean functions."""
     def __init__(self, *functions):
         super().__init__()
-        self.functions = list(functions)
-
-    def clone(self):
-        m = Additive()
-        m.functions.extend(self.functions)
-        return m
+        self.extend(functions)
 
     @tf_method
     @overrides
     def __call__(self, X):
-        vals = tf.pack([f(X) for f in self.functions])
+        vals = tf.pack([f(X) for f in self.children])
         return tf.reduce_prod(vals, 0)
 
     def __imul__(self, other):
-        self.functions.append(other)
+        self.append(other)
         return self
 
     @overrides
     def __mul__(self, other):
-        m = self.clone()
+        m = self.copy()
         m += other
         return m
 
     @overrides
     def __rmul__(self, other):
-        m = self.clone()
-        m.functions.insert(0, other)
+        m = self.copy()
+        m.insert(0, other)
         return m
 
-class Divisive(MeanFunction):
+class Divisive(MeanFunction, ParamAttributes):
     """The division of mean functions.
     
     `Divisive(a, b)(X)` returns `a(X) / b(X)`.
@@ -399,7 +388,8 @@ class Divisive(MeanFunction):
             m.numerator = other * m.numerator
         return m
 
-class _one(MeanFunction):
+class _one(MeanFunction, ParamAttributes):
+    @tf_method
     @overrides
     def __call__(self, X):
         return tf.ones([], dtype=X.dtype)

@@ -142,8 +142,12 @@ class WrappedTF(TreeWithCache):
         """Applies op placement rules based on the object hierarchy.
 
         Examples:
+            >>> from gptf.core.trees import AttributeTree
+            >>> class Example(WrappedTF, AttributeTree):
+            ...     pass
+
             Choose the op placement context by assigning to `.tf_device`:
-            >>> a, b, c, d, e = [WrappedTF() for _ in range(5)]
+            >>> a, b, c, d, e = [Example() for _ in range(5)]
             >>> a.tf_device = '/job:worker'
             >>> b.tf_device = tf.DeviceSpec(device_type='GPU', device_index=0)
             >>> c.tf_device = None
@@ -237,7 +241,11 @@ class WrappedTF(TreeWithCache):
             matching the session target of the highest parent.
 
         Examples:
-            >>> w = WrappedTF()
+            >>> from gptf.core.trees import AttributeTree
+            >>> class AttributeWrappedTF(WrappedTF, AttributeTree):
+            ...     pass
+
+            >>> w = AttributeWrappedTF()
 
             If there is already a default session, returns that one:
             >>> with tf.Session() as sess:
@@ -252,7 +260,7 @@ class WrappedTF(TreeWithCache):
             True
             >>> sess2.close()
             
-            >>> class Example(WrappedTF):
+            >>> class Example(WrappedTF, AttributeTree):
             ...     def op(self):
             ...         with self.op_placement_context():
             ...             return tf.constant(1)
@@ -327,12 +335,22 @@ class WrappedTF(TreeWithCache):
             else:
                 return self.highest_parent.get_session()
 
-    def on_session_birth(self):
-        """Called just after the session of the highest parent is created."""
+    def on_session_birth(self, session):
+        """Called just after a session is created.
+        
+        Args:
+            session (tf.Session): The created session.
+          
+        """
         pass
 
-    def on_session_death(self):
-        """Called just before the session of the highest parent is closed."""
+    def on_session_death(self, session):
+        """Called just before a session is closed.
+        
+        Args:
+            session (tf.Session): The dying session.
+          
+        """
         pass
 
     def _maybe_create_session(self):
@@ -342,11 +360,12 @@ class WrappedTF(TreeWithCache):
         `on_session_birth` for all objects lower in the tree.
 
         Examples:
-            >>> class Example(WrappedTF):
-            ...     def on_session_birth(self):
+            >>> from gptf.core.trees import AttributeTree
+            >>> class Example(WrappedTF, AttributeTree):
+            ...     def on_session_birth(self, session):
             ...         name = self.long_name
             ...         print('{}.on_session_birth called!'.format(name))
-            ...         super().on_session_birth()
+            ...         super().on_session_birth(session)
             >>> w = Example()
             >>> w.child = Example()
             >>> w.child.child = Example()
@@ -371,7 +390,7 @@ class WrappedTF(TreeWithCache):
         if self._tf_session is None:
             self._tf_session = new_session()
             for node in self:
-                node.on_session_birth()
+                node.on_session_birth(self._tf_session)
 
     def _maybe_kill_session(self): 
         """Handles session destruction if necessary.
@@ -380,11 +399,12 @@ class WrappedTF(TreeWithCache):
         `on_session_death` for all objects in the tree.
 
         Examples:
-            >>> class Example(WrappedTF):
-            ...     def on_session_death(self):
+            >>> from gptf.core.trees import AttributeTree
+            >>> class Example(WrappedTF, AttributeTree):
+            ...     def on_session_death(self, session):
             ...         name = self.long_name
             ...         print('{}.on_session_death called!'.format(name))
-            ...         super().on_session_death()
+            ...         super().on_session_death(session)
             >>> w = Example()
             >>> w.child = Example()
             >>> w.child.child = Example()
@@ -397,7 +417,7 @@ class WrappedTF(TreeWithCache):
         """
         if self._tf_session is not None:
             for node in self:
-                node.on_session_death()
+                node.on_session_death(self._tf_session)
             self._tf_session.close()
             self._tf_session = None
 
@@ -417,7 +437,7 @@ class WrappedTF(TreeWithCache):
         self.clear_subtree_caches()
 
     @overrides
-    def _on_new_parent(self, new_parent):
+    def _set_parent(self, new_parent):
         """Deals with cache clearing that happens when tree anatomy changes.
         
         If a `WrappedTF`'s ancestry changes, its op placement context
@@ -433,21 +453,22 @@ class WrappedTF(TreeWithCache):
         tree.
 
         Examples:
-            >>> class Example(WrappedTF):
+            >>> from gptf.core.trees import AttributeTree
+            >>> class Example(WrappedTF, AttributeTree):
             ...     def __init__(self, name):
             ...         super().__init__()
             ...         self.fallback_name = name
             ...         self.should_print = True
-            ...     def on_session_birth(self):
+            ...     def on_session_birth(self, session):
             ...         if self.should_print:
             ...             name = self.long_name
             ...             print('{}.on_session_birth called!'.format(name))
-            ...         super().on_session_birth()
-            ...     def on_session_death(self):
+            ...         super().on_session_birth(session)
+            ...     def on_session_death(self, session):
             ...         if self.should_print:
             ...             name = self.long_name
             ...             print('{}.on_session_death called!'.format(name))
-            ...         super().on_session_death()
+            ...         super().on_session_death(session)
             >>> w = Example('w')
             >>> x = Example('x')
             >>> y = Example('y')
@@ -503,16 +524,18 @@ class WrappedTF(TreeWithCache):
             >>> 'tf' in y.cache or 'tf' in y.child.cache
             False
 
-            When a `WrappedTF` is moved between trees, the caches in the old
-            tree are cleared and session births are registered in the subtree
-            of the moving `WrappedTF`.
+            When a `WrappedTF` is copied between trees, the caches in the
+            copy are cleared and session births are registered in the
+            subtree of the copy.
             >>> setup()
             >>> y.child_1 = w.child_0
-            w.child_0.on_session_death called!
+            x.on_session_death called!
             y.child_1.on_session_birth called!
             >>> 'tf' in y.cache and 'tf' in y.child.cache
             True
-            >>> 'tf' in w.cache or 'tf' in y.child_1.cache
+            >>> 'tf' in w.cache and 'tf' in w.child_0.cache
+            True
+            >>> 'tf' in y.child_1.cache
             False
 
         """
@@ -520,14 +543,25 @@ class WrappedTF(TreeWithCache):
             self._maybe_kill_session()
         elif self.highest_parent._tf_session is not None:
             for node in self:
-                node.on_session_death()
+                node.on_session_death(self.highest_parent._tf_session)
         self._on_op_placement_context_change()
 
-        super()._on_new_parent(new_parent)  # move to new tree
+        super()._set_parent(new_parent)  # move to new tree
 
         if self.highest_parent._tf_session is not None:
             for node in self:
-                node.on_session_birth()
+                node.on_session_birth(self.highest_parent._tf_session)
+
+    @overrides
+    def copy(self):
+        dupe = super().copy()
+        dupe._tf_session = None
+        if self.highest_parent._tf_session is not None:
+            for node in dupe:
+                node.on_session_death(self.highest_parent._tf_session)
+        if self.parent is not None:
+            dupe._on_op_placement_context_change()
+        return dupe
 
 def tf_method(method):
     """Decorator version of `WrappedTF.op_placement_context`.
@@ -539,7 +573,8 @@ def tf_method(method):
     Examples:
         In the following example, `Example.method_a` is equivalent 
         to `Example.method_b`.
-        >>> class Example(WrappedTF):
+        >>> from gptf.core.trees import AttributeTree
+        >>> class Example(WrappedTF, AttributeTree):
         ...     def method_a(self):
         ...         with self.op_placement_context():
         ...             with tf.name_scope(self.long_name + '.method_a/'):
