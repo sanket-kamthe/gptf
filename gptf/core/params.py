@@ -1,10 +1,13 @@
 # -*- encoding: utf-8 -*-
 """Provides classes that deal with the fetching as setting of parameters."""
-from builtins import super, filter, map, range
+from builtins import super, object, filter, map, range
 from future.utils import with_metaclass
 from abc import ABCMeta, abstractmethod
+from collections import namedtuple
 from functools import wraps
 import os
+import gc
+from weakref import WeakSet
 
 import numpy as np
 import tensorflow as tf
@@ -126,7 +129,7 @@ class WrappedValue(with_metaclass(ABCMeta, WrappedTF)):
 
     def _new_shape_action(self, value):
         """Performs the appropriate action given a new shape for `.value`."""
-        if self._numpy_value.shape == value.shape:
+        if self.value.shape == value.shape:
             pass
         elif self.on_shape_change == 'raise':
             raise ShapeChangeError("cannot change shape of {}"\
@@ -142,7 +145,7 @@ class WrappedValue(with_metaclass(ABCMeta, WrappedTF)):
 
     def _new_dtype_action(self, value):
         """Performs the appropriate action given a new dtype for `.value`."""
-        if self._numpy_value.dtype == value.dtype:
+        if self.value.dtype == value.dtype:
             pass
         elif self.on_dtype_change == 'raise':
             raise DTypeChangeError("cannot change dtype of {}"\
@@ -186,6 +189,8 @@ class WrappedValue(with_metaclass(ABCMeta, WrappedTF)):
 class Param(WrappedValue, Leaf):
     """A parameter of a model.
 
+    Instances have all attributes of `WrappedValue` and the following:
+
     Attributes:
         value (np.ndarray): The value of the parameter.
         tensor (tf.Tensor): A tensor representation of the parameter, 
@@ -197,8 +202,6 @@ class Param(WrappedValue, Leaf):
             Fixed parameters will not be optimised.
         transform (.transforms.Transform): The transform used to move the
             variable into a free state where it can be optimised.
-        on_shape_change ('raise' | 'pass' | 'recompile'): The action to take
-            when the shape of the data changes; see the setter for `.value`.
 
     Examples:
         Getting and setting values
@@ -377,6 +380,13 @@ class Param(WrappedValue, Leaf):
         2.718
 
     """
+    class Shared(object):
+        def __init__(self, parent, numpy_value, transform):
+            self.copies = WeakSet([parent])
+            self.numpy_value, self.transform = numpy_value, transform
+            self.fixed = False
+            self.cache = {}
+
     def __init__(self, initial_value, transform=Identity(), **kwargs):
         """Initialiser.
 
@@ -388,9 +398,8 @@ class Param(WrappedValue, Leaf):
 
         """
         super().__init__(**kwargs)
-        self._numpy_value = np.array(initial_value)
-        self.fixed = False
-        self._transform = transform
+        numpy_value = np.array(initial_value)
+        self._shared = self.Shared(self, numpy_value, transform) 
         
     @tf_method
     @overrides
@@ -399,7 +408,7 @@ class Param(WrappedValue, Leaf):
             sess = self.get_session()
             return sess.run(self.tensor)
         else:
-            return self._numpy_value.copy()
+            return self._shared.numpy_value.copy()
 
     @tf_method
     @overrides
@@ -407,9 +416,10 @@ class Param(WrappedValue, Leaf):
         if self._variable:
             sess = self.get_session()
             free_state = self.transform.np_backward(value)
-            self._numpy_value[...] = sess.run(self._variable.assign(free_state))
+            self._shared.numpy_value[...] = \
+                    sess.run(self._variable.assign(free_state))
         else:
-            self._numpy_value[...] = value
+            self._shared.numpy_value[...] = value
 
     @property
     @tf_method
@@ -422,7 +432,11 @@ class Param(WrappedValue, Leaf):
             
         """
         self._ensure_variable()
-        return self.transform.tf_forward(self._variable)
+        if '__Param_tensor' not in self._shared.cache:
+            self._shared.cache['__Param_tensor'] =\
+                    self.transform.tf_forward(self._variable)
+        return self._shared.cache['__Param_tensor']
+        #return self.transform.tf_forward(self._variable)
 
     @property
     def feed_dict(self):
@@ -439,9 +453,17 @@ class Param(WrappedValue, Leaf):
             raise FixedParameterError("cannot access free state of fixed Param")
 
     @property
+    def fixed(self):
+        return self._shared.fixed
+
+    @fixed.setter
+    def fixed(self, value):
+        self._shared.fixed = value
+
+    @property
     def transform(self):
         """The transform between the free space and value space."""
-        return self._transform
+        return self._shared.transform
 
     @transform.setter
     def transform(self, value):
@@ -471,10 +493,12 @@ class Param(WrappedValue, Leaf):
             # to clear its cache.
             self.clear_ancestor_caches()
             old_value = self.value
-            self._transform = value
+            if '__Param_tensor' in self._shared.cache:
+                del self._shared.cache['__Param_tensor']
+            self._shared.transform = value
             self.value = old_value
         else:
-            self._transform = value
+            self._shared.transform = value
 
     @overrides
     def on_session_birth(self, session):
@@ -485,13 +509,15 @@ class Param(WrappedValue, Leaf):
     @overrides
     def on_session_death(self, session):
         if self._variable:
-            self._numpy_value[...] = session.run(self.tensor)
+            self._shared.numpy_value[...] = session.run(self.tensor)
         super().on_session_death(session)
 
+    @overrides
     def clear_cache(self):
         """Save the variable value before it is cleared from the cache."""
         if self._variable:
-            self._numpy_value[...] = self.value
+            self._shared.numpy_value[...] = self.value
+        self._shared.cache.clear()
         super().clear_cache()
 
     @property
@@ -505,14 +531,14 @@ class Param(WrappedValue, Leaf):
         """
         self._ensure_variable()
         with tf.control_dependencies([self._variable.initializer]):
-            free_state = self.transform.np_backward(self._numpy_value)
+            free_state = self.transform.np_backward(self._shared.numpy_value)
             return self._variable.assign(free_state)
             
     @tf_method
     def _ensure_variable(self):
         """Creates a variable if necessary."""
         if not self._variable:
-            self._variable = tf.Variable(self._numpy_value)
+            self._variable = tf.Variable(self._shared.numpy_value)
     
     @property
     def _variable(self):
@@ -523,12 +549,29 @@ class Param(WrappedValue, Leaf):
         `if self._variable`.
 
         """
-        return self.cache.get("_Param__variable", None)
+        return self._shared.cache.get('__Param_variable', None)
 
     @_variable.setter
     def _variable(self, value):
         """Sets the variable."""
-        self.cache["_Param__variable"] = value
+        self._shared.cache['__Param_variable'] = value
+
+    @overrides
+    def copy(self):
+        copy = super().copy()
+        assert self._shared is copy._shared
+        self._shared.copies.add(copy)
+        return copy
+
+    @overrides
+    def clear_ancestor_caches(self):
+        """Clears the ancestor caches of all copies of this Param."""
+        try:
+            gc.disable()
+            for copy in self._shared.copies:
+                super(Param, copy).clear_ancestor_caches()
+        finally:
+            gc.enable()
 
 class DataHolder(WrappedValue, Leaf):
     """Holds data to be fed into TensorFlow for computation.
