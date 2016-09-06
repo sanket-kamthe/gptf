@@ -1,6 +1,7 @@
 # standard library
 from builtins import super, object
 from functools import wraps
+from collections.abc import Sequence
 import re
 try:  # in case of rogue Python 2.7, use contextlib2 instead of contextlib
     from contextlib import contextmanager, ExitStack
@@ -144,7 +145,9 @@ class WrappedTF(TreeWithCache):
         Examples:
             >>> from gptf.core.trees import AttributeTree
             >>> class Example(WrappedTF, AttributeTree):
-            ...     pass
+            ...     def __init__(self):
+            ...         super().__init__()
+            ...         self.tf_graph = tf.Graph()
 
             Choose the op placement context by assigning to `.tf_device`:
             >>> a, b, c, d, e = [Example() for _ in range(5)]
@@ -215,7 +218,8 @@ class WrappedTF(TreeWithCache):
             if self.parent is None and self.tf_graph is not None:
                 stack.enter_context(self.tf_graph.as_default())
             elif self.parent is not None:
-                stack.enter_context(self.parent.op_placement_context())
+                parent_context = self.parent.op_placement_context(name_scope)
+                stack.enter_context(parent_context)
 
             if self.tf_device is not None:
                 dev = self.tf_device
@@ -223,10 +227,11 @@ class WrappedTF(TreeWithCache):
                     dev = None
                 stack.enter_context(tf.device(dev))
 
-            # enter "absolute" name scope by appending "/"
-            scope = self.long_name + "/"
-            scope = INVALID_NAME_SCOPE_CHAR.sub("", scope)
-            stack.enter_context(tf.name_scope(scope))
+            if name_scope:
+                # enter "absolute" name scope by appending "/"
+                scope = self.long_name + "/"
+                scope = INVALID_NAME_SCOPE_CHAR.sub("", scope)
+                stack.enter_context(tf.name_scope(scope))
 
             yield
 
@@ -576,11 +581,13 @@ def tf_method(method):
         >>> from gptf.core.trees import AttributeTree
         >>> class Example(WrappedTF, AttributeTree):
         ...     def method_a(self):
-        ...         with self.op_placement_context():
-        ...             with tf.name_scope(self.long_name + '.method_a/'):
+        ...         with self.op_placement_context(name_scope=False):
+        ...             scope = self.long_name + '.method_a/'
+        ...             with tf.name_scope(scope):
         ...                 a = tf.constant(2)
         ...                 b = tf.constant(3)
-        ...                 return tf.add(a, b)
+        ...                 result = tf.add(a, b)
+        ...                 return tf.identity(result, name='0')  #scope[:-1])
         ...     @tf_method
         ...     def method_b(self):
         ...         a = tf.constant(2)
@@ -589,6 +596,7 @@ def tf_method(method):
 
         Devices are set properly in both methods:
         >>> e = Example()
+        >>> e.tf_graph = tf.Graph()  # don't break other doctests
         >>> e.tf_device = '/job:worker/task:0'
         >>> a = e.method_a()
         >>> print(a.device)
@@ -597,18 +605,68 @@ def tf_method(method):
         >>> b.device == a.device
         True
 
-        The method name is appended to the name scope!
+        The returned tensor(s) are given the name of the name scope.
         >>> print(a.name)
-        unnamed.method_a/Add:0
+        unnamed.method_a/0:0
         >>> print(b.name)
-        unnamed.method_b/Add:0
+        unnamed.method_b/0:0
+
+        Multiple method calls produce unique names.
+        >>> print(e.method_b().name)
+        unnamed.method_b/0_1:0
+
+        If a method returns a sequence of tensors, they are named
+        `<scope>/0`, `<scope>/1`, etc.
+        >>> class DoubleReturnExample(WrappedTF, AttributeTree):
+        ...     @tf_method
+        ...     def method(self):
+        ...         return tf.constant(1), tf.constant(2)
+        >>> obj = DoubleReturnExample()
+        >>> c, d = obj.method()
+        >>> print(c.name)
+        unnamed.method/0:0
+        >>> print(d.name)
+        unnamed.method/1:0
+        >>> c, d = obj.method()
+        >>> print(c.name)
+        unnamed.method/0_1:0
+        >>> print(d.name)
+        unnamed.method/1_1:0
+
+        Calls to other tensorflow methods do not cause nested name scopes.
+        >>> class NestedExample(WrappedTF, AttributeTree):
+        ...     def __init__(self, child):
+        ...         super().__init__()
+        ...         self.child = child
+        ...     @tf_method
+        ...     def method(self):
+        ...         print(self.child.method_b().name)
+        >>> NestedExample(Example()).method()
+        unnamed.child.method_b/0:0
+
+        Else, no attempt is made to rename the output.
+        >>> class NumpyReturnExample(WrappedTF, AttributeTree):
+        ...     @tf_method
+        ...     def method(self):
+        ...         return self.get_session().run(tf.constant(1))
+        >>> NumpyReturnExample().method()
+        1
         
     """
     @wraps(method)
     def wrapper(instance, *args, **kwargs):
         scope = "{}.{}/".format(instance.long_name, method.__name__)
         scope = INVALID_NAME_SCOPE_CHAR.sub("", scope)
-        with instance.op_placement_context(), tf.name_scope(scope):
-                return method(instance, *args, **kwargs)
+        with instance.op_placement_context(name_scope=False):
+            with tf.name_scope(scope):
+                result = method(instance, *args, **kwargs)
+                if (isinstance(result, Sequence) and 
+                    all(isinstance(x, tf.Tensor) for x in result)):
+                    return tuple(tf.identity(x, name=str(result.index(x)))
+                                 for x in result)
+                elif isinstance(result, tf.Tensor):
+                    return tf.identity(result, name='0')
+                else:
+                    return result
     return wrapper
 
