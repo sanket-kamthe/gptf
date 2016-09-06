@@ -185,7 +185,8 @@ class WrappedValue(with_metaclass(ABCMeta, WrappedTF)):
                     .format(valuestr))
         self._on_dtype_change = value
 
-#TODO: better copy for Param. Share variable!
+#TODO: copy tests
+#TODO: on_shape_change
 class Param(WrappedValue, Leaf):
     """A parameter of a model.
 
