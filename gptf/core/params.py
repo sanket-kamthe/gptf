@@ -8,12 +8,13 @@ from functools import wraps
 import os
 import gc
 from weakref import WeakSet
+from contextlib import contextmanager
 
 import numpy as np
 import tensorflow as tf
 from overrides import overrides
 
-from .trees import AttributeTree, Leaf, ListTree
+from .trees import AttributeTree, Leaf, ListTree, Tree
 from .transforms import Transform, Identity
 from .wrappedtf import WrappedTF, tf_method
 from .utils import isclassof, isattrof, is_array_like
@@ -185,9 +186,129 @@ class WrappedValue(with_metaclass(ABCMeta, WrappedTF)):
                     .format(valuestr))
         self._on_dtype_change = value
 
-#TODO: copy tests
-#TODO: on_shape_change
-class Param(WrappedValue, Leaf):
+class Proxy(Tree):
+    """Places important state in an object shared between copies."""  
+    class Shared(object):
+        pass
+
+    def __init__(self):
+        super().__init__()
+        self._shared = Proxy.Shared()
+        self._shared.copies = WeakSet([self])
+
+    @overrides
+    def copy(self):
+        copy = super().copy()
+        assert copy._shared is self._shared
+        self._shared.copies.add(copy)
+        return copy
+
+@contextmanager
+def no_gc():
+    gc.disable()
+    yield
+    gc.enable()
+        
+def share_properties(*properties):
+    """Shares properties of a `Proxy` subclass between all copies.
+
+    Args:
+        *properties (Tuple[str]): The (string) names of the properties
+            to override.
+        
+    Examples:
+        Here we set up an example class with a property and an
+        inheriting class that overrides that property.
+        >>> @share_properties('a')
+        ... class Example(Proxy, Leaf):
+        ...     @property
+        ...     def a(self):
+        ...         print('getter called')
+        ...         return self._a
+        ...     @a.setter
+        ...     def a(self, value):
+        ...         print('setter called')
+        ...         self._a = value
+        ...     @a.deleter
+        ...     def a(self):
+        ...         print('deleter called')
+        ...         del self._a
+
+        The inheriting class shares the property between the copies
+        using the property's getter/setter/deleter methods.
+        >>> e = Example()
+        >>> copies = [e.copy() for _ in range(3)]
+        >>> e.a = 1
+        setter called
+        setter called
+        setter called
+        setter called
+        >>> all(copy.a == 1 for copy in copies)
+        getter called
+        getter called
+        getter called
+        True
+        >>> del e.a
+        deleter called
+        deleter called
+        deleter called
+        deleter called
+
+    """
+    def wrapper(class_):
+        for name in properties:
+            def get_property(name=name):
+                # closures!
+                wrappedproperty = getattr(class_, name)
+                def getprop(self):
+                    return wrappedproperty.fget(self)
+                def setprop(self, value):
+                    with no_gc():
+                        for copy in self._shared.copies:
+                            wrappedproperty.fset(copy, value)
+                def delprop(self):
+                    with no_gc():
+                        for copy in self._shared.copies:
+                            wrappedproperty.fdel(copy)
+                doc = wrappedproperty.__doc__
+                return property(getprop, setprop, delprop, doc)
+            setattr(class_, name, get_property())
+        return class_
+    return wrapper
+
+@share_properties('tf_device', 'tf_graph', 'tf_session_target',
+                  'on_shape_change', 'on_dtype_change')
+class ProxyWrappedValue(WrappedValue, Proxy):
+    """Sync various useful properties between copies.
+    
+    Shares one cache between all copies, and shares the `.tf_device`, 
+    `.tf_graph`, `.tf_session_target`, `.on_shape_change` and
+    `.on_dtype_change` parameters.
+    
+    """
+    def __init__(self):
+        super().__init__()
+        self._shared.cache = {}
+
+    @property
+    def cache(self):
+        return self._shared.cache
+
+    @cache.setter
+    def cache(self, value):
+        self._shared.cache = value
+
+    @cache.deleter
+    def cache(self):
+        del self._shared.cache
+
+    def clear_all_ancestor_caches(self):
+        """Clears the caches of the ancestors of all copies."""
+        with no_gc():
+            for copy in self._shared.copies:
+                copy.clear_ancestor_caches()
+
+class Param(ProxyWrappedValue, Leaf):
     """A parameter of a model.
 
     Instances have all attributes of `WrappedValue` and the following:
@@ -380,14 +501,71 @@ class Param(WrappedValue, Leaf):
         ...     print("{:.3f}".format(sess.run(grad_exp)))
         2.718
 
-    """
-    class Shared(object):
-        def __init__(self, parent, numpy_value, transform):
-            self.copies = WeakSet([parent])
-            self.numpy_value, self.transform = numpy_value, transform
-            self.fixed = False
-            self.cache = {}
+        Copies
+        ------
 
+        You can create a copy of a `Param` using `Param.copy()`. The
+        new copy represents the same parameter, so the value and
+        various items of state (see below) are the same.
+        >>> p = Param(1.0, transform=transforms.Exp())
+        >>> copy = p.copy()
+
+        Copies have the same value as the original, and updating the
+        value of the copy updates the value of the original.
+        >>> np.array_equal(p.value, copy.value)
+        True
+        >>> p.value = 5.0
+        >>> copy.value
+        array(5.0)
+
+        Copies have the same transform, and setting the transform
+        of a copy sets the transform of the original.
+        >>> copy.transform is p.transform
+        True
+        >>> copy.transform = transforms.Identity()
+        >>> p.transform
+        gptf.core.transforms.Identity()
+
+        Copies have the same "fixed" flag. Fixing a copy fixes the
+        original and vice-versa.
+        >>> p.fixed = True
+        >>> copy.fixed
+        True
+        >>> copy.fixed = False
+        >>> p.fixed
+        False
+
+        Copies have the same free state.
+        >>> p.free_state is copy.free_state
+        True
+
+        This means that it is *very important* that every copy of of a
+        `Param` has the same device context and graph, or odd things
+        happen.
+        >>> class AttributeWrappedTF(AttributeTree, WrappedTF):
+        ...     pass
+        >>> treeparam = Param(1.0)
+        >>> w = AttributeWrappedTF()
+        >>> w.param = treeparam
+        >>> w.child = AttributeWrappedTF()
+        >>> w.child.param = treeparam  # creates a copy of the param
+        >>> w.tf_graph = tf.Graph()
+        >>> w.tf_device = '/job:spoon/task:0'
+        >>> w.child.tf_device = '/job:knife/task:0'
+        
+        In the above example, where should we place
+        `treeparam.free_state`? Should it be on `'/job:spoon/task:0'`
+        where `w.param` is, or on `'/job:knife/task:0'` where
+        `w.child.param` is? Currently, there is no system in place
+        to resolve this. In this situation, one should define the 
+        device context of `treeparam` explicitly:
+        >>> treeparam.tf_device = '/job:spoon'
+
+        To create a new param with the same value, pass the value to
+        `Param.__init__()`.
+        >>> notacopy = Param(p.value, transform=p.transform)
+
+    """
     def __init__(self, initial_value, transform=Identity(), **kwargs):
         """Initialiser.
 
@@ -399,9 +577,10 @@ class Param(WrappedValue, Leaf):
 
         """
         super().__init__(**kwargs)
-        numpy_value = np.array(initial_value)
-        self._shared = self.Shared(self, numpy_value, transform) 
-        
+        self._shared.numpy_value = np.array(initial_value)
+        self._shared.transform = transform
+        self._shared.fixed = False
+
     @tf_method
     @overrides
     def _get_value(self):
@@ -492,7 +671,7 @@ class Param(WrappedValue, Leaf):
         if self._variable:
             # anything that caches anything that relies on self.tensor needs
             # to clear its cache.
-            self.clear_ancestor_caches()
+            self.clear_all_ancestor_caches()
             old_value = self.value
             if '__Param_tensor' in self._shared.cache:
                 del self._shared.cache['__Param_tensor']
@@ -557,24 +736,7 @@ class Param(WrappedValue, Leaf):
         """Sets the variable."""
         self._shared.cache['__Param_variable'] = value
 
-    @overrides
-    def copy(self):
-        copy = super().copy()
-        assert self._shared is copy._shared
-        self._shared.copies.add(copy)
-        return copy
-
-    @overrides
-    def clear_ancestor_caches(self):
-        """Clears the ancestor caches of all copies of this Param."""
-        try:
-            gc.disable()
-            for copy in self._shared.copies:
-                super(Param, copy).clear_ancestor_caches()
-        finally:
-            gc.enable()
-
-class DataHolder(WrappedValue, Leaf):
+class DataHolder(ProxyWrappedValue, Leaf):
     """Holds data to be fed into TensorFlow for computation.
 
     Attributes:
@@ -612,6 +774,50 @@ class DataHolder(WrappedValue, Leaf):
         >>> with d.get_session() as sess:
         ...     sess.run(op, feed_dict=d.feed_dict)
         array([2, 3, 4])
+
+        Copies
+        ------
+
+        You can create a copy of a `DataHolder` using `.copy()`. The
+        new copy represents the same data, so the value and
+        various items of state (see below) are the same.
+        >>> d = DataHolder([1., 1., 1.])
+        >>> copy = d.copy()
+
+        Copies have the same value as the original, and updating the
+        value of the copy updates the value of the original.
+        >>> np.array_equal(d.value, copy.value)
+        True
+        >>> d.value = [5., 4., 3.]
+        >>> copy.value
+        array([ 5., 4., 3.])
+
+        Copies have the same placeholder.
+        >>> d.tensor is copy.tensor
+        True
+
+        This means that it, just in the case of `Param`s, it is 
+        *very important* that every copy of a `DataHolder` has the
+        same device context and graph, or odd things happen.
+        >>> class AttributeWrappedTF(AttributeTree, WrappedTF):
+        ...     pass
+        >>> treedata = DataHolder(1.0)
+        >>> w = AttributeWrappedTF()
+        >>> w.param = treedata
+        >>> w.child = AttributeWrappedTF()
+        >>> w.child.param = treedata  # creates a copy of the data
+        >>> w.tf_graph = tf.Graph()
+        >>> w.tf_device = '/job:spoon/task:0'
+        >>> w.child.tf_device = '/job:knife/task:0'
+        
+        In circumstances like the above, where copies have
+        conflicting parental device contexts, set the device
+        context explicitly.
+        >>> treedata.tf_device = '/job:spoon'
+        
+        To create a new dataholder with the same value, pass the value
+        to `DataHolder.__init__()`.
+        >>> notacopy = DataHolder(d.value)
         
     """
 
@@ -624,16 +830,16 @@ class DataHolder(WrappedValue, Leaf):
 
         """
         super().__init__(**kwargs)
-        self._numpy_value = np.array(initial_value)
+        self._shared.numpy_value = np.array(initial_value)
         self._placeholder = None
 
     @overrides
     def _get_value(self):
-        return self._numpy_value.copy()
+        return self._shared.numpy_value.copy()
 
     @overrides
     def _set_value(self, value):
-        self._numpy_value[...] = value
+        self._shared.numpy_value[...] = value
 
     @property
     def tensor(self):
@@ -643,21 +849,21 @@ class DataHolder(WrappedValue, Leaf):
     @property
     def feed_dict(self):
         self._assert_placeholder()
-        return { self._placeholder: self._numpy_value }
+        return { self._placeholder: self._shared.numpy_value }
 
     @property
     def _placeholder(self):
-        return self.cache.get('_DataHolder__placeholder', None)
+        return self._shared.cache.get('_DataHolder__placeholder', None)
 
     @_placeholder.setter
     def _placeholder(self, value):
-        self.cache['_DataHolder__placeholder'] = value
+        self._shared.cache['_DataHolder__placeholder'] = value
 
     @tf_method
     def _assert_placeholder(self):
         if self._placeholder is None:
-            dtype = tf.as_dtype(self._numpy_value.dtype)
-            self._placeholder = tf.placeholder(dtype) #self._numpy_value.shape)
+            dtype = tf.as_dtype(self._shared.numpy_value.dtype)
+            self._placeholder = tf.placeholder(dtype) #self._shared.numpy_value.shape)
 
 class Parameterized(WrappedTF):
     """An object that contains parameters and data.
