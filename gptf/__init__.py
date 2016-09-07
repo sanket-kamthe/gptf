@@ -1,6 +1,7 @@
 """Provides a GPflow / GPy like interface for distributed GPs."""
 # allow some core modules to be accessed using their names
-from .core import transforms, densities, likelihoods, meanfunctions, tfhacks
+from .core import transforms, densities, likelihoods, meanfunctions, kernels
+from .core import tfhacks   # hopefully someday we can be rid of these
 
 # fetch important objects from core modules
 from .core.models import Model, GPModel
