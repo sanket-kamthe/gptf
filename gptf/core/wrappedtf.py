@@ -1,12 +1,15 @@
 # standard library
 from builtins import super, object
 from functools import wraps
-from collections.abc import Sequence
-import re
+try:  # in case of rogue Python 2.7, use collections instead of collections.abc
+    from collections.abc import Sequence
+except ImportError:
+    from collections import Sequence
 try:  # in case of rogue Python 2.7, use contextlib2 instead of contextlib
     from contextlib import contextmanager, ExitStack
 except ImportError:
     from contextlib2 import contextmanager, ExitStack
+import re
 
 # nonstandard library
 import tensorflow as tf
@@ -70,7 +73,7 @@ class WrappedTF(TreeWithCache):
 
     Attributes:
         NO_DEVICE (object): A class-level constant, used to specify an
-            empty op placement context. Do 
+            empty op placement context.
         tf_device (str | Callable[[tf.Operation], str] | tf.DeviceSpec
                 | WrappedTF.NO_DEVICE | None):
             The device context onto which this object's ops should be pinned.
