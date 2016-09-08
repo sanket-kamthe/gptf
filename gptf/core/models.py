@@ -298,9 +298,9 @@ class GPModel(with_metaclass(ABCMeta, Model)):
         self.likelihood = likelihood
 
     @abstractmethod
-    def build_predict(self, test_points, full_cov=False):
-        """Computes the mean and variance of the latent function(s).
-
+    def build_prior_mean_var(self, test_points, full_cov=False):
+        """Builds an op for the mean and variance of the prior(s).
+        
         In the returned tensors, the last index should always be the 
         latent function index. Suppose `m` is some model with two
         latent functions:
@@ -315,9 +315,43 @@ class GPModel(with_metaclass(ABCMeta, Model)):
         Args:
             test_points (np.ndarray): The points from the sample
                 space for which to predict means and variances
-                of the latent functions. This array should be two 
-                dimensional such that `test_points[i]` retrieves the 
-                `i`th point.
+                of the prior distribution(s). This array should 
+                be two dimensional such that `test_points[i]` 
+                retrieves the `i`th point.
+            full_cov (bool): If `False`, return an array of variances
+                at the test points. If `True`, return the full
+                covariance matrix of the posterior distribution.
+            
+        Returns:
+            (tf.Tensor, tf.Tensor): A tensor that calculates the
+            mean at the test points, a tensor that calculates either 
+            the variances at the test points or the full covariance
+            matrix. Both tensors have the same dtype.
+
+        """
+        NotImplemented
+
+    @abstractmethod
+    def build_posterior_mean_var(self, test_points, full_cov=False):
+        """Builds an op for the mean and variance of the posterior(s).
+
+        In the returned tensors, the last index should always be the 
+        latent function index. Suppose `m` is some model with two
+        latent functions:
+
+            test_points = tf.constant([[1, 2], [3, 4]])
+            mean, var = m.build_posterior_mean_var([[1,2],[3,4]], True)
+            mean[:, 0]  # means for the 0th latent func
+            mean[:, 1]  # means for the 1st latent func
+            var[:, :, 0]  # full covariance matrix for latent func 0
+            var[:, :, 1]  # full covariance matrix for latent func 1
+
+        Args:
+            test_points (np.ndarray): The points from the sample
+                space for which to predict means and variances
+                of the posterior distribution(s). This array should 
+                be two dimensional such that `test_points[i]` 
+                retrieves the `i`th point.
             full_cov (bool): If `False`, return an array of variances
                 at the test points. If `True`, return the full
                 covariance matrix of the posterior distribution.
@@ -330,10 +364,10 @@ class GPModel(with_metaclass(ABCMeta, Model)):
 
         """
         NotImplemented
-        
+
     @autoflow((tf.float64, [None, None]))
-    def predict_fs(self, test_points):
-        """Computes the means and variances of the latent function(s).
+    def compute_prior_mean_var(self, test_points):
+        """Computes the means and variances of the prior(s).
 
         This is just an autoflowed version of 
         `.build_predict(test_points)`.
@@ -349,10 +383,135 @@ class GPModel(with_metaclass(ABCMeta, Model)):
             the variances at the test points.
 
         """
-        return self.build_predict(test_points, full_cov=False)
+        return self.build_prior_mean_var(test_points, full_cov=False)
 
     @autoflow((tf.float64, [None, None]))
-    def predict_fs_full_cov(self, test_points):
+    def compute_prior_mean_cov(self, test_points):
+        """Computes the means and full covariance matrices.
+
+        This is just an autoflowed version of 
+        `.build_predict(test_points, full_cov=True)`.
+
+        Args:
+            test_points (np.ndarray): The points from the sample
+                space for which to compute means and predictions.
+                This array should be two dimensional such that
+                `test_points[i]` retrieves the `i`th point.
+
+        Returns:
+            (np.ndarray, np.ndarray): The means at the test points,
+            the full covriance matri(x|ces) for the prior 
+            distribution(s).
+
+        """
+        return self.build_prior_mean_var(test_points, full_cov=True)
+
+    @autoflow((tf.float64, [None, None]), (tf.int32, []))
+    def compute_prior_samples(self, test_points, num_samples): 
+        """Computes samples from the prior distribution(s).
+
+        Args:
+            test_points (np.ndarray): The points from the sample
+                space for which to compute samples. This array should
+                be two dimensional such that `test_points[i]` 
+                should retrieve the `i`th point.
+            num_samples (int): The number of samples to take.
+
+        Returns:
+            (np.ndarray): An array of samples from the prior
+            distributions, with dimensions 
+            `(sample, test_point, latent_func)`
+
+        Examples:
+            For testing purposes, we create an example model whose
+            likelihood is always `0` and whose `.build_predict()`
+            returns mean `0` and variance `1` for every test point,
+            or an independent covariance matrix.
+            >>> from overrides import overrides
+            >>> from gptf import ParamAttributes, tfhacks
+            >>> class Example(GPModel, ParamAttributes):
+            ...     def __init__(self, likelihood, dtype):
+            ...         super().__init__(likelihood)
+            ...         self.dtype = dtype
+            ...     @property
+            ...     def dtype(self):
+            ...         return self._dtype
+            ...     @dtype.setter
+            ...     def dtype(self, value):
+            ...         self.clear_cache()
+            ...         self._dtype = value
+            ...     @tf_method
+            ...     @overrides
+            ...     def build_log_likelihood(self):
+            ...         return tf.constant(0)
+            ...     @tf_method
+            ...     @overrides
+            ...     def build_log_likelihood(self):
+            ...         NotImplemented
+            ...     @tf_method
+            ...     @overrides
+            ...     def build_prior_mean_var\
+            ...             (self, test_points, full_cov=False):
+            ...         n = tf.shape(test_points)[0]
+            ...         mu = tf.zeros([n, 1], self.dtype)
+            ...         var = (tf.expand_dims(tfhacks.eye(n, self.dtype),-1) 
+            ...                if full_cov else tf.ones([n, 1], self.dtype))
+            ...         return mu, var
+            ...     @tf_method
+            ...     @overrides
+            ...     def build_posterior_mean_var\
+            ...             (self, test_points, full_cov=False):
+            ...         NotImplemented
+            >>> m = Example(None, tf.float64)  # ignore the likelihood
+            >>> test_points = np.array([[0.], [1.], [2.], [3.]])
+
+            The shape of the returned array is `(a, b, c)`, where `a`
+            is the number of samples, `b` is the number of test points
+            and `c` is the number of latent functions.
+            >>> samples = m.compute_prior_samples(test_points, 2)
+            >>> samples.shape
+            (2, 4, 1)
+
+            `.compute_prior_samples()` respects the dtype of the tensors
+            returned by `.build_predict()`.
+            >>> samples.dtype
+            dtype('float64')
+            >>> m.dtype = tf.float32
+            >>> samples = m.compute_prior_samples(test_points, 2)
+            >>> samples.dtype
+            dtype('float32')
+            
+        """
+        mu, var = self.build_prior_mean_var(test_points, full_cov=True)
+        jitter = tfhacks.eye(tf.shape(mu)[0], var.dtype) * 1e-06
+        L = tf.batch_cholesky(tf.transpose(var, (2, 0, 1)) + jitter)
+        V_shape = [tf.shape(L)[0], tf.shape(L)[1], num_samples]
+        V = tf.random_normal(V_shape, dtype=L.dtype)
+        samples = tf.expand_dims(tf.transpose(mu), -1) + tf.batch_matmul(L, V)
+        return tf.transpose(samples)
+        
+    @autoflow((tf.float64, [None, None]))
+    def compute_posterior_mean_var(self, test_points):
+        """Computes the means and variances of the posterior(s).
+
+        This is just an autoflowed version of 
+        `.build_predict(test_points)`.
+
+        Args:
+            test_points (np.ndarray): The points from the sample
+                space for which to compute means and predictions.
+                This array should be two dimensional such that
+                `test_points[i]` retrieves the `i`th point.
+
+        Returns:
+            (np.ndarray, np.ndarray): The means at the test points,
+            the variances at the test points.
+
+        """
+        return self.build_posterior_mean_var(test_points, full_cov=False)
+
+    @autoflow((tf.float64, [None, None]))
+    def compute_posterior_mean_cov(self, test_points):
         """Computes the means and full covariance matrices.
 
         This is just an autoflowed version of 
@@ -370,10 +529,10 @@ class GPModel(with_metaclass(ABCMeta, Model)):
             distribution(s).
 
         """
-        return self.build_predict(test_points, full_cov=True)
+        return self.build_posterior_mean_var(test_points, full_cov=True)
 
     @autoflow((tf.float64, [None, None]), (tf.int32, []))
-    def predict_fs_samples(self, test_points, num_samples): 
+    def compute_posterior_samples(self, test_points, num_samples): 
         """Computes samples from the posterior distribution(s).
 
         Args:
@@ -409,10 +568,16 @@ class GPModel(with_metaclass(ABCMeta, Model)):
             ...     @tf_method
             ...     @overrides
             ...     def build_log_likelihood(self):
-            ...         return tf.constant(0)
+            ...         NotImplemented
             ...     @tf_method
             ...     @overrides
-            ...     def build_predict(self, test_points, full_cov=False):
+            ...     def build_prior_mean_var\
+            ...             (self, test_points, full_cov=False):
+            ...         NotImplemented
+            ...     @tf_method
+            ...     @overrides
+            ...     def build_posterior_mean_var\
+            ...             (self, test_points, full_cov=False):
             ...         n = tf.shape(test_points)[0]
             ...         mu = tf.zeros([n, 1], self.dtype)
             ...         var = (tf.expand_dims(tfhacks.eye(n, self.dtype),-1) 
@@ -424,21 +589,21 @@ class GPModel(with_metaclass(ABCMeta, Model)):
             The shape of the returned array is `(a, b, c)`, where `a`
             is the number of samples, `b` is the number of test points
             and `c` is the number of latent functions.
-            >>> samples = m.predict_fs_samples(test_points, 2)
+            >>> samples = m.compute_posterior_samples(test_points, 2)
             >>> samples.shape
             (2, 4, 1)
 
-            `.predict_fs_samples()` respects the dtype of the tensors
+            `.compute_posterior_samples()` respects the dtype of the tensors
             returned by `.build_predict()`.
             >>> samples.dtype
             dtype('float64')
             >>> m.dtype = tf.float32
-            >>> samples = m.predict_fs_samples(test_points, 2)
+            >>> samples = m.compute_posterior_samples(test_points, 2)
             >>> samples.dtype
             dtype('float32')
             
         """
-        mu, var = self.build_predict(test_points, full_cov=True)
+        mu, var = self.build_posterior_mean_var(test_points, full_cov=True)
         jitter = tfhacks.eye(tf.shape(mu)[0], var.dtype) * 1e-06
         L = tf.batch_cholesky(tf.transpose(var, (2, 0, 1)) + jitter)
         V_shape = [tf.shape(L)[0], tf.shape(L)[1], num_samples]
