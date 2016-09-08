@@ -23,6 +23,16 @@ class GPR(GPModel):
             of the GP.
         likelihood (gptf.likelihoods.Gaussian): The likelihood of the GP
 
+    Examples:
+        >>> from gptf import Kernels
+        >>> X = np.array([[1, 1, 0],
+        ...               [1, 2, 1],
+        ...               [2, 3, 0]])
+        >>> Y = np.array([[1, 1],
+        ...               [2, 3],
+        ...               [3, 1]])
+        >>> g = GPR()
+
     """
     def __init__(self, inputs, values, kernel, 
             meanfunction=meanfunctions.Zero()):
@@ -61,9 +71,23 @@ class GPR(GPModel):
 
     @tf_method
     @overrides
-    def build_predict(self, test_points, full_cov=False):
+    def build_prior_mean_var(self, test_points, full_cov=False):
+        fmean = self.meanfunction(test_points)
+        num_latent = tf.shape(self.values.tensor)[1]
+        fmean += tf.zeros([1, num_latent])  # broadcasting mu to correct shape
+        if full_cov:
+            fvar = self.kernel.K(test_points)
+            fvar = tf.tile(tf.expand_dims(cov, 2), (1, 1, num_latent)
+        else:
+            fvar = self.kernel.KDiag(test_points)
+            fvar = tf.tile(tf.expand_dims(fvar, 1), (1, num_latent))
+        return fmean, fvar
+
+    @tf_method
+    @overrides
+    def build_posterior_mean_var(self, test_points, full_cov=False):
         X = self.inputs.tensor
-        Y = self.inputs.tensor
+        Y = self.values.tensor
         Kx = self.kernel.K(X, test_points)
         K = self.kernel.K(X) + tfhacks.eye(tf.shape(X)[0], X.dtype)
         K *= self.likelihood.variance.tensor
@@ -71,7 +95,7 @@ class GPR(GPModel):
         A = tf.matrix_triangular_solve(L, Kx, lower=True)
         V = tf.matrix_triangular_solve(L, Y - self.meanfunction(X))
         fmean = tf.matmul(A, V, transpose_a=True)
-        fmean += self.mean_function(test_points)
+        fmean += self.meanfunction(test_points)
         if full_cov:
             fvar = self.kernel.K(test_points) - tf.matmul(A, A, transpose_a=1)
             fvar = tf.tile(tf.expand_dims(fvar, 2), (1, 1, tf.shape(Y)[1]))
