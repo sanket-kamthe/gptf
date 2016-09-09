@@ -1,6 +1,6 @@
-# GPTF
+# gptf
 
-GPTF is a library for building Guassian Process models in Python using
+**gptf** is a library for building Guassian Process models in Python using
 [TensorFlow][tensorflow], based on [GPflow][GPflow]. Its benefits over
 GPflow include:
 
