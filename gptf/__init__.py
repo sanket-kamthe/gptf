@@ -5,7 +5,7 @@ from .core import tfhacks   # hopefully someday we can be rid of these
 
 # fetch important objects from core modules
 from .core.models import Model, GPModel
-from .core.params import DataHolder, Param, Parameterised, \
+from .core.params import DataHolder, Param, Parameterized, \
         ParamAttributes, ParamList, autoflow
 from .core.wrappedtf import tf_method
 
