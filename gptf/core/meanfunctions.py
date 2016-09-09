@@ -18,7 +18,7 @@ class MeanFunction(with_metaclass(ABCMeta, Parameterized)):
 
     Examples:
         >>> class Ones(MeanFunction, ParamAttributes):
-        ...     @tf_method
+        ...     @tf_method()
         ...     @overrides
         ...     def __call__(self, X):
         ...         return tf.ones(tf.shape(X), dtype=X.dtype)
@@ -128,7 +128,7 @@ class Zero(MeanFunction, ParamAttributes):
         super().__init__()
         self.num_latent_functions = num_latent_functions
 
-    @tf_method
+    @tf_method()
     @overrides
     def __call__(self, X):
         """Calls the mean function.
@@ -188,7 +188,7 @@ class Linear(MeanFunction, ParamAttributes):
         self.A = A if isinstance(A, Param) else Param(A)
         self.b = b if isinstance(b, Param) else Param(b)
 
-    @tf_method
+    @tf_method()
     @overrides
     def __call__(self, X):
         """Calls the mean function.
@@ -225,7 +225,7 @@ class Constant(MeanFunction, ParamAttributes):
         super().__init__()
         self.c = c if isinstance(c, Param) else Param(c)
 
-    @tf_method
+    @tf_method()
     @overrides
     def __call__(self, X):
         """Calls the mean function.
@@ -253,7 +253,7 @@ class Negative(MeanFunction, ParamAttributes):
         super().__init__()
         self.negated = function
 
-    @tf_method
+    @tf_method()
     @overrides
     def __call__(self, X):
         return tf.neg(self.negated(X))
@@ -268,7 +268,7 @@ class Absolute(MeanFunction, ParamAttributes):
         super().__init__()
         self.absolute = function
 
-    @tf_method
+    @tf_method()
     @overrides
     def __call__(self, X):
         return tf.abs(self.absolute(X))
@@ -283,7 +283,7 @@ class Additive(MeanFunction, ParamList):
         super().__init__()
         self.extend(functions)
 
-    @tf_method
+    @tf_method()
     @overrides
     def __call__(self, X):
         vals = tf.pack([f(X) for f in self.children])
@@ -311,7 +311,7 @@ class Multiplicative(MeanFunction, ParamList):
         super().__init__()
         self.extend(functions)
 
-    @tf_method
+    @tf_method()
     @overrides
     def __call__(self, X):
         vals = tf.pack([f(X) for f in self.children])
@@ -347,7 +347,7 @@ class Divisive(MeanFunction, ParamAttributes):
     def clone(self):
         return Divisive(self.numerator, self.denominator)
 
-    @tf_method
+    @tf_method()
     @overrides
     def __call__(self, X):
         return tf.div(self.numerator(X), self.denominator(X))
@@ -389,7 +389,7 @@ class Divisive(MeanFunction, ParamAttributes):
         return m
 
 class _one(MeanFunction, ParamAttributes):
-    @tf_method
+    @tf_method()
     @overrides
     def __call__(self, X):
         return tf.ones([], dtype=X.dtype)

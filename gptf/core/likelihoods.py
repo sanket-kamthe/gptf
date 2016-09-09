@@ -8,7 +8,7 @@ import numpy as np
 import tensorflow as tf
 
 from . import densities, transforms
-from .params import Parameterized, Param
+from .params import Parameterized, ParamAttributes, Param
 from .wrappedtf import tf_method
 
 
@@ -67,7 +67,7 @@ class Likelihood(with_metaclass(ABCMeta, Parameterized)):
         """
         NotImplemented
 
-    @tf_method
+    @tf_method()
     def predict_mean_and_var(self, mu_F, var_F):
         """The mean & variance of Y given a mean & variance of the latent func.
 
@@ -84,7 +84,7 @@ class Likelihood(with_metaclass(ABCMeta, Parameterized)):
         """
         NotImplemented
 
-    @tf_method
+    @tf_method()
     def predict_density(self, mu_F, var_F, Y):
         """The (log) density of Y given a mean & variance of the latent func.
 
@@ -98,7 +98,7 @@ class Likelihood(with_metaclass(ABCMeta, Parameterized)):
         """
         NotImplemented
 
-    @tf_method
+    @tf_method()
     def variational_expectations(self, mu_F, var_F, Y):
         """Compute the expected log density of the data.
 
@@ -113,7 +113,7 @@ class Likelihood(with_metaclass(ABCMeta, Parameterized)):
         NotImplemented
 
 
-class Guassian(Likelihood):
+class Gaussian(Likelihood, ParamAttributes):
     def __init__(self, variance=1.):
         """Initialiser.
 
@@ -126,32 +126,32 @@ class Guassian(Likelihood):
         self.variance = (variance if isinstance(variance, Param)
                          else Param(variance, transform=transforms.Exp()))
 
-    @tf_method
+    @tf_method()
     @overrides
     def logp(self, F, Y):
         return densities.gaussian(F, Y, self.variance.tensor)
 
-    @tf_method
+    @tf_method()
     @overrides
     def conditional_mean(self, F):
         return tf.identity(F)
 
-    @tf_method
+    @tf_method()
     @overrides
     def conditional_variance(self, F):
         return tf.fill(tf.shape(F), self.variance.tensor)
 
-    @tf_method
+    @tf_method()
     @overrides
     def predict_mean_and_var(self, mu_F, var_F):
         return tf.identity(mu_F), var_F + self.variance.tensor
 
-    @tf_method
+    @tf_method()
     @overrides
     def predict_density(self, mu_F, var_F, Y):
         return densities.gaussian(mu_F, Y, var_F + self.variance.tensor)
 
-    @tf_method
+    @tf_method()
     @overrides
     def variational_expectations(self, mu_F, var_F, Y):
         return (-.5 * tf.log(2*np.pi) - .5 * tf.log(self.variance.tensor) -

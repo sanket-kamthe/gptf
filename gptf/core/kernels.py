@@ -21,14 +21,14 @@ class Kernel(with_metaclass(ABCMeta, Parameterized)):
 
     Examples:
         >>> class Ones(Kernel, ParamAttributes):
-        ...     @tf_method
+        ...     @tf_method()
         ...     @overrides
         ...     def K(self, X, X2):
         ...         if X2 is None:
         ...             X2 = X
         ...         return tf.ones((tf.shape(X)[0], tf.shape(X2)[0]), 
         ...                        dtype=X.dtype)
-        ...     @tf_method
+        ...     @tf_method()
         ...     @overrides
         ...     def Kdiag(self, X):
         ...         return tf.ones((tf.shape(X)[0],), dtype=X.dtype)
@@ -171,11 +171,11 @@ class PartiallyActive(Kernel, ParamAttributes):
         First, we define an example kernel that lets us inspect the
         arguments passed to `.K()`.
         >>> class Example(Kernel, ParamAttributes):
-        ...     @tf_method
+        ...     @tf_method()
         ...     @overrides
         ...     def K(self, X, X2):
         ...         return X, X2
-        ...     @tf_method
+        ...     @tf_method()
         ...     @overrides
         ...     def Kdiag(self, X, X2):
         ...         NotImplemented
@@ -236,12 +236,12 @@ class PartiallyActive(Kernel, ParamAttributes):
                 X2 = tf.transpose(tf.gather(tf.transpose(X2), self.active_dims))
             return X, X2
 
-    @tf_method
+    @tf_method()
     @overrides
     def K(self, X, X2=None):
         return self.wrapped.K(*self._slice(X, X2))
 
-    @tf_method
+    @tf_method()
     @overrides
     def Kdiag(self, X, X2=None):
         return self.wrapped.Kdiag(*self._slice(X, X2))
@@ -270,7 +270,7 @@ class Static(Kernel, ParamAttributes):
         self.variance = (variance if isinstance(variance, Param)
                          else Param(variance, transform=Exp()))
 
-    @tf_method
+    @tf_method()
     @overrides
     def Kdiag(self, X):
         return tf.fill([tf.shape(X)[0]], self.variance.tensor)
@@ -296,7 +296,7 @@ Bias = Constant  # a rose by another other name
 class Stationary(with_metaclass(ABCMeta, Kernel, ParamAttributes)):
     """Base class for stationary kernels.
 
-    Inheriting classes must define `.trueK` instead of `.K`.
+    Inheriting classes must define `._trueK()` instead of `.K()`.
 
     Stationary kernels depend only on
         r = || X - X2 ||
@@ -312,6 +312,32 @@ class Stationary(with_metaclass(ABCMeta, Kernel, ParamAttributes)):
             before distances are found between them.
             Note that if ARD is used, this will be `None` until the
             first call to `.K()`.
+
+    Examples:
+        You can use ARD to automatically create one length scale for
+        each dimension of the input.
+        >>> from gptf import tfhacks
+        >>> class Example(Stationary):
+        ...     @tf_method()
+        ...     @overrides
+        ...     def _trueK(self, X, X2=None):
+        ...         n = tf.shape(X)[0]
+        ...         return tfhacks.eye((n, n))
+        >>> e = Example(1., 1., True)  # use ARD
+
+        At first, no length scale parameter is created.
+        >>> e.lengthscales is None
+        True
+
+        When `.K()` is called, the shape of `X` is used to create the
+        value of `.lengthscales`.
+        >>> X = np.array([[2., 3., 4.]])
+        >>> e.get_session().run(e.K(X))
+        array([[ 1.]])
+        >>> isinstance(e.lengthscales, Param)
+        True
+        >>> e.lengthscales.value
+        array([ 1., 1., 1.])
 
     """
     def __init__(self, variance=1.0, lengthscales=1.0, ARD=False):
@@ -342,27 +368,33 @@ class Stationary(with_metaclass(ABCMeta, Kernel, ParamAttributes)):
         else:
             self.lengthscales = Param(lengthscales, transform=Exp())
 
-    @staticmethod
-    def trueK(self, X, X2=None):
+    @abstractmethod
+    def _trueK(self, X, X2=None):
         """See Kernel.K.__doc__"""
         NotImplemented
 
-    @tf_method
+    @tf_method()
     @overrides
     def K(self, X, X2=None):
         if self._ARD and self.lengthscales is None:
             # accept float or array
-            base = np.ones(tf.get_rank(X))
+            try:
+                # tensor
+                dim = X.get_shape()[1].value
+            except AttributeError:
+                # ndarray or array_like
+                dim = np.shape(X)[1]
+            base = np.ones((dim,))
             l = self._initial_lengthscales * base
             self.lengthscales = Param(l, transform=Exp())
-        return self.trueK(X, X2)
+        return self._trueK(X, X2)
 
-    @tf_method
+    @tf_method()
     @overrides
     def Kdiag(self, X):
         return tf.fill((tf.shape(X)[0],), self.variance.tensor)
 
-    @tf_method
+    @tf_method()
     def square_dist(self, X, X2=None):
         """The squared distances between X and X2.
 
@@ -373,17 +405,19 @@ class Stationary(with_metaclass(ABCMeta, Kernel, ParamAttributes)):
         
         Returns:
             (tf.Tensor): A tensor of shape `N`x`M`, where
-            `self.squared_dist(X, X2)[a, b]` is the squared distance
+            `self.square_dist(X, X2)[a, b]` is the squared distance
             between `X[a]` and `X2[b]`.
 
         """
-        X = X / self.lengthscales
-        X2 = X if X2 is None else X2 / self.lengthscales
+        l = self.lengthscales.tensor
+        X = X / l
+        X2 = X if X2 is None else X2 / l
         X = tf.expand_dims(X, 1)
-        X2 = tf.expand_dims(X, 0)
-        return tf.reduce_sum(tf.square(X - X2), 2)
+        X2 = tf.expand_dims(X2, 0)
+        ret = tf.reduce_sum(tf.square(X - X2), 2)
+        return ret
 
-    @tf_method
+    @tf_method()
     def euclid_dist(self, X, X2):
         """The Euclidean distances between X and X2.
 
@@ -394,59 +428,61 @@ class Stationary(with_metaclass(ABCMeta, Kernel, ParamAttributes)):
         
         Returns:
             (tf.Tensor): A tensor of shape `N`x`M`, where
-            `self.squared_dist(X, X2)[a, b]` is the Euclidean distance
+            `self.square_dist(X, X2)[a, b]` is the Euclidean distance
             between `X[a]` and `X2[b]`.
 
         """
-        return tf.sqrt(self.squared_dist(X, X2))
+        return tf.sqrt(self.square_dist(X, X2))
 
 class RBF(Stationary):
     """The Radial Basis Function (RBF) or squared exponential kernel."""
-    @tf_method
+    @tf_method()
     @overrides
-    def trueK(self, X, X2=None):
-        return self.variance * tf.exp(-self.squared_dist(X, X2)/2)
+    def _trueK(self, X, X2=None):
+        return self.variance.tensor * tf.exp(-self.square_dist(X, X2)/2)
         
 class Exponential(Stationary):
     """The Exponential kernel."""
-    @tf_method
+    @tf_method()
     @overrides
-    def trueK(self, X, X2=None):
-        return self.variance * tf.exp(-self.euclid_dist(X, X2)/2)
+    def _trueK(self, X, X2=None):
+        return self.variance.tensor * tf.exp(-self.euclid_dist(X, X2)/2)
 
 class Matern12(Stationary):
     """The Matern 1/2 kernel"""
-    @tf_method
+    @tf_method()
     @overrides
-    def trueK(self, X, X2=None):
+    def _trueK(self, X, X2=None):
         r = self.euclid_dist(X, X2)
-        return self.variance * tf.exp(-r)
+        return self.variance.tensor * tf.exp(-r)
 
 class Matern32(Stationary):
     """The Matern 3/2 kernel"""
-    @tf_method
+    @tf_method()
     @overrides
-    def trueK(self, X, X2=None):
+    def _trueK(self, X, X2=None):
+        v = self.variance.tensor
         r = self.euclid_dist(X, X2)
         sqrt3 = np.sqrt(3.)
-        return self.variance * (1. + sqrt3*r) * tf.exp(-sqrt3*r)
+        return v * (1. + sqrt3 * r) * tf.exp(-sqrt3 * r)
 
 class Matern52(Stationary):
     """The Matern 5/2 kernel"""
-    @tf_method
+    @tf_method()
     @overrides
-    def trueK(self, X, X2=None):
-        r2 = self.squared_dist(X, X2)
+    def _trueK(self, X, X2=None):
+        v = self.variance.tensor
+        r2 = self.square_dist(X, X2)
         r = tf.sqrt(r2)
         sqrt5 = np.sqrt(5.)
-        return self.variance * (1. + sqrt5*r + 5/3*r2) * tf.exp(-sqrt5*r)
+        return v * (1. + sqrt5 * r + 5/3 * r2) * tf.exp(-sqrt5 * r)
 
 class Cosine(Stationary):
     """The Cosine kernel."""
-    @tf_method
+    @tf_method()
     @overrides
-    def trueK(self, X, X2=None):
-        return self.variance * tf.cos(self.euclid_distance(X, X2))
+    def _trueK(self, X, X2=None):
+        return self.variance.tensor * tf.cos(self.euclid_distance(X, X2))
 
 #TODO: Implement more kernels
 
@@ -456,12 +492,12 @@ class Negative(Kernel, ParamAttributes):
         super().__init__()
         self.negated = kernel
 
-    @tf_method
+    @tf_method()
     @overrides
     def K(self, X, X2=None):
         return tf.neg(self.negated.K(X, X2))
 
-    @tf_method
+    @tf_method()
     @overrides
     def Kdiag(self, X):
         return tf.neg(self.negated.Kdiag(X))
@@ -476,12 +512,12 @@ class Absolute(Kernel, ParamAttributes):
         super().__init__()
         self.absolute = kernel
 
-    @tf_method
+    @tf_method()
     @overrides
     def K(self, X, X2=None):
         return tf.abs(self.absolute.K(X, X2))
 
-    @tf_method
+    @tf_method()
     @overrides
     def Kdiag(self, X):
         return tf.abs(self.absolute.Kdiag(X))
@@ -496,13 +532,13 @@ class Additive(Kernel, ParamList):
         super().__init__()
         self.extend(kernels)
 
-    @tf_method
+    @tf_method()
     @overrides
     def K(self, X, X2=None):
         vals = tf.pack([k.K(X, X2) for k in self.children])
         return tf.reduce_sum(vals, 0)
 
-    @tf_method
+    @tf_method()
     @overrides
     def Kdiag(self, X):
         vals = tf.pack([k.Kdiag(X) for k in self.children])
@@ -530,13 +566,13 @@ class Multiplicative(Kernel, ParamList):
         super().__init__()
         self.extend(kernels)
 
-    @tf_method
+    @tf_method()
     @overrides
     def K(self, X, X2=None):
         vals = tf.pack([k.K(X, X2) for k in self.children])
         return tf.reduce_prod(vals, 0)
 
-    @tf_method
+    @tf_method()
     @overrides
     def Kdiag(self, X):
         vals = tf.pack([k.Kdiag(X) for k in self.operands])
@@ -569,12 +605,12 @@ class Divisive(Kernel, ParamAttributes):
         self.numerator = numerator
         self.denominator = denominator
 
-    @tf_method
+    @tf_method()
     @overrides
     def K(self, X, X2=None):
         return tf.div(self.numerator.K(X, X2), self.denominator.K(X, X2))
 
-    @tf_method
+    @tf_method()
     @overrides
     def Kdiag(self, X):
         return tf.div(self.numerator.Kdiag(X), self.denominator.Kdiag(X))
@@ -616,12 +652,12 @@ class Divisive(Kernel, ParamAttributes):
         return m
 
 class _one(Kernel, ParamAttributes):
-    @tf_method
+    @tf_method()
     @overrides
     def K(self, X, X2=None):
         return tf.ones([], dtype=X.dtype)
 
-    @tf_method
+    @tf_method()
     @overrides
     def Kdiag(self, X):
         return tf.ones([], dtype=X.dtype)

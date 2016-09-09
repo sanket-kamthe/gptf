@@ -271,7 +271,8 @@ def share_properties(*properties):
                         for copy in self._shared.copies:
                             wrappedproperty.fdel(copy)
                 doc = wrappedproperty.__doc__
-                return property(getprop, setprop, delprop, doc)
+                prop = property(getprop, setprop, delprop, doc)
+                return prop
             setattr(class_, name, get_property())
         return class_
     return wrapper
@@ -286,8 +287,8 @@ class ProxyWrappedValue(WrappedValue, Proxy):
     `.on_dtype_change` parameters.
     
     """
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self._shared.cache = {}
 
     @property
@@ -581,7 +582,7 @@ class Param(ProxyWrappedValue, Leaf):
         self._shared.transform = transform
         self._shared.fixed = False
 
-    @tf_method
+    @tf_method(cache=False)
     @overrides
     def _get_value(self):
         if self._variable:
@@ -590,7 +591,7 @@ class Param(ProxyWrappedValue, Leaf):
         else:
             return self._shared.numpy_value.copy()
 
-    @tf_method
+    @tf_method(cache=False)
     @overrides
     def _set_value(self, value):
         if self._variable:
@@ -602,7 +603,7 @@ class Param(ProxyWrappedValue, Leaf):
             self._shared.numpy_value[...] = value
 
     @property
-    @tf_method
+    @tf_method(cache=False)
     def tensor(self):
         """Returns a tensor representing the value of the parameter.
         
@@ -623,7 +624,7 @@ class Param(ProxyWrappedValue, Leaf):
         return {}
 
     @property
-    @tf_method
+    @tf_method(cache=False)
     def free_state(self):
         """Returns a variable that maps to the free state of the parameter."""
         if not self.fixed:
@@ -701,7 +702,7 @@ class Param(ProxyWrappedValue, Leaf):
         super().clear_cache()
 
     @property
-    @tf_method
+    @tf_method(cache=False)
     def initializer(self):
         """Initialises the internal `tf.Variable` to the correct value.
         
@@ -714,7 +715,7 @@ class Param(ProxyWrappedValue, Leaf):
             free_state = self.transform.np_backward(self._shared.numpy_value)
             return self._variable.assign(free_state)
             
-    @tf_method
+    @tf_method(cache=False)
     def _ensure_variable(self):
         """Creates a variable if necessary."""
         if not self._variable:
@@ -859,7 +860,7 @@ class DataHolder(ProxyWrappedValue, Leaf):
     def _placeholder(self, value):
         self._shared.cache['_DataHolder__placeholder'] = value
 
-    @tf_method
+    @tf_method(cache=False)
     def _assert_placeholder(self):
         if self._placeholder is None:
             dtype = tf.as_dtype(self._shared.numpy_value.dtype)
@@ -1032,11 +1033,11 @@ class Parameterized(WrappedTF):
             >>> p.child.a = Param([1., 2., 3.])
             >>> p.child.b = Param([[1.]], transform=transforms.Exp())
             >>> print(p.param_summary(fmt='plain'))  # doctest:-NORMALIZE_WHITESPACE
-            name      | value           | transform | prior
-            ----------+-----------------+-----------+------
-            p.child.a | [1.0, 2.0, 3.0] | identity  | nyi  
-            p.child.b | <np.ndarray>    | +ve (Exp) | nyi  
-            p.param   | 1.0             | identity  | nyi  
+            name      | value                 | transform | prior
+            ----------+-----------------------+-----------+------
+            p.child.a | [1.000, 2.000, 3.000] | identity  | nyi  
+            p.child.b | <np.ndarray>          | +ve (Exp) | nyi  
+            p.param   | 1.000                 | identity  | nyi  
             
         """
         params = self.params
@@ -1079,11 +1080,11 @@ class Parameterized(WrappedTF):
             >>> p.child.a = DataHolder([1., 2., 3.])
             >>> p.child.b = DataHolder([[1.]])
             >>> print(p.data_summary(fmt='plain'))  # doctest:-NORMALIZE_WHITESPACE
-            name      | value          
-            ----------+----------------
-            p.child.a | [1.0, 2.0, 3.0]
-            p.child.b | <np.ndarray>   
-            p.data    | 1.0            
+            name      | value                
+            ----------+----------------------
+            p.child.a | [1.000, 2.000, 3.000]
+            p.child.b | <np.ndarray>         
+            p.data    | 1.000                
 
         """
         data = self.data_holders
@@ -1139,7 +1140,7 @@ class Parameterized(WrappedTF):
 
             A zero-dimensional array produces a scalar representation:
             >>> Parameterized._value_str(a, 5, '')
-            '1.0'
+            '1.000'
 
             One dimensional arrays are repreduced up to `max_len`:
             >>> Parameterized._value_str(b, 5, '')
@@ -1152,16 +1153,22 @@ class Parameterized(WrappedTF):
             '<np.ndarray>'
           
         """
+        def tostring(arr):
+            arr = np.asscalar(arr)
+            if isinstance(arr, float):
+                return "{:.3f}".format(arr)
+            else:
+                return str(arr)
         if len(value.shape) > 1:
             return "<np.ndarray>"
         elif len(value.shape) == 1:
             if value.shape[0] > max_len:
-                return "[" + ", ".join(map(str, value[:max_len - 1])) \
+                return "[" + ", ".join(map(tostring, value[:max_len - 1])) \
                         + ", ...]"
             else:
-                return "[" + ", ".join(map(str, value)) + "]"
+                return "[" + ", ".join(map(tostring, value)) + "]"
         else:
-            return str(value)
+            return tostring(value)
 
 # en-gb compatibility patch
 Parameterised = Parameterized
@@ -1360,7 +1367,7 @@ def autoflow(*placeholder_specs):
             returns a NumPy array through autoflow magic.
 
         """
-        @tf_method
+        @tf_method(cache=False)
         @wraps(method)
         def wrapper(instance, *np_args):
             name = '_Parameterized__autoflow__{}'.format(method.__name__)

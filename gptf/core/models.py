@@ -9,7 +9,7 @@ from tensorflow.contrib.opt import ScipyOptimizerInterface
 from scipy.optimize import OptimizeResult
 
 from . import tfhacks
-from .params import Parameterized, DataHolder, autoflow
+from .params import Parameterized, ParamAttributes, DataHolder, autoflow
 from .wrappedtf import tf_method
 
 class Model(with_metaclass(ABCMeta, Parameterized)):
@@ -27,12 +27,12 @@ class Model(with_metaclass(ABCMeta, Parameterized)):
     ...         super().__init__()
     ...         self.x = Param(1.)  # create new Param child
     ...
-    ...     @tf_method
+    ...     @tf_method()
     ...     @overrides
     ...     def build_log_likelihood(self):
     ...         return 3 - self.x.tensor  # use Param in expression
 
-    The `.optimise` method can be used to optimise the parameters of the
+    The `.optimize` method can be used to optimize the parameters of the
     model to minimise the likelihood. The loss function (the negative of
     the sum of the likelihood and any priors) is cached in the WrappedTF
     cache, and lazily recompiled when the cache is cleared, e.g. on 
@@ -50,7 +50,7 @@ class Model(with_metaclass(ABCMeta, Parameterized)):
         """
         NotImplemented
 
-    @tf_method
+    @tf_method()
     def build_log_prior(self):
         NotImplemented
 
@@ -68,7 +68,7 @@ class Model(with_metaclass(ABCMeta, Parameterized)):
     def compute_log_prior(self):
         NotImplemented
 
-    @tf_method
+    @tf_method(cache=False)
     def optimize(self, method='L-BFGS-B', callback=None, maxiter=1000, **kw):
         """Optimize the model by maximising the log likelihood.
 
@@ -111,7 +111,7 @@ class Model(with_metaclass(ABCMeta, Parameterized)):
             ...         super().__init__()
             ...         self.a = Param(a, transform=transforms.Exp(0.))
             ...         self.b = Param(b, transform=transforms.Exp(0.))
-            ...     @tf_method
+            ...     @tf_method()
             ...     @overrides
             ...     def build_log_likelihood(self):
             ...         return 10. - self.a.tensor - self.b.tensor
@@ -266,7 +266,7 @@ class Model(with_metaclass(ABCMeta, Parameterized)):
     def _compile_loss(self):
         return -self.build_log_likelihood()
 
-class GPModel(with_metaclass(ABCMeta, Model)):
+class GPModel(with_metaclass(ABCMeta, Model, ParamAttributes)):
     """A base class for Guassian Process models.
 
     A Gaussian process model is a model of the form
@@ -281,22 +281,7 @@ class GPModel(with_metaclass(ABCMeta, Model)):
     variance are pushed through the likelihood to obtain the means and 
     variances of held out data.
 
-    Attributes:
-        likelihood (gptf.likelihoods.Likelihood): The likelihood to use
-            when making predictions.
-        
     """
-    def __init__(self, likelihood):
-        """Initialiser.
-
-        Args:
-            likelihood (gptf.likelihoods.Likelihood): The likelihood to
-                use when making predictions.
-
-        """
-        super().__init__()
-        self.likelihood = likelihood
-
     @abstractmethod
     def build_prior_mean_var(self, test_points, full_cov=False):
         """Builds an op for the mean and variance of the prior(s).
@@ -430,8 +415,8 @@ class GPModel(with_metaclass(ABCMeta, Model)):
             >>> from overrides import overrides
             >>> from gptf import ParamAttributes, tfhacks
             >>> class Example(GPModel, ParamAttributes):
-            ...     def __init__(self, likelihood, dtype):
-            ...         super().__init__(likelihood)
+            ...     def __init__(self, dtype):
+            ...         super().__init__()
             ...         self.dtype = dtype
             ...     @property
             ...     def dtype(self):
@@ -440,29 +425,29 @@ class GPModel(with_metaclass(ABCMeta, Model)):
             ...     def dtype(self, value):
             ...         self.clear_cache()
             ...         self._dtype = value
-            ...     @tf_method
+            ...     @tf_method()
             ...     @overrides
             ...     def build_log_likelihood(self):
             ...         return tf.constant(0)
-            ...     @tf_method
+            ...     @tf_method()
             ...     @overrides
             ...     def build_log_likelihood(self):
             ...         NotImplemented
-            ...     @tf_method
+            ...     @tf_method()
             ...     @overrides
-            ...     def build_prior_mean_var\
+            ...     def build_prior_mean_var\\
             ...             (self, test_points, full_cov=False):
             ...         n = tf.shape(test_points)[0]
             ...         mu = tf.zeros([n, 1], self.dtype)
             ...         var = (tf.expand_dims(tfhacks.eye(n, self.dtype),-1) 
             ...                if full_cov else tf.ones([n, 1], self.dtype))
             ...         return mu, var
-            ...     @tf_method
+            ...     @tf_method()
             ...     @overrides
-            ...     def build_posterior_mean_var\
+            ...     def build_posterior_mean_var\\
             ...             (self, test_points, full_cov=False):
             ...         NotImplemented
-            >>> m = Example(None, tf.float64)  # ignore the likelihood
+            >>> m = Example(tf.float64)  # ignore the likelihood
             >>> test_points = np.array([[0.], [1.], [2.], [3.]])
 
             The shape of the returned array is `(a, b, c)`, where `a`
@@ -555,8 +540,8 @@ class GPModel(with_metaclass(ABCMeta, Model)):
             >>> from overrides import overrides
             >>> from gptf import ParamAttributes, tfhacks
             >>> class Example(GPModel, ParamAttributes):
-            ...     def __init__(self, likelihood, dtype):
-            ...         super().__init__(likelihood)
+            ...     def __init__(self, dtype):
+            ...         super().__init__()
             ...         self.dtype = dtype
             ...     @property
             ...     def dtype(self):
@@ -565,25 +550,25 @@ class GPModel(with_metaclass(ABCMeta, Model)):
             ...     def dtype(self, value):
             ...         self.clear_cache()
             ...         self._dtype = value
-            ...     @tf_method
+            ...     @tf_method()
             ...     @overrides
             ...     def build_log_likelihood(self):
             ...         NotImplemented
-            ...     @tf_method
+            ...     @tf_method()
             ...     @overrides
-            ...     def build_prior_mean_var\
+            ...     def build_prior_mean_var\\
             ...             (self, test_points, full_cov=False):
             ...         NotImplemented
-            ...     @tf_method
+            ...     @tf_method()
             ...     @overrides
-            ...     def build_posterior_mean_var\
+            ...     def build_posterior_mean_var\\
             ...             (self, test_points, full_cov=False):
             ...         n = tf.shape(test_points)[0]
             ...         mu = tf.zeros([n, 1], self.dtype)
             ...         var = (tf.expand_dims(tfhacks.eye(n, self.dtype),-1) 
             ...                if full_cov else tf.ones([n, 1], self.dtype))
             ...         return mu, var
-            >>> m = Example(None, tf.float64)  # ignore the likelihood
+            >>> m = Example(tf.float64)
             >>> test_points = np.array([[0.], [1.], [2.], [3.]])
 
             The shape of the returned array is `(a, b, c)`, where `a`
