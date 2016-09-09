@@ -1,13 +1,53 @@
 # -*- encoding: utf-8 -*-
 """Provides utility functions."""
 from builtins import map, range, zip
+from collections import OrderedDict
+try:
+    from collections.abc import MutableMapping
+except ImportError:
+    from collections import MutableMapping
 from functools import wraps, partial
-import re
-import os
 import html
 import numbers
+import os
+import re
 
 import numpy as np
+
+class LRUCache(MutableMapping):
+    """A least-recently-used cache.
+    
+    Implementation stolen from `this article.`_
+    
+    .. _this article: https://www.kunxi.org/blog/2014/05/lru-cache-in-python/
+
+    """
+    def __init__(self, capacity):
+        self.capacity = capacity
+        self.cache = OrderedDict()
+
+    def __getitem__(self, key):
+        value = self.cache.pop(key)
+        self.cache[key] = value  # move value to the head of the dict
+        return value
+
+    def __setitem__(self, key, value):
+        try:
+            self.cache.pop(key)
+        except KeyError:
+            if len(self.cache) >= self.capacity:
+                self.cache.popitem(last=False)
+        self.cache[key] = value
+
+    def __delitem__(self, key):
+        del self.cache[key]
+
+    def __iter__(self):
+        return self.cache.__iter__()
+
+    def __len__(self):
+        return self.cache.__len__()
+          
 
 def is_array_like(obj):
     """Tests if an object is array_like.
