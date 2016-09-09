@@ -3,8 +3,10 @@ from builtins import super, object
 from future.utils import with_metaclass
 from abc import ABCMeta, abstractmethod, abstractproperty
 from collections import MutableSequence, Iterable
+from functools import wraps
 from overrides import overrides
 
+from .utils import LRUCache
 
 class BadParentError(Exception):
     """Raised when a parent does not have a reference to a requested child."""
@@ -315,7 +317,7 @@ class Tree(with_metaclass(ABCMeta, Iterable)):
 
     def __repr__(self):
         return "<{module}.{classname} object, fallback_name {long_name}, \
-id {memory}>".format(module=__name__, classname=self.__class__.__name__,
+id {memory}>".format(module=self.__module__, classname=self.__class__.__name__,
 long_name=self.fallback_name, memory=hex(id(self)))
 
 
@@ -971,3 +973,39 @@ class TreeWithCache(Tree):
         if self.parent is not None:
             self.parent.clear_cache()
             self.parent.clear_ancestor_caches()
+
+def cache_method(capacity=128):
+    """Adds caching to a method of a `TreeWithCache`.
+
+    Stores an `LRUCache` which maps from method call arguments to
+    return values in the instance's cache. This keeps the caches
+    of each instance seperate, and allows us to clear them using
+    `instance.cache_clear()`.
+
+    Note: if the arguments are not hashable, we skip caching and
+    just return the value of the method.
+
+    Args:
+        capacity (int): The capacity of the cache. If the size of
+            the cache exceeds the capacity, the least recently used
+            (stored / retreived) arguments will be evicted.
+
+    """
+    def decorator(method):
+        @wraps(method)
+        def wrapper(instance, *args, **kwargs):
+            cache_name = '__tf_method_cache_{}'.format(id(method))
+            if cache_name not in instance.cache:
+                instance.cache[cache_name] = LRUCache(capacity)
+            method_cache = instance.cache[cache_name]
+            key = (args, frozenset(kwargs.items()))
+            try:
+                hash(key)
+            except TypeError:
+                return method(instance, *args, **kwargs)
+            else:
+                if key not in method_cache:
+                    method_cache[key] =  method(instance, *args, **kwargs)
+                return method_cache[key]
+        return wrapper
+    return decorator
