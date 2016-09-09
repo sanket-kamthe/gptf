@@ -16,7 +16,7 @@ import tensorflow as tf
 from overrides import overrides
 
 # local
-from .trees import TreeWithCache
+from .trees import TreeWithCache, cache_method
 
 
 INVALID_NAME_SCOPE_CHAR = re.compile(r"[^\w.\\\-/]")
@@ -571,40 +571,43 @@ class WrappedTF(TreeWithCache):
             dupe._on_op_placement_context_change()
         return dupe
 
-def tf_method(method):
+def tf_method(name_scope=True, cache=True, cache_limit=128):
     """Decorator version of `WrappedTF.op_placement_context`.
     
     Applies `instance.op_placement_context(name_scope=False)` 
-    to `instance.method(...)`, and opens a name scope that matches the
-    method. See examples.
+    to `instance.method(...)`
     
+    Args:
+        name_scope (bool): If `True`, wraps the function in an
+            appropriate `tf.name_scope()`.
+        cache (bool): If `True`, applies caching to the function.
+            Multiple calls with the same arguments will return
+            the same result. See examples.
+        cache_limit (int): The limit for the cache. 
+
     Examples:
         In the following example, `Example.method_a` is equivalent 
         to `Example.method_b`.
         >>> from gptf.core.trees import AttributeTree
         >>> class Example(WrappedTF, AttributeTree):
-        ...     def method_a(self):
+        ...     def method_a(self, a, b):
         ...         with self.op_placement_context(name_scope=False):
         ...             scope = self.long_name + '.method_a/'
         ...             with tf.name_scope(scope):
-        ...                 a = tf.constant(2)
-        ...                 b = tf.constant(3)
         ...                 result = tf.add(a, b)
         ...                 return tf.identity(result, name='0')  #scope[:-1])
-        ...     @tf_method
-        ...     def method_b(self):
-        ...         a = tf.constant(2)
-        ...         b = tf.constant(3)
+        ...     @tf_method()
+        ...     def method_b(self, a, b):
         ...         return tf.add(a, b)
 
         Devices are set properly in both methods:
         >>> e = Example()
         >>> e.tf_graph = tf.Graph()  # don't break other doctests
         >>> e.tf_device = '/job:worker/task:0'
-        >>> a = e.method_a()
+        >>> a = e.method_a(2, 3)
         >>> print(a.device)
         /job:worker/task:0
-        >>> b = e.method_b()
+        >>> b = e.method_b(2, 3)
         >>> b.device == a.device
         True
 
@@ -615,13 +618,13 @@ def tf_method(method):
         unnamed.method_b/0:0
 
         Multiple method calls produce unique names.
-        >>> print(e.method_b().name)
+        >>> print(e.method_b(1, 2).name)
         unnamed.method_b/0_1:0
 
         If a method returns a sequence of tensors, they are named
         `<scope>/0`, `<scope>/1`, etc.
         >>> class DoubleReturnExample(WrappedTF, AttributeTree):
-        ...     @tf_method
+        ...     @tf_method(cache=False)
         ...     def method(self):
         ...         return tf.constant(1), tf.constant(2)
         >>> obj = DoubleReturnExample()
@@ -641,35 +644,59 @@ def tf_method(method):
         ...     def __init__(self, child):
         ...         super().__init__()
         ...         self.child = child
-        ...     @tf_method
-        ...     def method(self):
-        ...         print(self.child.method_b().name)
-        >>> NestedExample(Example()).method()
+        ...     @tf_method()
+        ...     def method(self, a, b):
+        ...         print(self.child.method_b(a, b).name)
+        >>> NestedExample(Example()).method(0, 0)
         unnamed.child.method_b/0:0
 
         Else, no attempt is made to rename the output.
         >>> class NumpyReturnExample(WrappedTF, AttributeTree):
-        ...     @tf_method
+        ...     @tf_method()
         ...     def method(self):
         ...         return self.get_session().run(tf.constant(1))
         >>> NumpyReturnExample().method()
         1
+
+        If caching is enabled, then multiple calls with the same 
+        arguments will result in the same return value.
+        >>> tensor = e.method_b(5, 5)
+        >>> tensor is e.method_b(5, 5)
+        True
+        
+        This means that ops are not added to the graph multiple times
+        for identical method calls, which is a good thing.
+
+        If the cache is cleared (perhaps due to a device context
+        change), the method cache is also cleared, and new tensors
+        will be returned.
+        >>> e.clear_cache()
+        >>> tensor is e.method_b(5, 5)
+        False
         
     """
-    @wraps(method)
-    def wrapper(instance, *args, **kwargs):
-        scope = "{}.{}/".format(instance.long_name, method.__name__)
-        scope = INVALID_NAME_SCOPE_CHAR.sub("", scope)
-        with instance.op_placement_context(name_scope=False):
-            with tf.name_scope(scope):
-                result = method(instance, *args, **kwargs)
-                if (isinstance(result, Sequence) and 
-                    all(isinstance(x, tf.Tensor) for x in result)):
-                    return tuple(tf.identity(x, name=str(result.index(x)))
-                                 for x in result)
-                elif isinstance(result, tf.Tensor):
-                    return tf.identity(result, name='0')
-                else:
-                    return result
-    return wrapper
+    def decorator(method):
+        @wraps(method)
+        def wrapper(instance, *args, **kwargs):
+            with ExitStack() as stack:
+                op_cntxt = instance.op_placement_context(name_scope=False)
+                stack.enter_context(op_cntxt)
+                if name_scope:
+                    scope = "{}.{}/".format(instance.long_name,method.__name__)
+                    scope = INVALID_NAME_SCOPE_CHAR.sub("", scope)
+                    stack.enter_context(tf.name_scope(scope))
 
+                result = method(instance, *args, **kwargs)
+
+                if name_scope:
+                    if (isinstance(result, Sequence) and 
+                        all(isinstance(x, tf.Tensor) for x in result)):
+                        return tuple(tf.identity(x, str(result.index(x)))
+                                     for x in result)
+                    elif isinstance(result, tf.Tensor):
+                        return tf.identity(result, name='0')
+                return result
+        if cache:
+            wrapper = cache_method(cache_limit)(wrapper)
+        return wrapper
+    return decorator
