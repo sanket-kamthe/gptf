@@ -35,8 +35,8 @@ kw_args['install_requires'] =\
         [ 'tensorflow>=0.9'
         , 'scipy'
         , 'numpy'
-        , 'future'
-        , 'overrides'
+        , 'future>=0.15'
+        , 'overrides>=1.7'
         ]
 kw_args['dependency_links'] = []
 kw_args['tests_require'] = []
