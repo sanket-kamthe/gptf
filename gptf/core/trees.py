@@ -118,7 +118,7 @@ class Tree(with_metaclass(ABCMeta, Iterable)):
             ...     def children(self):
             ...         return tuple(self._children)
             ...     def copy(self):
-            ...         copy = object.__new__(type(self))
+            ...         copy = self.__new__(type(self))
             ...         copy.__dict__ = self.__dict__.copy()
             ...         copy._children = [c.copy() for c in self._children]
             ...         copy._set_parent(None)
@@ -170,7 +170,7 @@ class Tree(with_metaclass(ABCMeta, Iterable)):
             ...     def children(self):
             ...         return tuple(self._children)
             ...     def copy(self):
-            ...         copy = object.__new__(type(self))
+            ...         copy = self.__new__(type(self))
             ...         copy.__dict__ = self.__dict__.copy()
             ...         copy._children = [c.copy() for c in self._children]
             ...         copy._set_parent(None)
@@ -213,7 +213,7 @@ class Tree(with_metaclass(ABCMeta, Iterable)):
             ...     def children(self):
             ...         return tuple(self._children)
             ...     def copy(self):
-            ...         copy = object.__new__(type(self))
+            ...         copy = self.__new__(type(self))
             ...         copy.__dict__ = self.__dict__.copy()
             ...         copy._children = [c.copy() for c in self._children]
             ...         copy._set_parent(None)
@@ -284,7 +284,7 @@ class Tree(with_metaclass(ABCMeta, Iterable)):
             ...     def children(self):
             ...         return tuple(self._children)
             ...     def copy(self):
-            ...         copy = object.__new__(type(self))
+            ...         copy = self.__new__(type(self))
             ...         copy.__dict__ = self.__dict__.copy()
             ...         copy._children = [c.copy() for c in self._children]
             ...         copy._set_parent(None)
@@ -364,7 +364,7 @@ class Leaf(Tree):
             True
 
         """
-        copy = object.__new__(type(self))
+        copy = self.__new__(type(self))
         copy.__dict__ = self.__dict__.copy()
         super(Leaf, copy)._set_parent(None)
         return copy
@@ -506,7 +506,7 @@ class AttributeTree(Tree):
             True
 
         """
-        copy = object.__new__(type(self))
+        copy = self.__new__(type(self))
         copy.__dict__ = self.__dict__.copy()
         for k, v in copy.__dict__.items():
             if isinstance(v, Tree) and k != '_Tree__parent':
@@ -810,7 +810,7 @@ class ListTree(Tree, MutableSequence):
             True
 
         """
-        copy = object.__new__(type(self))
+        copy = self.__new__(type(self))
         copy.__dict__ = self.__dict__.copy()
         copy._children = [tree.__copy__() for tree in self._children]
         super(ListTree, copy)._set_parent(None)
