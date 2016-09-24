@@ -36,8 +36,7 @@ class GPR(GPModel):
         ...               [2, 1, 1],
         ...               [3, 2, 0],
         ...               [4, 0, 1]], dtype=np.float64)
-        >>> Y = np.zeros([X.shape[0], 2], dtype=np.float64)
-        >>> gp = GPR(X, Y, kernels.RBF(1.0, 1.0))
+        >>> gp = GPR(kernels.RBF(1.0, 1.0))
         >>> gp.fallback_name = "gp"
         >>> print(gp.summary(fmt='plain'))
         Parameterized object gp
@@ -49,23 +48,18 @@ class GPR(GPModel):
             gp.kernel.variance     | 1.000 | +ve (Exp) | nyi
             gp.likelihood.variance | 1.000 | +ve (Exp) | nyi
         <BLANKLINE>
-        Data:
-            name      | value
-            ----------+-------------
-            gp.inputs | <np.ndarray>
-            gp.values | <np.ndarray>
-        <BLANKLINE>
 
-        To generate some sample data, we'll compute a sample
-        function from the prior.
-        >>> gp.values.value = gp.compute_prior_samples(X, 1)[0]
+        To generate some sample training outputs, we'll compute a 
+        sample from the prior with 2 latent functions at our
+        training inputs.
+        >>> Y = gp.compute_prior_samples(X, 2, 1)[0]
         
         Then we'll mess with the value of the parameters. When
         we optimise the model, they should return to `1.000`.
-        >>> gp.kernel.variance = 5.345
-        >>> gp.kernel.lengthscales = 0.123
-        >>> gp.likelihood.variance = 10.
-        >>> gp.optimize(disp=False)
+        >>> gp.kernel.variance = 1.5
+        >>> gp.kernel.lengthscales = 0.8
+        >>> gp.likelihood.variance = 1.3
+        >>> gp.optimize(X, Y, disp=False)
         message: 'SciPy optimizer completed successfully.'
         success: True
               x: array([...,...,...])
@@ -77,16 +71,10 @@ class GPR(GPModel):
         gp.likelihood.variance | 1.000 | +ve (Exp) | nyi
 
     """
-    def __init__(self, inputs, values, kernel, 
-            meanfunction=meanfunctions.Zero()):
+    def __init__(self, kernel, meanfunction=meanfunctions.Zero()):
         """Initializer.
 
         Args:
-            inputs (DataHolder | np.ndarray): A data matrix of size 
-                `N`x`D`, representing the input data.
-            values (DataHolder | np.ndarray): A data matrix of size
-                `N`x`R`, representing the observed values of the
-                latent function(s) at the inputs.
             kernel (gptf.kernels.Kernel): The kernel.
             meanfunction (gptf.meanfunctions.MeanFunction):
                 The mean function.
@@ -94,18 +82,12 @@ class GPR(GPModel):
         """
         super().__init__()
         self.likelihood = likelihoods.Gaussian()
-        self.inputs = (inputs if isinstance(inputs, DataHolder) 
-                else DataHolder(inputs, on_shape_change='recompile'))
-        self.values = (values if isinstance(inputs, DataHolder) 
-                else DataHolder(values, on_shape_change='recompile'))
         self.kernel = kernel
         self.meanfunction = meanfunction
     
     @tf_method()
     @overrides
-    def build_log_likelihood(self):
-        X = self.inputs.tensor
-        Y = self.values.tensor
+    def build_log_likelihood(self, X, Y):
         noise_variance = self.likelihood.variance.tensor
         K = self.kernel.K(X)
         # Add gaussian noise to kernel
@@ -117,11 +99,10 @@ class GPR(GPModel):
 
     @tf_method()
     @overrides
-    def build_prior_mean_var(self, test_points, full_cov=False):
+    def build_prior_mean_var(self, test_points, num_latent, full_cov=False):
         noise_var = self.likelihood.variance.tensor
         X = test_points
         fmean = self.meanfunction(X)
-        num_latent = tf.shape(self.values.tensor)[1]
         fmean += tf.zeros([1, num_latent], fmean.dtype)  # broadcast mu
         if full_cov:
             fvar = self.kernel.K(X)
@@ -135,9 +116,7 @@ class GPR(GPModel):
 
     @tf_method()
     @overrides
-    def build_posterior_mean_var(self, test_points, full_cov=False):
-        X = self.inputs.tensor
-        Y = self.values.tensor
+    def build_posterior_mean_var(self, X, Y, test_points, full_cov=False):
         noise_var = self.likelihood.variance.tensor
         Kx = self.kernel.K(X, test_points)
         K = self.kernel.K(X)
