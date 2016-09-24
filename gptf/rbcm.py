@@ -18,13 +18,13 @@ def cao_fleet_weights(experts, points):
     The predictive power is calculated as
 
     .. math::
-        beta_k(x_\star)=\\frac{1}{2} (\ln (sigma^\star_k)^2 
-                                   - \ln sigma^{-2}_k(x_\star))
+        β_k(x_\star)=\\frac{1}{2} (\ln (σ^\star_k)^2 
+                                   - \ln σ^{-2}_k(x_\star))
 
-    where :math:`beta_k(x_\star)` is the predictive power of the
+    where :math:`β_k(x_\star)` is the predictive power of the
     :math:`k`th expert at the point :math:`x_\star`, 
-    :math:`(sigma^\star_k)^2` is the prior variance of the :math:`k`th
-    expert and :math:`sigma^{-2}_k(x_\star)` is the posterior variance
+    :math:`(σ^\star_k)^2` is the prior variance of the :math:`k`th
+    expert and :math:`σ^{-2}_k(x_\star)` is the posterior variance
     of the :math:`k`th expert at the point :math:`x_\star`.
 
     Args:
@@ -50,9 +50,9 @@ def equal_weights(experts, points):
     """Gives each expert an equal weight.
 
     .. math::
-        \\forall k \in 0..M,\ beta_k = 1 / M
+        \\forall k \in 0..M,\ β_k = 1 / M
 
-    where :math:`beta_k` is the weight of the :math:`k`th expert at
+    where :math:`β_k` is the weight of the :math:`k`th expert at
     every point and :math:`M` is the number of experts.
 
     The dtype returned matches the dtype of `points`.
@@ -106,13 +106,13 @@ class PoE(GPModel, ParamList):
         
     .. math::
 
-        sigma^{-2}_PoE &= \sum_{k=1}^{M} sigma^{-2}_k
+        σ^{-2}_PoE &= \sum_{k=1}^{M} σ^{-2}_k
 
-        μ_PoE &= sigma^2_PoE \sum_{k=1}^{M} μ_k sigma^{-2}_k
+        μ_PoE &= σ^2_PoE \sum_{k=1}^{M} μ_k σ^{-2}_k
 
-    where :math:`μ_PoE` and :math:`sigma^2_PoE` are the final posterior
+    where :math:`μ_PoE` and :math:`σ^2_PoE` are the final posterior
     mean and variance, :math:`M` is the number of child experts and
-    :math:`μ_k` and :math:`sigma^2_k` are the posterior mean and variance
+    :math:`μ_k` and :math:`σ^2_k` are the posterior mean and variance
     for the :math:`k`th child.
 
     """
@@ -163,17 +163,17 @@ class gPoE(GPModel, ParamList):
 
     .. math::
 
-        sigma^{-2}_gPoE &= \sum_{k=1}^{M} beta_k sigma^{-2}_c
+        σ^{-2}_gPoE &= \sum_{k=1}^{M} β_k σ^{-2}_c
 
-        μ_gPoE &= sigma^2_gPoE \sum_{k=1}^{M} beta_k μ_k sigma^{-2}_k
+        μ_gPoE &= σ^2_gPoE \sum_{k=1}^{M} β_k μ_k σ^{-2}_k
 
-    where :math:`μ_gPoE` and :math:`sigma^2_PoE` are the final posterior
+    where :math:`μ_gPoE` and :math:`σ^2_PoE` are the final posterior
     mean and variance, :math:`M` is the number of child experts and
-    :math:`μ_k` and :math:`sigma^2_k` are the posterior mean and variance
-    for the :math:`k`th child and :math:`beta_k` is the weight of the
+    :math:`μ_k` and :math:`σ^2_k` are the posterior mean and variance
+    for the :math:`k`th child and :math:`β_k` is the weight of the
     :math:`k`th child.
 
-    Note that when :math:`\sum_{k} beta_k = 1`, the model falls back to
+    Note that when :math:`\sum_{k} β_k = 1`, the model falls back to
     the prior outside the range of the data.
 
     """
