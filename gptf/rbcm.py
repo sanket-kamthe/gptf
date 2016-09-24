@@ -1,3 +1,4 @@
+# -*- encoding: utf-8 -*-
 """Provides classes for Robust Bayesian Committee Machines."""
 #TODO: Work out the maths for a non-zero prior mean function?
 from __future__ import division
