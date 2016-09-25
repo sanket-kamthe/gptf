@@ -26,49 +26,42 @@ class GPR(GPModel):
     Examples:
         >>> import numpy as np
         >>> from gptf import kernels
-        >>> X = np.array([[0, 0, 0],  # a bunch of unique data points
-        ...               [1, 1, 1],
-        ...               [2, 2, 0],
-        ...               [3, 0, 1],
-        ...               [4, 1, 0],
-        ...               [0, 2, 1],
-        ...               [1, 0, 0],
-        ...               [2, 1, 1],
-        ...               [3, 2, 0],
-        ...               [4, 0, 1]], dtype=np.float64)
-        >>> gp = GPR(kernels.RBF(1.0, 1.0))
+        >>> gp = GPR(kernels.RBF(variance=10.))
         >>> gp.fallback_name = "gp"
+        >>> gp.likelihood.variance = .25 # reduce noise
         >>> print(gp.summary(fmt='plain'))
         Parameterized object gp
         <BLANKLINE>
         Params:
-            name                   | value | transform | prior
-            -----------------------+-------+-----------+------
-            gp.kernel.lengthscales | 1.000 | +ve (Exp) | nyi
-            gp.kernel.variance     | 1.000 | +ve (Exp) | nyi
-            gp.likelihood.variance | 1.000 | +ve (Exp) | nyi
+            name                   | value  | transform | prior
+            -----------------------+--------+-----------+------
+            gp.kernel.lengthscales | 1.000  | +ve (Exp) | nyi
+            gp.kernel.variance     | 10.000 | +ve (Exp) | nyi
+            gp.likelihood.variance | 0.250  | +ve (Exp) | nyi
         <BLANKLINE>
 
         To generate some sample training outputs, we'll compute a 
-        sample from the prior with 2 latent functions at our
+        sample from the prior with one latent function at our
         training inputs.
-        >>> Y = gp.compute_prior_samples(X, 2, 1)[0]
+        >>> X = np.random.uniform(0., 5., (100, 1)) # 500 unique 1d points
+        >>> Y = gp.compute_prior_samples(X, 1, 1)[0]
         
         Then we'll mess with the value of the parameters. When
-        we optimise the model, they should return to `1.000`.
-        >>> gp.kernel.variance = 1.5
-        >>> gp.kernel.lengthscales = 0.8
-        >>> gp.likelihood.variance = 1.3
+        we optimise the model, they should return to something close
+        to their original state.
+        >>> gp.kernel.variance = 5.
+        >>> gp.kernel.lengthscales = 5.
+        >>> gp.likelihood.variance = 5.
         >>> gp.optimize(X, Y, disp=False)
         message: 'SciPy optimizer completed successfully.'
         success: True
               x: array([...,...,...])
-        >>> print(gp.param_summary(fmt='plain'))
-        name                   | value | transform | prior
-        -----------------------+-------+-----------+------
-        gp.kernel.lengthscales | 1.000 | +ve (Exp) | nyi
-        gp.kernel.variance     | 1.000 | +ve (Exp) | nyi
-        gp.likelihood.variance | 1.000 | +ve (Exp) | nyi
+        >>> abs(gp.kernel.lengthscales.value - 1.) < 1
+        True
+        >>> abs(gp.kernel.variance.value - 1.) < 1
+        True
+        >>> abs(gp.likelihood.variance.value - .25) < .1
+        True
 
     """
     def __init__(self, kernel, meanfunction=meanfunctions.Zero()):
