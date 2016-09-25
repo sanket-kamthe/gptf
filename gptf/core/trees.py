@@ -480,6 +480,8 @@ class AttributeTree(Tree):
             False
             >>> copy.child is t.child
             False
+            >>> copy.child.parent is copy
+            True
             >>> copy.a is t.a
             True
 
@@ -508,10 +510,14 @@ class AttributeTree(Tree):
         """
         copy = self.__new__(type(self))
         copy.__dict__ = self.__dict__.copy()
-        for k, v in copy.__dict__.items():
+        tree_children = []
+        for k, v in self.__dict__.items():
             if isinstance(v, Tree) and k != '_Tree__parent':
-                copy.__dict__[k] = v.copy()
+                del copy.__dict__[k]
+                tree_children.append((k, v))
         super(AttributeTree, copy)._set_parent(None)
+        for k, v in tree_children:
+            setattr(copy, k, v.copy())
         return copy
 
     @overrides
@@ -786,6 +792,8 @@ class ListTree(Tree, MutableSequence):
             False
             >>> copy[0] is t[0]
             False
+            >>> copy[0].parent is copy
+            True
             >>> copy.a is t.a
             True
             >>> copy.child is t.child  # attributes are not children
@@ -812,8 +820,10 @@ class ListTree(Tree, MutableSequence):
         """
         copy = self.__new__(type(self))
         copy.__dict__ = self.__dict__.copy()
-        copy._children = [tree.__copy__() for tree in self._children]
+        copy._children = []
         super(ListTree, copy)._set_parent(None)
+        for child in self.children:
+            copy.append(child.copy())
         return copy
 
 class TreeWithCache(Tree):
