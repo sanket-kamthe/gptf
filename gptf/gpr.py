@@ -4,13 +4,13 @@ from builtins import super
 from overrides import overrides
 import tensorflow as tf
 
-from gptf import GPModel, DataHolder, tf_method
+from gptf import GPModel, ParamAttributes, tf_method
 from gptf import likelihoods, densities, meanfunctions
 from gptf import tfhacks
 
 
 #TODO: Write tests.
-class GPR(GPModel):
+class GPR(GPModel, ParamAttributes):
     """Gaussian process regression with Gaussian noise.
     
     Attributes:
@@ -64,17 +64,20 @@ class GPR(GPModel):
         True
 
     """
-    def __init__(self, kernel, meanfunction=meanfunctions.Zero()):
+    def __init__(self, kernel, meanfunction=meanfunctions.Zero(),
+                 noise_variance=1.):
         """Initializer.
 
         Args:
             kernel (gptf.kernels.Kernel): The kernel.
             meanfunction (gptf.meanfunctions.MeanFunction):
                 The mean function.
+            noise_variance (float | gptf.Param): The variance of the
+                noise. This will become self.likelihood.variance.
 
         """
         super().__init__()
-        self.likelihood = likelihoods.Gaussian()
+        self.likelihood = likelihoods.Gaussian(noise_variance)
         self.kernel = kernel
         self.meanfunction = meanfunction
     
@@ -102,7 +105,7 @@ class GPR(GPModel):
             fvar += tfhacks.eye(tf.shape(X)[0], X.dtype) * noise_var
             fvar = tf.tile(tf.expand_dims(fvar, 2), (1, 1, num_latent))
         else:
-            fvar = self.kernel.KDiag(X)
+            fvar = self.kernel.Kdiag(X)
             fvar += tf.ones((tf.shape(X)[0],), X.dtype) * noise_var
             fvar = tf.tile(tf.expand_dims(fvar, 1), (1, num_latent))
         return fmean, fvar
