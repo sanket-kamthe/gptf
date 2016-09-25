@@ -48,6 +48,19 @@ class LRUCache(MutableMapping):
     def __len__(self):
         return self.cache.__len__()
           
+def unique(seq, id_fun=None):
+    """Gets all the unique items in a list."""
+    if id_fun is None:
+        def id_fun(x): return x
+    seen = set()
+    result = []
+    for item in seq:
+        marker = id_fun(item)
+        if marker in seen:
+            continue
+        seen.add(marker)
+        result.append(item)
+    return type(seq)(result)
 
 def is_array_like(obj):
     """Tests if an object is array_like.
