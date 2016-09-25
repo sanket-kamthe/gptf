@@ -8,7 +8,7 @@ import tensorflow as tf
 from tensorflow.contrib.opt import ScipyOptimizerInterface
 from scipy.optimize import OptimizeResult
 
-from . import tfhacks
+from . import tfhacks, utils
 from .params import Parameterized, ParamAttributes, DataHolder, autoflow
 from .wrappedtf import tf_method
 
@@ -254,6 +254,7 @@ class Model(with_metaclass(ABCMeta, Parameterized)):
         if not isinstance(Y, tf.Tensor): feed_dict[Y_tensor] = Y
 
         variables = [p.free_state for p in self.params if not p.fixed]
+        variables = utils.unique(variables)
         free_state = tf.concat(0, [tf.reshape(v, [-1]) for v in variables])
         sess = self.get_session()
 
@@ -290,7 +291,7 @@ class Model(with_metaclass(ABCMeta, Parameterized)):
     def _compile_loss(self, X, Y):
         return -self.build_log_likelihood(X, Y)
 
-class GPModel(with_metaclass(ABCMeta, Model, ParamAttributes)):
+class GPModel(Model):
     """A base class for Guassian Process models.
 
     A Gaussian process model is a model of the form
