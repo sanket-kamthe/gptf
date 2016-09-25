@@ -9,5 +9,8 @@ from .core.params import DataHolder, Param, Parameterized, \
         ParamAttributes, ParamList, autoflow
 from .core.wrappedtf import tf_method
 
+# make submodules visible
+from . import gpr, distributed
+
 __author__ = "Blaine Rogers <br1314@ic.ac.uk>"
 __version__ = "0"
