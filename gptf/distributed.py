@@ -17,7 +17,7 @@ import tensorflow as tf
 
 from gptf import GPModel, Parameterized, ParamList, ParamAttributes, tf_method
 
-def cao_fleet_weights(experts, points):
+def cao_fleet_weights(experts, X, Y, points):
     """The predictive power of the experts at the points.
 
     The predictive power is calculated as
@@ -35,23 +35,26 @@ def cao_fleet_weights(experts, points):
     Args:
         experts (Sequence[GPModel]): the experts to calculate
             the weights of.
-        points (Sequence[GPModel]): the points at which to
-            calculate the weights of the model.
+        X (tf.Tensor): the training inputs, shape `[n, point_dims]`.
+        Y (tf.Tensor): the training outputs, shape `[n, num_latent]`.
+        points (tf.Tensor): the points at which to calculate the 
+            weights of the model, shape `[m, point_dims]`.
 
     Returns:
         (Tuple[tf.Tensor]): The weights of the experts at the
-        points. Each tensor has shape `(num_points)`.
+        points. Each tensor has shape `(num_points, num_latent)`.
 
     """
     def weight(expert):
-        prior_var = expert.prior_mean_var(points)[1]
-        post_var = expert.posterior_mean_var(points)[1]
+        num_latent = tf.shape(Y)[1]
+        prior_var = expert.build_prior_mean_var(points, num_latent)[1]
+        post_var = expert.build_posterior_mean_var(X, Y, points)[1]
         weight = .5 * (tf.log(prior_var) - tf.log(post_var))
         # return very small value instead of zero
         return tf.maximum(weight, np.finfo(np.float64).eps)
     return tuple(weight(expert) for expert in experts)
 
-def equal_weights(experts, points):
+def equal_weights(experts, X, Y, points):
     """Gives each expert an equal weight.
 
     .. math::
@@ -65,19 +68,21 @@ def equal_weights(experts, points):
     Args:
         experts (Sequence[GPModel]): the experts to calculate
             the weights of.
-        points (Sequence[GPModel]): the points at which to
-            calculate the weights of the model.
-    
+        X (tf.Tensor): the training inputs, shape `[n, point_dims]`.
+        Y (tf.Tensor): the training outputs, shape `[n, num_latent]`.
+        points (tf.Tensor): the points at which to calculate the 
+            weights of the model, shape `[m, point_dims]`.
+
     Returns:
         (Tuple[tf.Tensor]): The weights of the experts at the
-        points. Each tensor has shape `(num_points)`.
+        points. Each tensor has shape `(num_points, num_latent)`.
 
     """
     beta = tf.constant(1 / len(experts), dtype=points.dtype)
-    beta = tf.fill((tf.shape(points)[0],), beta)
+    beta = tf.fill((tf.shape(points)[0], 1), beta)
     return tuple(beta for _ in experts)
 
-def ones_weights(experts, points):
+def ones_weights(experts, X, Y, points):
     """All weights are 1.
 
     The dtype returned matches the dtype of `points`.
@@ -85,18 +90,50 @@ def ones_weights(experts, points):
     Args:
         experts (Sequence[GPModel]): the experts to calculate
             the weights of.
-        points (Sequence[GPModel]): the points at which to
-            calculate the weights of the model.
-    
+        X (tf.Tensor): the training inputs, shape `[n, point_dims]`.
+        Y (tf.Tensor): the training outputs, shape `[n, num_latent]`.
+        points (tf.Tensor): the points at which to calculate the 
+            weights of the model, shape `[m, point_dims]`.
+
     Returns:
         (Tuple[tf.Tensor]): The weights of the experts at the
-        points. Each tensor has shape `(num_points)`.
+        points. Each tensor has shape `(num_points, num_latent)`.
 
     """
-    ones = tf.ones((tf.shape(points)[0],), dtype=points.dtype)
+    ones = tf.ones((tf.shape(points)[0], 1), dtype=points.dtype)
     return tuple(ones for _ in experts)
 
-class PoEReduction(GPModel, ParamList):
+class Reduction(GPModel, ParamList):
+    """Common code for distributed GP reductions."""
+    @tf_method()
+    @overrides
+    def build_log_likelihood(self, X, Y):
+        """The sum of the log likelihoods of the children."""
+        chunks = self._get_chunks(X, Y)
+        lmls = [child.build_log_likelihood(Xk, Yk) for child, Xk, Yk in chunks]
+        return tf.reduce_sum(tf.pack(lmls, 0), 0)
+
+    @tf_method()
+    @overrides
+    def build_prior_mean_var(self, test_points, num_latent, full_cov=False):
+        """The arithetic mean of the prior mean / variance of the chilren."""
+        if full_cov:
+            raise NotImplementedError("Full covariance matrix not yet"
+                    "implemented for distributed GPs.")
+        mu, var = zip(*[child.build_prior_mean_var(
+                            test_points, num_latent, full_cov
+                        ) for child in self.children])
+        M = float(len(self.children))
+        mu, var = tf.pack(mu, 0), tf.pack(var, 0)
+        return tf.reduce_sum(mu, 0) / M, tf.reduce_sum(var, 0) / M
+
+    @tf_method()
+    def _get_chunks(self, X, Y):
+        """Seperates X and Y into chunks, pairing each chunk with a child."""
+        M = len(self.children)
+        return zip(self.children, tf.split(0, M, X), tf.split(0, M, Y))
+
+class PoEReduction(Reduction):
     """Combines the predictions of its children using the PoE model.
     
     In the Product of Experts (PoE) model, the variance of the 
@@ -131,30 +168,21 @@ class PoEReduction(GPModel, ParamList):
 
     @tf_method()
     @overrides
-    def build_log_likelihood(self):
-        lmls = [child.build_log_likelihood() for child in self.children]
-        return tf.reduce_sum(tf.pack(lmls, 0), 0)
-
-    @tf_method()
-    @overrides
-    def build_prior_mean_var(self, test_points):
-        """The arithetic mean of the prior mean / variance of the chilren."""
-        mu, var = zip(*[child.build_prior_mean_var(test_points)
-                        for child in self.children])
-        mu, var = tf.pack(mu, 0), tf.pack(var, 0)
-        return tf.reduce_sum(mu, 0) / len(mu), tf.reduce_sum(var, 0) / len(var)
-
-    @tf_method()
-    @overrides
-    def build_posterior_mean_var(self, test_points):
-        mu, var = zip(*[child.build_posterior_mean_var(test_points)
-                        for child in self.children])
+    def build_posterior_mean_var(self, X, Y, test_points, full_cov=False):
+        if full_cov:
+            raise NotImplementedError("Full covariance matrix not yet"
+                    "implemented for distributed GPs.")
+        M = len(self.children)
+        chunks = zip(self.children, tf.split(0, M, X), tf.split(0, M, Y))
+        mu, var = zip(*[child.build_posterior_mean_var(
+                            Xk, Yk, test_points, full_cov
+                        ) for child, Xk, Yk in chunks])
         mu, var = tf.pack(mu, 0), tf.pack(var, 0)
         joint_var = 1 / tf.reduce_sum(1 / var, 0)
-        joint_mu = joint_var * tf.reduce_sum(mean / var, 0)
+        joint_mu = joint_var * tf.reduce_sum(mu / var, 0)
         return joint_mu, joint_var
 
-class gPoEReduction(GPModel, ParamList):
+class gPoEReduction(Reduction):
     """Combines the predictions of its children using the gPoE model.
     
     The generalised Product of Experts (gPoE) model is similar to the
@@ -200,40 +228,43 @@ class gPoEReduction(GPModel, ParamList):
         super().__init__()
         self.extend(children)
         self.weightfunction = weightfunction
+    #TODO: better weight functions that don't need X and Y
+    #@tf_method()
+    #@overrides
+    #def build_prior_mean_var(self, test_points, num_latent, full_cov=False):
+    #    """A weighted mean of the prior means and variances of the experts."""
+    #    if full_cov:
+    #        raise NotImplementedError("Full covariance matrix not yet"
+    #                "implemented for distributed GPs.")
+    #    mu, var = zip(*[child.build_prior_mean_var(
+    #                        test_points, num_latent, full_cov
+    #                    ) for child in self.children])
+    #    weight = self.weightfunction(self.children, test_points)
+    #    mu, var, weight = map(lambda x: tf.pack(x, 0), (mu, var, weight))
+
+    #    w_total = tf.reduce_sum(weight, 0)
+    #    joint_mu = tf.reduce_sum(weight * mu, 0) / w_total
+    #    joint_var = tf.reduce_sum(weight * var, 0) / w_total
+    #    return joint_mu, joint_var
 
     @tf_method()
     @overrides
-    def build_log_likelihood(self):
-        lmls = [child.build_log_likelihood() for child in self.children]
-        return tf.reduce_sum(tf.pack(lmls, 0), 0)
-
-    @tf_method()
-    @overrides
-    def build_prior_mean_var(self, test_points):
-        """A weighted mean of the prior means and variances of the experts."""
-        mu, var = zip(*[child.build_prior_mean_var(test_points)
-                        for child in self.children])
-        weight = self.weightfunction(self.children, test_points)
-        mu, var, weight = map(lambda x: tf.pack(x, 0), (mu, var, weight))
-
-        weight_total = tf.reduce_sum(weight, 0)
-        joint_mu = tf.reduce_sum(weight * mu, 0) / weight_total
-        joint_var = tf.reduce_sum(weight * var, 0) / weight_total
-        return joint_mu, joint_var
-
-    @tf_method()
-    @overrides
-    def build_posterior_mean_var(self, test_points):
-        mu, var = zip(*[child.build_posterior_mean_var(test_points)
-                        for child in self.children])
-        weight = self.weightfunction(self.children, test_points)
+    def build_posterior_mean_var(self, X, Y, test_points, full_cov=False):
+        if full_cov:
+            raise NotImplementedError("Full covariance matrix not yet"
+                    "implemented for distributed GPs.")
+        chunks = self._get_chunks(X, Y)
+        mu, var = zip(*[child.build_posterior_mean_var(
+                            Xk, Yk, test_points, full_cov
+                        ) for child, Xk, Yk in chunks])
+        weight = self.weightfunction(self.children, X, Y, test_points)
         mu, var, weight = map(lambda x: tf.pack(x, 0), (mu, var, weight))
 
         joint_var = 1 / tf.reduce_sum(weight / var, 0)
-        joint_mu = joint_var * tf.reduce_sum(weight * mean / var, 0)
+        joint_mu = joint_var * tf.reduce_sum(weight * mu / var, 0)
         return joint_mu, joint_var
 
-class BCMReduction(GPModel, ParamList):
+class BCMReduction(Reduction):
     """Combines the predictions of its children using the BCM model.
     
     In the Bayesian Committee Machine (BCM) model, the variance of the 
@@ -270,32 +301,24 @@ class BCMReduction(GPModel, ParamList):
 
     @tf_method()
     @overrides
-    def build_log_likelihood(self):
-        lmls = [child.build_log_likelihood() for child in self.children]
-        return tf.reduce_sum(tf.pack(lmls, 0), 0)
-
-    @tf_method()
-    @overrides
-    def build_prior_mean_var(self, test_points):
-        """The arithetic mean of the prior mean / variance of the chilren."""
-        mu, var = zip(*[child.build_prior_mean_var(test_points)
-                        for child in self.children])
+    def build_posterior_mean_var(self, X, Y, test_points, full_cov=False):
+        if full_cov:
+            raise NotImplementedError("Full covariance matrix not yet"
+                    "implemented for distributed GPs.")
+        chunks = self._get_chunks(X, Y)
+        mu, var = zip(*[child.build_posterior_mean_var(
+                            Xk, Yk, test_points, full_cov
+                        ) for child, Xk, Yk in chunks])
         mu, var = tf.pack(mu, 0), tf.pack(var, 0)
-        return tf.reduce_sum(mu, 0) / len(mu), tf.reduce_sum(var, 0) / len(var)
 
-    @tf_method()
-    @overrides
-    def build_posterior_mean_var(self, test_points):
-        mu, var = zip(*[child.build_posterior_mean_var(test_points)
-                        for child in self.children])
-        mu, var = tf.pack(mu, 0), tf.pack(var, 0)
-        prior_precision = 1 / self.build_prior_mean_var(points)[1]
+        num_latent = tf.shape(Y)[1]
+        prior_var = self.build_prior_mean_var(test_points, num_latent)[1]
         joint_var = 1/ (tf.reduce_sum(1 / var, 0)
-                        + (1 - len(self.children)) * prior_precision)
-        joint_mu = joint_var * tf.reduce_sum(mean / var, 0)
+                        + (1 - len(self.children)) / prior_var)
+        joint_mu = joint_var * tf.reduce_sum(mu / var, 0)
         return joint_mu, joint_var
 
-class rBCMReduction(GPModel, ParamList):
+class rBCMReduction(Reduction):
     """Combines the predictions of its children using the rBCM model.
     
     In the Bayesian Committee Machine (rBCM) model, the variance of the 
@@ -343,38 +366,43 @@ class rBCMReduction(GPModel, ParamList):
         self.extend(children)
         self.weightfunction = weightfunction
 
-    @tf_method()
-    @overrides
-    def build_log_likelihood(self):
-        lmls = [child.build_log_likelihood() for child in self.children]
-        return tf.reduce_sum(tf.pack(lmls, 0), 0)
+    #TODO: better weight functions that don't need X and Y
+    #@tf_method()
+    #@overrides
+    #def build_prior_mean_var(self, test_points, num_latent, full_cov=False):
+    #    """A weighted mean of the prior means and variances of the experts."""
+    #    if full_cov:
+    #        raise NotImplementedError("Full covariance matrix not yet"
+    #                "implemented for distributed GPs.")
+    #    mu, var = zip(*[child.build_prior_mean_var(
+    #                        test_points, num_latent, full_cov
+    #                    ) for child in self.children])
+    #    weight = self.weightfunction(self.children, test_points)
+    #    mu, var, weight = map(lambda x: tf.pack(x, 0), (mu, var, weight))
+
+    #    w_total = tf.reduce_sum(weight, 0)
+    #    joint_mu = tf.reduce_sum(weight * mu, 0) / w_total
+    #    joint_var = tf.reduce_sum(weight * var, 0) / w_total
+    #    return joint_mu, joint_var
 
     @tf_method()
     @overrides
-    def build_prior_mean_var(self, test_points):
-        """A weighted mean of the prior means and variances of the experts."""
-        mu, var = zip(*[child.build_prior_mean_var(test_points)
-                        for child in self.children])
-        weight = self.weightfunction(self.children, test_points)
+    def build_posterior_mean_var(self, X, Y, test_points, full_cov=False):
+        if full_cov:
+            raise NotImplementedError("Full covariance matrix not yet"
+                    "implemented for distributed GPs.")
+        chunks = self._get_chunks(X, Y)
+        mu, var = zip(*[child.build_posterior_mean_var(
+                            Xk, Yk, test_points, full_cov
+                        ) for child, Xk, Yk in chunks])
+        weight = self.weightfunction(self.children, X, Y, test_points)
         mu, var, weight = map(lambda x: tf.pack(x, 0), (mu, var, weight))
 
-        weight_total = tf.reduce_sum(weight, 0)
-        joint_mu = tf.reduce_sum(weight * mu, 0) / weight_total
-        joint_var = tf.reduce_sum(weight * var, 0) / weight_total
-        return joint_mu, joint_var
-
-    @tf_method()
-    @overrides
-    def build_posterior_mean_var(self, test_points):
-        mu, var = zip(*[child.build_posterior_mean_var(test_points)
-                        for child in self.children])
-        weight = self.weightfunction(self.children, test_points)
-        mu, var, weight = map(lambda x: tf.pack(x, 0), (mu, var, weight))
-
-        prior_precision = 1 / self.build_prior_mean_var(test_points)[1]
+        num_latent = tf.shape(Y)[1]
+        prior_var = self.build_prior_mean_var(test_points, num_latent)[1]
         joint_var = 1 / (tf.reduce_sum(weight / var, 0)
-                         + (1 - tf.reduce_sum(weight, 0)) * prior_precision)
-        joint_mu = joint_var * tf.reduce_sum(weight * mean / var, 0)
+                         + (1 - tf.reduce_sum(weight, 0)) / prior_var)
+        joint_mu = joint_var * tf.reduce_sum(weight * mu / var, 0)
         return joint_mu, joint_var
 
 class PriorDivisorReduction(GPModel, ParamAttributes):
@@ -407,19 +435,26 @@ class PriorDivisorReduction(GPModel, ParamAttributes):
 
     @tf_method()
     @overrides
-    def build_log_likelihood(self):
-        return child.build_log_likelihood() 
+    def build_log_likelihood(self, X, Y):
+        return child.build_log_likelihood(X, Y) 
 
     @tf_method()
     @overrides
-    def build_prior_mean_var(self, test_points):
-        return self.child.build_prior_mean_var(test_points)
+    def build_prior_mean_var(self, test_points, num_latent, full_cov=False):
+        return self.child.build_prior_mean_var(
+                test_points, num_latent, full_cov)
 
     @tf_method
     @overrides
-    def build_posterior_mean_var(self, test_points):
-        mu, var = self.child.build_posterior_mean_var(test_points)
-        weight = self.weightfunction([self.child], test_points)
+    def build_posterior_mean_var(self, X, Y, test_points, full_cov=False):
+        if full_cov:
+            raise NotImplementedError("Full covariance matrix not yet"
+                    "implemented for distributed GPs.")
+        mu, var = self.child.build_posterior_mean_var(
+                X, Y, test_points, full_cov
+        )
+        weight = self.weightfunction([self.child], X, Y, test_points)
+
         prior_precision = 1 / self.build_prior_mean_var(test_points)[1]
         joint_var = 1 / (1 / var + (1 - weight) * prior_precision)
         joint_mu = joint_var * mu / var
