@@ -2,14 +2,19 @@
 """Provides classes for Robust Bayesian Committee Machines."""
 #TODO: Work out the maths for a non-zero prior mean function?
 from __future__ import division
-from builtins import super, zip, map
+from builtins import super, zip, map, range
 from future.utils import with_metaclass
 from abc import ABCMeta, abstractmethod
+from functools import reduce
+import operator
 try:
     from collections.abc import Sequence
 except ImportError:
     from collections import Sequence
-import operator
+try:
+    from itertools import zip_longest
+except ImportError:
+    from itertools import izip_longest as zip_longest
 
 from overrides import overrides
 import numpy as np
@@ -45,14 +50,16 @@ def cao_fleet_weights(experts, X, Y, points):
         points. Each tensor has shape `(num_points, num_latent)`.
 
     """
-    def weight(expert):
+    def weight(expert, X, Y):
         num_latent = tf.shape(Y)[1]
         prior_var = expert.build_prior_mean_var(points, num_latent)[1]
         post_var = expert.build_posterior_mean_var(X, Y, points)[1]
         weight = .5 * (tf.log(prior_var) - tf.log(post_var))
         # return very small value instead of zero
         return tf.maximum(weight, np.finfo(np.float64).eps)
-    return tuple(weight(expert) for expert in experts)
+    M = len(experts)
+    chunks = zip(experts, tf.split(0, M, X), tf.split(0, M, Y))
+    return tuple(weight(*chunk) for chunk in chunks)
 
 def equal_weights(experts, X, Y, points):
     """Gives each expert an equal weight.
@@ -172,8 +179,7 @@ class PoEReduction(Reduction):
         if full_cov:
             raise NotImplementedError("Full covariance matrix not yet"
                     "implemented for distributed GPs.")
-        M = len(self.children)
-        chunks = zip(self.children, tf.split(0, M, X), tf.split(0, M, Y))
+        chunks = self._get_chunks(X, Y)
         mu, var = zip(*[child.build_posterior_mean_var(
                             Xk, Yk, test_points, full_cov
                         ) for child, Xk, Yk in chunks])
@@ -207,9 +213,9 @@ class gPoEReduction(Reduction):
     the prior outside the range of the data.
 
     Attributes:
-        weightfunction(Callable[[Sequence[GPModel], tf.Tensor],
-            Tuple[tf.Tensor]]): A function used to calculate the
-            weight of the experts.
+        weightfunction (Callable[[Sequence[GPModel], tf.Tensor,
+            tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): 
+            A function used to calculate the weight of the experts.
 
     For other attributes, see `GPModel` and `ParamList`.
 
@@ -220,9 +226,9 @@ class gPoEReduction(Reduction):
         Args:
             children (Sequence[GPModel]): The experts to combine the
                 opinions of.
-            weightfunction (Callable[[Sequence[GPModel], tf.Tensor],
-                Tuple[tf.Tensor]]): A function used to calculate the 
-                weights of the experts.
+            weightfunction (Callable[[Sequence[GPModel], tf.Tensor,
+                tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): 
+                A function used to calculate the weight of the experts.
 
         """
         super().__init__()
@@ -344,9 +350,9 @@ class rBCMReduction(Reduction):
     the data.
 
     Attributes:
-        weightfunction(Callable[[Sequence[GPModel], tf.Tensor],
-            Tuple[tf.Tensor]]): A function used to calculate the
-            weight of the experts.
+        weightfunction (Callable[[Sequence[GPModel], tf.Tensor,
+            tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): 
+            A function used to calculate the weight of the experts.
 
     For other attributes, see `GPModel` and `ParamList`.
 
@@ -357,9 +363,9 @@ class rBCMReduction(Reduction):
         Args:
             children (Sequence[GPModel]): The experts to combine the
                 opinions of.
-            weightfunction (Callable[[Sequence[GPModel], tf.Tensor],
-                Tuple[tf.Tensor]]): A function used to calculate the 
-                weights of the experts.
+            weightfunction (Callable[[Sequence[GPModel], tf.Tensor,
+                tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): 
+                A function used to calculate the weight of the experts.
 
         """
         super().__init__()
@@ -415,9 +421,9 @@ class PriorDivisorReduction(GPModel, ParamAttributes):
     
     Attributes:
         child (GPModel): The expert to correct the opinion of.
-        weightfunction (Callable[[Sequence[GPModel], tf.Tensor],
-            Tuple[tf.Tensor]]): A function used to calculate the 
-            weights of the experts.
+        weightfunction (Callable[[Sequence[GPModel], tf.Tensor,
+            tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): 
+            A function used to calculate the weight of the expert.
 
     """
     def __init__(self, child, weightfunction):
@@ -425,11 +431,12 @@ class PriorDivisorReduction(GPModel, ParamAttributes):
 
         Args:
             child (GPModel): The expert to correct the opinion of.
-            weightfunction (Callable[[Sequence[GPModel], tf.Tensor],
-                Tuple[tf.Tensor]]): A function used to calculate the 
-                weights of the experts.
+            weightfunction (Callable[[Sequence[GPModel], tf.Tensor,
+                tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): 
+                A function used to calculate the weight of the expert.
 
         """
+        super().__init__()
         self.child = child
         self.weightfunction = weightfunction
 
@@ -444,7 +451,7 @@ class PriorDivisorReduction(GPModel, ParamAttributes):
         return self.child.build_prior_mean_var(
                 test_points, num_latent, full_cov)
 
-    @tf_method
+    @tf_method()
     @overrides
     def build_posterior_mean_var(self, X, Y, test_points, full_cov=False):
         if full_cov:
@@ -453,12 +460,100 @@ class PriorDivisorReduction(GPModel, ParamAttributes):
         mu, var = self.child.build_posterior_mean_var(
                 X, Y, test_points, full_cov
         )
-        weight = self.weightfunction([self.child], X, Y, test_points)
+        weight = self.weightfunction([self.child], X, Y, test_points)[0]
 
-        prior_precision = 1 / self.build_prior_mean_var(test_points)[1]
-        joint_var = 1 / (1 / var + (1 - weight) * prior_precision)
+        num_latent = tf.shape(Y)[1]
+        prior_var = self.build_prior_mean_var(test_points, num_latent)[1]
+        joint_var = 1 / (1 / var + (1 - weight) / prior_var)
         joint_mu = joint_var * mu / var
         return joint_mu, joint_var
+
+def chunks(n, iterable, padvalue=None):
+    """Iterator for equal-sized chunks of an iterable.
+
+    Args:
+        n (int): The size of each chunk.
+        iterable (Iterable): The iterable to seperate.
+        padvalue: A value to pad the last chunk with if `n` does not
+            evenly divide len(list).
+
+    Examples:
+        >>> for chunk in chunks(3, 'abcdefg', 'x'):
+        ...     print(chunk)
+        ('a', 'b', 'c')
+        ('d', 'e', 'f')
+        ('g', 'x', 'x')
+    
+    """
+    return zip_longest(*((iter(iterable),) * n), fillvalue=padvalue)
+
+class TreerBCM(GPModel, ParamAttributes):
+    """An rBCM, expressed as a tree of reductions.
+
+    Attributes:
+        divisor (PriorDivisorReduction): The prior correction node at
+            the root of the tree.
+
+    """
+    def __init__(self, experts, weightfunction, architecture):
+        """Initialiser.
+
+        Args:
+            experts (GPModel | Sequence[GPModel]): The experts to 
+                combine the opinions of. If this is a `GPModel`, then it
+                will be shallow-copied to fill out the architecture.
+                If it is a sequence of `GPModel`s, then the architecture
+                will have to have as many nodes in its final layer as
+                there are in the sequence, i.e.
+
+                    len(experts) == reduce(operator.mul,architecture,1)
+
+            weightfunction (Callable[[Sequence[GPModel], tf.Tensor,
+                tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): 
+                A function used to calculate the weight of the experts.
+            architecture (Sequence[int]): The branching factors at each
+                layer of the rBCM.
+
+        """
+        super().__init__()
+        # make sure there are enough experts
+        assert len(architecture) > 0
+        num_experts = reduce(operator.mul, architecture, 1)
+        if isinstance(experts, GPModel):
+            experts = (experts,) * num_experts
+        else:
+            assert len(experts) == num_experts
+
+        chunksize = architecture.pop(-1)
+        layer = [gPoEReduction(c, weightfunction)
+                 for c in chunks(chunksize, experts)]
+
+        for chunksize in reversed(architecture):
+            layer = [PoEReduction(c) for c in chunks(chunksize, layer)]
+                
+        assert len(layer) == 1
+        def total_weight(_, X, Y, test_points):
+            weights = weightfunction(experts, X, Y, test_points)
+            return [tf.reduce_sum(tf.pack(weights, 0), 0)]
+
+        self.divisor = PriorDivisorReduction(layer[0], total_weight)
+
+    @tf_method()
+    @overrides
+    def build_log_likelihood(self, X, Y):
+        return self.divisor.build_log_likelihood(X, Y)
+
+    @tf_method()
+    @overrides
+    def build_prior_mean_var(self, test_points, num_latent, full_cov=False):
+        return self.divisor.build_prior_mean_var(
+                test_points, num_latent, full_cov)
+        
+    @tf_method()
+    @overrides
+    def build_posterior_mean_var(self, X, Y, test_points, full_cov=False):
+        return self.divisor.build_posterior_mean_var(
+                X, Y, test_points, full_cov)
 
 class DistributedrBCM(GPModel, ParamAttributes):
     """Acts as an rBCM, but distributes its computation."""
@@ -487,11 +582,9 @@ class DistributedrBCM(GPModel, ParamAttributes):
                 first task of the specified job is used.
 
         """
-        # make sure there are enough experts
-        num_experts = reduce(operator.mul, architecture, 1)
-        if isinstance(experts, GPModel):
-            experts = [experts.copy() for _ in range(num_experts)]
-        else:
-            assert len(experts) == num_experts
+        super().__init__()
 
-        
+    @tf_method()
+    @overrides
+    def build_log_likelihood(self, X, Y):
+        ...
