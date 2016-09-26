@@ -1,5 +1,5 @@
 """Provides facilities for calculating likelihoods, densities etc."""
-from builtins import super
+from builtins import super, map
 from future.utils import with_metaclass
 from abc import ABCMeta, abstractmethod
 
@@ -19,6 +19,10 @@ class Likelihood(with_metaclass(ABCMeta, Parameterized)):
     and `.conditional_variance()`.
 
     """
+    def __init__(self):
+        super().__init__()
+        self.gauss_hermite_points = 20
+
     @abstractmethod
     def logp(self, F, Y):
         """The log density of the data given the function values.
@@ -37,7 +41,10 @@ class Likelihood(with_metaclass(ABCMeta, Parameterized)):
     def conditional_mean(self, F):
         """Computes the mean of the data given values of the latent func.
 
-        If this object represents `p(y|f)`, then this method computes
+        If this object represents :math:`p(y|f)`, then this method 
+        computes
+
+        .. math::
             \int y p(y|f) dy
 
         Args:
@@ -54,7 +61,10 @@ class Likelihood(with_metaclass(ABCMeta, Parameterized)):
     def conditional_variance(self, F):
         """Computes the variance of the data given values of the latent func.
 
-        If this object represents `p(y|f)`, then this method computes
+        If this object represents :math:`p(y|f)`, then this method 
+        computes
+
+        .. math::
             \int y^2 p(y|f) dy - (\int y p(y|f) dy)^2
 
         Args:
@@ -71,32 +81,75 @@ class Likelihood(with_metaclass(ABCMeta, Parameterized)):
     def predict_mean_and_var(self, mu_F, var_F):
         """The mean & variance of Y given a mean & variance of the latent func.
 
-        if `q(f) = N(mu_F, var_F)` and this object represents `p(y|f)`,
+        if :math:`q(f) = N(mu_F, var_F)` and this object represents 
+        :math:`p(y|f)`,
         then this method computes the predictive mean
+
+        .. math::
             \int\int y p(y|f) q(f) df dy
 
         and the predictive variance
-            \int\int y^2 p(y|f) q(f) df dy - (\int\int y p(y|f) q(f) df dy)^2
+
+        .. math::
+            \int\int y^2 p(y|f) q(f) df dy 
+            - (\int\int y p(y|f) q(f) df dy)^2
 
         Here, we implement a Gauss-Hermite quadrature routine, but some
         likelihoods (e.g. Gaussian) will implement specific cases.
 
         """
-        NotImplemented
+        x_gh, w_gh = np.polynomial.hermite.hermgauss(
+            self.gauss_hermite_points
+        )
+
+        shape = tf.shape(mu_F)
+        def reshape(X): return tf.reshape(x, (-1, 1))
+        mu_F, var_F, w_gh = map(reshape, (mu_F, var_F, w_gh))
+
+        w_gh /= np.sqrt(np.pi)
+        X = x_gh[None, :] * tf.sqrt(2. * var_F) + mu_F
+
+        # here's the quadrature for the mean
+        E_y = tf.reshape(tf.matmul(self.conditional_mean(X), w_gh), shape)
+
+        # here's the quadrature for the variance
+        integrand = (self.conditional_variance(X) +
+                     tf.square(self.conditional_mean(X)))
+        V_y = tf.reshape(tf.matmul(integrand, w_gh), shape) - tf.square(E_y)
+
+        return E_y, V_y
 
     @tf_method()
     def predict_density(self, mu_F, var_F, Y):
         """The (log) density of Y given a mean & variance of the latent func.
 
-        if `q(f) = N(mu_F, var_F)` and this object represents `p(y|f)`,
+        if :math:`q(f) = N(mu_F, var_F)` and this object represents 
+        :math:`p(y|f)`,
         then this method computes the predictive density
+
+        .. math::
             \int p(y=Y|f) q(f) df
 
         Here, we implement a Gauss-Hermite quadrature routine, but some
         likelihoods (e.g. Gaussian, Poisson) will implement specific cases.
 
         """
-        NotImplemented
+        x_gh, w_gh = np.polynomial.hermite.hermgauss(
+            self.gauss_hermite_points
+        )
+
+        shape = tf.shape(mu_F)
+        def reshape(X): return tf.reshape(x, (-1, 1))
+        mu_F, var_F, Y, w_gh = map(reshape, (mu_F, var_F, Y, w_gh))
+
+        w_gh /= np.sqrt(np.pi)
+        X = x_gh[None, :] * tf.sqrt(2. * var_F) + mu_F
+
+        # broadcast Y to match X
+        Y = tf.tile(Y, [1, self.num_gauss_hermite_points])
+
+        logp = self.logp(X, Y)
+        return tf.reshape(tf.log(tf.matmul(tf.exp(logp), w_gh)), shape)
 
     @tf_method()
     def variational_expectations(self, mu_F, var_F, Y):
@@ -110,8 +163,22 @@ class Likelihood(with_metaclass(ABCMeta, Parameterized)):
         likelihoods (e.g. Gaussian, Poisson) will implement specific cases.
 
         """
-        NotImplemented
+        x_gh, w_gh = np.polynomial.hermite.hermgauss(
+            self.gauss_hermite_points
+        )
 
+        shape = tf.shape(mu_F)
+        def reshape(X): return tf.reshape(x, (-1, 1))
+        mu_F, var_F, Y, w_gh = map(reshape, (mu_F, var_F, Y, w_gh))
+
+        w_gh /= np.sqrt(np.pi)
+        X = x_gh[None, :] * tf.sqrt(2. * var_F) + mu_F
+
+        # broadcast Y to match X
+        Y = tf.tile(Y, [1, self.num_gauss_hermite_points])
+
+        logp = self.logp(X, Y)
+        return tf.reshape(tf.matmul(logp, w_gh), shape)
 
 class Gaussian(Likelihood, ParamAttributes):
     def __init__(self, variance=1.):
