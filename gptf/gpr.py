@@ -45,6 +45,9 @@ class GPR(GPModel, ParamAttributes):
         training inputs.
         >>> X = np.random.uniform(0., 5., (100, 1)) # 500 unique 1d points
         >>> Y = gp.compute_prior_samples(X, 1, 1)[0]
+
+        Then we'll add some noise:
+        >>> Y += np.random.normal(0., np.sqrt(gp.likelihood.variance), Y.shape)
         
         Then we'll mess with the value of the parameters. When
         we optimise the model, they should return to something close
