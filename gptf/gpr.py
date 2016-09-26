@@ -102,11 +102,9 @@ class GPR(GPModel, ParamAttributes):
         fmean += tf.zeros([1, num_latent], fmean.dtype)  # broadcast mu
         if full_cov:
             fvar = self.kernel.K(X)
-            fvar += tfhacks.eye(tf.shape(X)[0], X.dtype) * noise_var
             fvar = tf.tile(tf.expand_dims(fvar, 2), (1, 1, num_latent))
         else:
             fvar = self.kernel.Kdiag(X)
-            fvar += tf.ones((tf.shape(X)[0],), X.dtype) * noise_var
             fvar = tf.tile(tf.expand_dims(fvar, 1), (1, num_latent))
         return fmean, fvar
 
