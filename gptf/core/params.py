@@ -674,8 +674,8 @@ class Param(ProxyWrappedValue, Leaf):
             # to clear its cache.
             self.clear_all_ancestor_caches()
             old_value = self.value
-            if '__Param_tensor' in self._shared.cache:
-                del self._shared.cache['__Param_tensor']
+            if '_Param__tensor' in self._shared.cache:
+                del self._shared.cache['_Param__tensor']
             self._shared.transform = value
             self.value = old_value
         else:
@@ -742,12 +742,12 @@ class Param(ProxyWrappedValue, Leaf):
         `if self._variable`.
 
         """
-        return self._shared.cache.get('__Param_variable', None)
+        return self._shared.cache.get('_Param__variable', None)
 
     @_variable.setter
     def _variable(self, value):
         """Sets the variable."""
-        self._shared.cache['__Param_variable'] = value
+        self._shared.cache['_Param__variable'] = value
 
 class DataHolder(ProxyWrappedValue, Leaf):
     """Holds data to be fed into TensorFlow for computation.
