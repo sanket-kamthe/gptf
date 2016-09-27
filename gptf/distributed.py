@@ -507,7 +507,6 @@ def tree_rBCM(experts, weightfunction, architecture):
             layer of the rBCM.
 
     """
-    super().__init__()
     # make sure there are enough experts
     assert len(architecture) > 0
     num_experts = reduce(operator.mul, architecture, 1)
