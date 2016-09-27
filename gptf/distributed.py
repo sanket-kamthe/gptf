@@ -529,8 +529,9 @@ def tree_rBCM(experts, weightfunction, architecture):
 
     return PriorDivisorReduction(layer[0], total_weight)
 
-def distributed_tree_rBCM(experts, clusterspec, worker_job='worker', 
-        param_server_job='ps', target_job=None, target_protocol='grpc'):
+def distributed_tree_rBCM(experts, weightfunction, 
+        clusterspec, worker_job='worker', param_server_job='ps', 
+        target_job=None, target_protocol='grpc'):
     """Constructs a TreerBCM and distributes its computations.
 
     Preconditions:
@@ -562,6 +563,9 @@ def distributed_tree_rBCM(experts, clusterspec, worker_job='worker',
             If it is a sequence of `GPModel`s, then the architecture
             will have as many nodes in its final layer as
             there are in the sequence.
+        weightfunction (Callable[[Sequence[GPModel], tf.Tensor,
+            tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): 
+            A function used to calculate the weight of the experts.
         clusterspec (tf.train.ClusterSpec): The cluster to
             distribute tasks over.
         worker_job (str): The job to assign computationally
@@ -581,9 +585,9 @@ def distributed_tree_rBCM(experts, clusterspec, worker_job='worker',
         architecture = [num_worker_tasks]
     else:
         assert len(experts) % num_worker_tasks == 0
-        architecture = [num_worker_tasks, len(experts) / num_worker_tasks]
+        architecture = [num_worker_tasks, len(experts) // num_worker_tasks]
 
-    rBCM = tree_rBCM(experts, architecture)
+    rBCM = tree_rBCM(experts, weightfunction, architecture)
 
     rBCM.tf_graph = tf.Graph()
     
