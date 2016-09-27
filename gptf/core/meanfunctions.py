@@ -147,7 +147,7 @@ class Zero(MeanFunction, ParamAttributes):
                    [ 0.]])
 
         """
-        return tf.zeros([tf.shape(X)[0], 1], dtype=X.dtype)
+        return tf.zeros([tf.shape(X)[0], 1], dtype=tf.as_dtype(X.dtype))
 
     def __imul__(self, other):
         return self
@@ -392,7 +392,7 @@ class _one(MeanFunction, ParamAttributes):
     @tf_method()
     @overrides
     def __call__(self, X):
-        return tf.ones([], dtype=X.dtype)
+        return tf.ones([], dtype=tf.as_dtype(X.dtype))
 
     def __imul__(self, other):
         return other
