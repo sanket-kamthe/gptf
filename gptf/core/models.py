@@ -256,37 +256,39 @@ class Model(with_metaclass(ABCMeta, Parameterized)):
         variables = [p.free_state for p in self.params if not p.fixed]
         variables = utils.unique(variables)
         free_state = tf.concat(0, [tf.reshape(v, [-1]) for v in variables])
-        sess = self.get_session()
 
-        try:
-            if type(method) is str:
-                success_message = "SciPy optimizer completed successfully."
-                options = {'maxiter': maxiter, 'disp': True}
-                options.update(kw)
-                optimizer = ScipyOptimizerInterface(loss, var_list=variables, 
-                        method=method, options=options)
-                optimizer.minimize(self.get_session(), feed_dict, 
-                        step_callback=callback)
-            else:
-                # treat method as TensorFlow optimizer.
-                success_message = "Finished iterations."
-                opt_step = method.minimize(loss, var_list=variables, **kw)
-                for _ in range(maxiter):
-                    sess.run(opt_step, feed_dict=feed_dict)
-                    if callback is not None:
-                        callback(sess.run(free_state))
-        except KeyboardInterrupt:
+        with self.get_session() as sess:
+            try:
+                if type(method) is str:
+                    success_msg = "SciPy optimizer completed successfully."
+                    options = {'maxiter': maxiter, 'disp': True}
+                    options.update(kw)
+                    optimizer = ScipyOptimizerInterface(
+                        loss, var_list=variables, method=method, 
+                        options=options
+                    )
+                    optimizer.minimize(self.get_session(), feed_dict, 
+                            step_callback=callback)
+                else:
+                    # treat method as TensorFlow optimizer.
+                    success_msg = "Finished iterations."
+                    opt_step = method.minimize(loss, var_list=variables, **kw)
+                    for _ in range(maxiter):
+                        sess.run(opt_step, feed_dict=feed_dict)
+                        if callback is not None:
+                            callback(sess.run(free_state))
+            except KeyboardInterrupt:
+                return OptimizeResult\
+                        ( x=sess.run(free_state)
+                        , success=False
+                        , message="Keyboard interrupt."
+                        )
+
             return OptimizeResult\
                     ( x=sess.run(free_state)
-                    , success=False
-                    , message="Keyboard interrupt."
+                    , success=True
+                    , message=success_msg
                     )
-
-        return OptimizeResult\
-                ( x=sess.run(free_state)
-                , success=True
-                , message=success_message
-                )
 
     def _compile_loss(self, X, Y):
         return -self.build_log_likelihood(X, Y)
