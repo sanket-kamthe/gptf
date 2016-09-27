@@ -603,7 +603,7 @@ class Param(ProxyWrappedValue, Leaf):
             self._shared.numpy_value[...] = value
 
     @property
-    @tf_method(cache=False)
+    @tf_method(cache=False, rename_output=False)
     def tensor(self):
         """Returns a tensor representing the value of the parameter.
         
@@ -624,7 +624,7 @@ class Param(ProxyWrappedValue, Leaf):
         return {}
 
     @property
-    @tf_method(cache=False)
+    @tf_method(cache=False, rename_output=False)
     def free_state(self):
         """Returns a variable that maps to the free state of the parameter."""
         if not self.fixed:
@@ -714,7 +714,7 @@ class Param(ProxyWrappedValue, Leaf):
         super().clear_cache()
 
     @property
-    @tf_method(cache=False)
+    @tf_method(cache=False, rename_output=False)
     def initializer(self):
         """Initialises the internal `tf.Variable` to the correct value.
         
