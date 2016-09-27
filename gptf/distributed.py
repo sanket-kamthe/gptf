@@ -487,104 +487,116 @@ def chunks(n, iterable, padvalue=None):
     """
     return zip_longest(*((iter(iterable),) * n), fillvalue=padvalue)
 
-class TreerBCM(GPModel, ParamAttributes):
+def tree_rBCM(experts, weightfunction, architecture):
     """An rBCM, expressed as a tree of reductions.
 
-    Attributes:
-        divisor (PriorDivisorReduction): The prior correction node at
-            the root of the tree.
+    Args:
+        experts (GPModel | Sequence[GPModel]): The experts to 
+            combine the opinions of. If this is a `GPModel`, then it
+            will be shallow-copied to fill out the architecture.
+            If it is a sequence of `GPModel`s, then the architecture
+            will have to have as many nodes in its final layer as
+            there are in the sequence, i.e.
+
+                len(experts) == reduce(operator.mul,architecture,1)
+
+        weightfunction (Callable[[Sequence[GPModel], tf.Tensor,
+            tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): 
+            A function used to calculate the weight of the experts.
+        architecture (Sequence[int]): The branching factors at each
+            layer of the rBCM.
 
     """
-    def __init__(self, experts, weightfunction, architecture):
-        """Initialiser.
+    super().__init__()
+    # make sure there are enough experts
+    assert len(architecture) > 0
+    num_experts = reduce(operator.mul, architecture, 1)
+    if isinstance(experts, GPModel):
+        experts = (experts,) * num_experts
+    else:
+        assert len(experts) == num_experts
 
-        Args:
-            experts (GPModel | Sequence[GPModel]): The experts to 
-                combine the opinions of. If this is a `GPModel`, then it
-                will be shallow-copied to fill out the architecture.
-                If it is a sequence of `GPModel`s, then the architecture
-                will have to have as many nodes in its final layer as
-                there are in the sequence, i.e.
+    chunksize = architecture.pop(-1)
+    layer = [gPoEReduction(c, weightfunction)
+             for c in chunks(chunksize, experts)]
 
-                    len(experts) == reduce(operator.mul,architecture,1)
+    for chunksize in reversed(architecture):
+        layer = [PoEReduction(c) for c in chunks(chunksize, layer)]
+            
+    assert len(layer) == 1
+    def total_weight(_, X, Y, test_points):
+        weights = weightfunction(experts, X, Y, test_points)
+        return [tf.reduce_sum(tf.pack(weights, 0), 0)]
 
-            weightfunction (Callable[[Sequence[GPModel], tf.Tensor,
-                tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): 
-                A function used to calculate the weight of the experts.
-            architecture (Sequence[int]): The branching factors at each
-                layer of the rBCM.
+    return PriorDivisorReduction(layer[0], total_weight)
 
-        """
-        super().__init__()
-        # make sure there are enough experts
-        assert len(architecture) > 0
-        num_experts = reduce(operator.mul, architecture, 1)
-        if isinstance(experts, GPModel):
-            experts = (experts,) * num_experts
-        else:
-            assert len(experts) == num_experts
+def distributed_tree_BCM(experts, clusterspec, worker_job='worker', 
+        param_server_job='ps', target_job=None, target_protocol='grpc'):
+    """Constructs a TreerBCM and distributes its computations.
 
-        chunksize = architecture.pop(-1)
-        layer = [gPoEReduction(c, weightfunction)
-                 for c in chunks(chunksize, experts)]
+    Preconditions:
+        if `experts` is a sequence, the number of worker tasks must
+        evenly divide `len(experts)`.
+    
+    If `experts` is a sequence, the architecture of the `TreerBCM` will
+    be `[n, m]`, where `n` is the number of worker tasks and 
+    `m = len(experts) / n`. Each `gPoEReduction` will be pinned to a 
+    different worker task.
+    
+    If `experts` is a `GPModel`, the architecture of the `TreerBCM` will 
+    be `[n]`, where `n` is the number of worker tasks. `experts` will be
+    copied to fill out the architecture, with each copy being pinned to 
+    a different worker task.
 
-        for chunksize in reversed(architecture):
-            layer = [PoEReduction(c) for c in chunks(chunksize, layer)]
-                
-        assert len(layer) == 1
-        def total_weight(_, X, Y, test_points):
-            weights = weightfunction(experts, X, Y, test_points)
-            return [tf.reduce_sum(tf.pack(weights, 0), 0)]
+    `Param`s will be pinned to parameter server tasks in a round-robin
+    fashion, based on the order they appear in `TreerBCM.params`.
 
-        self.divisor = PriorDivisorReduction(layer[0], total_weight)
+    Additionally, the `.tf_graph` of the `TreerBCM` will be set to a
+    new graph and the `.tf_session_target` will be set to either the
+    first task of the target job or the first task of the parameter
+    server job.
 
-    @tf_method()
-    @overrides
-    def build_log_likelihood(self, X, Y):
-        return self.divisor.build_log_likelihood(X, Y)
+    Args:
+        experts (GPModel | Sequence[GPModel]): The experts to 
+            combine the opinions of. If this is a `GPModel`, then it
+            will be shallow-copied to fill out the architecture.
+            If it is a sequence of `GPModel`s, then the architecture
+            will have as many nodes in its final layer as
+            there are in the sequence.
+        clusterspec (tf.train.ClusterSpec): The cluster to
+            distribute tasks over.
+        worker_job (str): The job to assign computationally
+            expensive tasks to.
+        param_server_job (str): The job to assign paramaters to.
+        target_job (str | None): The job to coordinate other jobs
+            from. This is used to find the `tf_session_target`. 
+            If `None`, the first task of `param_server_job`
+            will be used as the session target. Otherwise, the 
+            first task of the specified job is used.
+        target_protocol (str): The protocol to use when connecting to
+            the target server. Defaults to 'grpc'.
 
-    @tf_method()
-    @overrides
-    def build_prior_mean_var(self, test_points, num_latent, full_cov=False):
-        return self.divisor.build_prior_mean_var(
-                test_points, num_latent, full_cov)
-        
-    @tf_method()
-    @overrides
-    def build_posterior_mean_var(self, X, Y, test_points, full_cov=False):
-        return self.divisor.build_posterior_mean_var(
-                X, Y, test_points, full_cov)
+    """
+    num_worker_tasks = len(clusterspec.job_tasks(worker_job))
+    if isinstance(experts, GPModel):
+        architecture = [num_worker_tasks]
+    else:
+        assert len(experts) % num_worker_tasks == 0
+        architecture = [num_worker_tasks, len(experts) / num_worker_tasks]
 
-class DistributedrBCM(GPModel, ParamAttributes):
-    """Acts as an rBCM, but distributes its computation."""
-    def __init__(self, experts, architecture, clusterspec, 
-            worker_job='worker', param_server_job='ps', master_job=None):
-        """Initialiser.
+    rBCM = tree_rBCM(experts, architecture)
 
-        Args:
-            experts (GPModel | Sequence[GPModel]): The experts to 
-                combine the opinions of. If this is a `GPModel`, then it
-                will be shallow-copied to fill out the architecture.
-                If it is a sequence of `GPModel`s, then the architecture
-                will have to have as many nodes in its final layer as
-                there are in the sequence.
-            architecture (Sequence[int]): The branching factors at each
-                layer of the rBCM.
-            clusterspec (tf.train.ClusterSpec): The cluster to
-                distribute tasks over.
-            worker_job (str): The job to assign computationally
-                expensive tasks to.
-            param_server_job (str): The job to assign paramaters to.
-            master_job (str | None): The job to coordinate other jobs
-                from. This is used to find the `tf_session_target`. 
-                If `None`, the first task of `param_server_job`
-                will be used as the session target. Otherwise, the 
-                first task of the specified job is used.
+    rBCM.tf_graph = tf.Graph()
+    
+    target = (clusterspec.job_tasks(target_job)[0] if target_job 
+              else clusterspec.job_tasks(parameter_server_job)[0])
+    rBCM.tf_session_target = '{}://{}'.format(target_protocol, target)
 
-        """
-        super().__init__()
+    for index, child in enumerate(rBCM.child.children):
+        child.tf_device = tf.DeviceSpec(job=worker_job, task=index)
 
-    @tf_method()
-    @overrides
-    def build_log_likelihood(self, X, Y):
-        ...
+    for index, param in enumerate(rBCM.params):
+        i = index % len(clusterspec.job_tasks(param_server_job))
+        param.tf_device = tf.DeviceSpec(job=param_server_job, task=i)
+
+    return rBCM
