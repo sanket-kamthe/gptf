@@ -613,10 +613,10 @@ class Param(ProxyWrappedValue, Leaf):
             
         """
         self._ensure_variable()
-        if '__Param_tensor' not in self._shared.cache:
-            self._shared.cache['__Param_tensor'] =\
+        if '_Param__tensor' not in self._shared.cache:
+            self._shared.cache['_Param__tensor'] =\
                     self.transform.tf_forward(self._variable)
-        return self._shared.cache['__Param_tensor']
+        return self._shared.cache['_Param__tensor']
         #return self.transform.tf_forward(self._variable)
 
     @property
