@@ -557,7 +557,8 @@ class WrappedTF(TreeWithCache):
         #    copy._on_op_placement_context_change()
         return copy
 
-def tf_method(name_scope=True, cache=True, cache_limit=128):
+def tf_method(name_scope=True, rename_output=True, 
+        cache=True, cache_limit=128):
     """Decorator version of `WrappedTF.op_placement_context`.
     
     Applies `instance.op_placement_context(name_scope=False)` 
@@ -674,7 +675,7 @@ def tf_method(name_scope=True, cache=True, cache_limit=128):
 
                 result = method(instance, *args, **kwargs)
 
-                if name_scope:
+                if name_scope and rename_output:
                     if (isinstance(result, Sequence) and 
                         all(isinstance(x, tf.Tensor) for x in result)):
                         return tuple(tf.identity(x, str(result.index(x)))
