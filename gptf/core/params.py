@@ -581,21 +581,21 @@ class Param(ProxyWrappedValue, Leaf):
         self._shared.numpy_value = np.array(initial_value)
         self._shared.transform = transform
         self._shared.fixed = False
+        self._session = None
 
     @tf_method(cache=False)
     @overrides
     def _get_value(self):
-        if self._variable:
-            sess = self.get_session()
-            return sess.run(self.tensor)
+        if self._variable and self._session:
+            return self._session.run(self.tensor)
         else:
             return self._shared.numpy_value.copy()
 
     @tf_method(cache=False)
     @overrides
     def _set_value(self, value):
-        if self._variable:
-            sess = self.get_session()
+        if self._variable and self._session:
+            sess = self._session
             free_state = self.transform.np_backward(value)
             self._shared.numpy_value[...] = \
                     sess.run(self._variable.assign(free_state))
@@ -683,12 +683,24 @@ class Param(ProxyWrappedValue, Leaf):
 
     @overrides
     def on_session_birth(self, session):
+        if self._session:
+            raise RuntimeError(
+                "{} is already initialised in another session, {}."
+                .format(self.long_name, self._session)
+            )
+        self._session = session
         self._ensure_variable()
         session.run(self.initializer)
         super().on_session_birth(session)
 
     @overrides
     def on_session_death(self, session):
+        if self._session is not session:
+            raise RuntimeError(
+                "{} is not initialised in {}"
+                .format(self.long_name, session)
+            )
+        self._session = None
         if self._variable:
             self._shared.numpy_value[...] = session.run(self.tensor)
         super().on_session_death(session)
@@ -1382,8 +1394,9 @@ def autoflow(*placeholder_specs):
                 instance.cache[name] = storage
             feed_dict = dict(zip(storage['tf_args'], np_args))
             feed_dict.update(instance.feed_dict)
-            sess = instance.get_session()
-            return sess.run(storage['op'], feed_dict=feed_dict)
+            
+            with instance.get_session() as sess:
+                return sess.run(storage['op'], feed_dict=feed_dict)
         return wrapper
     return decorator
 
