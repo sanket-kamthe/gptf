@@ -43,11 +43,12 @@ class GPR(GPModel, ParamAttributes):
         To generate some sample training outputs, we'll compute a 
         sample from the prior with one latent function at our
         training inputs.
-        >>> X = np.random.uniform(0., 5., (100, 1)) # 500 unique 1d points
+        >>> X = np.random.uniform(0., 5., (50, 1)) # 500 unique 1d points
         >>> Y = gp.compute_prior_samples(X, 1, 1)[0]
 
         Then we'll add some noise:
-        >>> Y += np.random.normal(0., np.sqrt(gp.likelihood.variance), Y.shape)
+        >>> sigma = np.sqrt(gp.likelihood.variance.value)
+        >>> Y += np.random.normal(0., sigma, Y.shape)
         
         Then we'll mess with the value of the parameters. When
         we optimise the model, they should return to something close
@@ -59,11 +60,14 @@ class GPR(GPModel, ParamAttributes):
         message: 'SciPy optimizer completed successfully.'
         success: True
               x: array([...,...,...])
-        >>> abs(gp.kernel.lengthscales.value - 1.) < 1
+        >>> def vaguely_close_to(param, b):
+        ...     v = param.value
+        ...     return abs(v - v*.25) < b
+        >>> vaguely_close_to(gp.kernel.lengthscales, 1.)
         True
-        >>> abs(gp.kernel.variance.value - 1.) < 1
+        >>> vaguely_close_to(gp.kernel.variance, 10.)
         True
-        >>> abs(gp.likelihood.variance.value - .25) < .1
+        >>> vaguely_close_to(gp.likelihood.variance, .25)
         True
 
     """
