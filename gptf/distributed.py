@@ -529,7 +529,7 @@ def tree_rBCM(experts, weightfunction, architecture):
 
     return PriorDivisorReduction(layer[0], total_weight)
 
-def distributed_tree_BCM(experts, clusterspec, worker_job='worker', 
+def distributed_tree_rBCM(experts, clusterspec, worker_job='worker', 
         param_server_job='ps', target_job=None, target_protocol='grpc'):
     """Constructs a TreerBCM and distributes its computations.
 
