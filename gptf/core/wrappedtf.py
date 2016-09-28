@@ -109,7 +109,8 @@ class NullContextWrapper(object):
                 '_NullContextWrapper__wrapped'}:
             setattr(self.__wrapped, name, value)
         else:
-            super().__setattr__(name, value)
+            #super().__setattr__(name, value)
+            super(NullContextWrapper, self).__setattr__(name, value)
 
     def __delattr__(self, name):
         if name not in {'__enter__', '__exit__',
