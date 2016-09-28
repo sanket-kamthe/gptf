@@ -17,7 +17,7 @@ import numpy as np
 class LRUCache(MutableMapping):
     """A least-recently-used cache.
     
-    Implementation stolen from `this article.`_
+    Implementation stolen from `this article`_.
     
     .. _this article: https://www.kunxi.org/blog/2014/05/lru-cache-in-python/
 
