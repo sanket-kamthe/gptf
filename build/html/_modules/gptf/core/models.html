@@ -1,0 +1,748 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-gb">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>gptf.core.models &#8212; gptf 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="gptf 1.0.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for gptf.core.models</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Provides base classes for models of all kinds.&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">super</span><span class="p">,</span> <span class="nb">range</span>
+<span class="kn">from</span> <span class="nn">future.utils</span> <span class="k">import</span> <span class="n">with_metaclass</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="k">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">from</span> <span class="nn">tensorflow.contrib.opt</span> <span class="k">import</span> <span class="n">ScipyOptimizerInterface</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="k">import</span> <span class="n">OptimizeResult</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">tfhacks</span><span class="p">,</span> <span class="n">utils</span>
+<span class="kn">from</span> <span class="nn">.params</span> <span class="k">import</span> <span class="n">Parameterized</span><span class="p">,</span> <span class="n">ParamAttributes</span><span class="p">,</span> <span class="n">DataHolder</span><span class="p">,</span> <span class="n">autoflow</span>
+<span class="kn">from</span> <span class="nn">.wrappedtf</span> <span class="k">import</span> <span class="n">tf_method</span>
+
+<div class="viewcode-block" id="Model"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.models.Model">[docs]</a><span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="n">with_metaclass</span><span class="p">(</span><span class="n">ABCMeta</span><span class="p">,</span> <span class="n">Parameterized</span><span class="p">)):</span>
+    <span class="sd">&quot;&quot;&quot;Base class for models. </span>
+<span class="sd">    </span>
+<span class="sd">    Inheriting classes must define `.build_log_likelihood(self)`.</span>
+
+<span class="sd">    `Param` and `Parameterized` objects that are children of the model</span>
+<span class="sd">    can be used in the tensorflow expression. Children on the model are</span>
+<span class="sd">    defined like so:</span>
+<span class="sd">    &gt;&gt;&gt; from overrides import overrides</span>
+<span class="sd">    &gt;&gt;&gt; from gptf import Param, ParamAttributes</span>
+<span class="sd">    &gt;&gt;&gt; class Example(Model, ParamAttributes):</span>
+<span class="sd">    ...     def __init__(self):</span>
+<span class="sd">    ...         super().__init__()</span>
+<span class="sd">    ...         self.x = Param(1.)  # create new Param child</span>
+<span class="sd">    ...</span>
+<span class="sd">    ...     @tf_method()</span>
+<span class="sd">    ...     @overrides</span>
+<span class="sd">    ...     def build_log_likelihood(self, X, Y):</span>
+<span class="sd">    ...         return 3 - self.x.tensor  # use Param in expression</span>
+
+<span class="sd">    The `.optimize` method can be used to optimize the parameters of the</span>
+<span class="sd">    model to minimise the likelihood. The loss function (the negative of</span>
+<span class="sd">    the sum of the likelihood and any priors) is cached in the WrappedTF</span>
+<span class="sd">    cache, and lazily recompiled when the cache is cleared, e.g. on </span>
+<span class="sd">    recompile.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@abstractmethod</span>
+<div class="viewcode-block" id="Model.build_log_likelihood"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.models.Model.build_log_likelihood">[docs]</a>    <span class="k">def</span> <span class="nf">build_log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Builds the log likelihood of the model w.r.t. the data.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            X (tf.Tensor): The training inputs.</span>
+<span class="sd">            Y (tf.Tensor): The training outputs.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (tf.Tensor): A tensor that, when run, calculates the log</span>
+<span class="sd">            likelihood of the model.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">NotImplemented</span></div>
+
+    <span class="nd">@tf_method</span><span class="p">()</span>
+<div class="viewcode-block" id="Model.build_log_prior"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.models.Model.build_log_prior">[docs]</a>    <span class="k">def</span> <span class="nf">build_log_prior</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">NotImplemented</span></div>
+
+    <span class="nd">@autoflow</span><span class="p">((</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]),</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]))</span>
+<div class="viewcode-block" id="Model.compute_log_likelihood"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.models.Model.compute_log_likelihood">[docs]</a>    <span class="k">def</span> <span class="nf">compute_log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Computes the likelihood of the model w.r.t. the data.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            (np.ndarray): The log likelihood of the model.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_log_likelihood</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span></div>
+
+    <span class="nd">@autoflow</span><span class="p">()</span>
+<div class="viewcode-block" id="Model.compute_log_prior"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.models.Model.compute_log_prior">[docs]</a>    <span class="k">def</span> <span class="nf">compute_log_prior</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">NotImplemented</span></div>
+
+    <span class="nd">@tf_method</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<div class="viewcode-block" id="Model.optimize"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.models.Model.optimize">[docs]</a>    <span class="k">def</span> <span class="nf">optimize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;L-BFGS-B&#39;</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+            <span class="n">maxiter</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Optimize the model by maximising the log likelihood.</span>
+
+<span class="sd">        Maximises the sum of the log likelihood given X &amp; Y and any </span>
+<span class="sd">        priors with respect to any free variables.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            X (np.ndarray | tf.Tensor): The training inputs.</span>
+<span class="sd">            Y (np.ndarray | tf.Tensor): The training outputs.</span>
+<span class="sd">            method (tf.train.Optimizer | str): The means by which to</span>
+<span class="sd">                optimise. If `method` is a string, it will be passed as</span>
+<span class="sd">                the `method` argument to the initialiser of</span>
+<span class="sd">                `tf.contrib.opt.ScipyOptimizerInterface`. Else, it</span>
+<span class="sd">                will be treated as an instance of `tf.train.Optimizer`</span>
+<span class="sd">                and its `.minimize()` method will be used as the training</span>
+<span class="sd">                step.</span>
+<span class="sd">            callback (Callable[[np.ndarray], ...]): A function that will</span>
+<span class="sd">                be called at each optimization step with the current value</span>
+<span class="sd">                of the variable vector (a vector constructed by flattening</span>
+<span class="sd">                the free state of each free `Param` and then concatenating </span>
+<span class="sd">                them in the order the `Param`s are returned by `.params`.</span>
+<span class="sd">            maxiter (int): The maximum number of iterations of the optimizer.</span>
+<span class="sd">            **kw: Additional keyword arguments are passed through to the</span>
+<span class="sd">                optimizer.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (scipy.OptimizeResult) The result of the optimisation.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            Let&#39;s construct a very simple model for demonstration </span>
+<span class="sd">            purposes. It has two (scalar) parameters, `.a` and `.b`, </span>
+<span class="sd">            which are constrained to be positive, and its likelihood is</span>
+<span class="sd">            `10 - a - b`, regardless of X and Y.</span>
+<span class="sd">            &gt;&gt;&gt; import numbers</span>
+<span class="sd">            &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">            &gt;&gt;&gt; from overrides import overrides</span>
+<span class="sd">            &gt;&gt;&gt; from gptf import Param, ParamAttributes, transforms</span>
+<span class="sd">            &gt;&gt;&gt; class Example(Model, ParamAttributes):</span>
+<span class="sd">            ...     def __init__(self, a, b):</span>
+<span class="sd">            ...         assert isinstance(a, numbers.Number)</span>
+<span class="sd">            ...         assert isinstance(b, numbers.Number)</span>
+<span class="sd">            ...         super().__init__()</span>
+<span class="sd">            ...         self.a = Param(a, transform=transforms.Exp(0.))</span>
+<span class="sd">            ...         self.b = Param(b, transform=transforms.Exp(0.))</span>
+<span class="sd">            ...     @tf_method()</span>
+<span class="sd">            ...     @overrides</span>
+<span class="sd">            ...     def build_log_likelihood(self, X, Y):</span>
+<span class="sd">            ...         return 10. - self.a.tensor - self.b.tensor</span>
+
+<span class="sd">            We won&#39;t care about the values of X and Y.</span>
+<span class="sd">            &gt;&gt;&gt; X = np.array(0.)</span>
+<span class="sd">            &gt;&gt;&gt; Y = np.array(0.)</span>
+
+<span class="sd">            TensorFlow optimizers</span>
+<span class="sd">            ---------------------</span>
+
+<span class="sd">            We can optimise the parameters of the model using a TensorFlow</span>
+<span class="sd">            optimizer like so:</span>
+<span class="sd">            &gt;&gt;&gt; m = Example(3., 4.)</span>
+<span class="sd">            &gt;&gt;&gt; opt = tf.train.GradientDescentOptimizer(learning_rate=1)</span>
+<span class="sd">            &gt;&gt;&gt; m.optimize(X, Y, opt)  # use None for X, Y</span>
+<span class="sd">            message: &#39;Finished iterations.&#39;</span>
+<span class="sd">            success: True</span>
+<span class="sd">                  x: array([..., ...])</span>
+
+<span class="sd">            After the optimisation, both parameters are optimised</span>
+<span class="sd">            towards 0, but are still positive. The constraints on the </span>
+<span class="sd">            parameters have been respected.</span>
+<span class="sd">            &gt;&gt;&gt; print(&quot;m.a: {:.3f}&quot;.format(np.asscalar(m.a.value)))</span>
+<span class="sd">            m.a: 0.001</span>
+<span class="sd">            &gt;&gt;&gt; print(&quot;m.b: {:.3f}&quot;.format(np.asscalar(m.b.value)))</span>
+<span class="sd">            m.b: 0.001</span>
+
+<span class="sd">            If we fix a parameter, it is not optimized:</span>
+<span class="sd">            &gt;&gt;&gt; m.a = 5.</span>
+<span class="sd">            &gt;&gt;&gt; m.b = 1.</span>
+<span class="sd">            &gt;&gt;&gt; m.b.fixed = True</span>
+<span class="sd">            &gt;&gt;&gt; m.optimize(X, Y, opt)</span>
+<span class="sd">            message: &#39;Finished iterations.&#39;</span>
+<span class="sd">            success: True</span>
+<span class="sd">                  x: array([...])</span>
+<span class="sd">            &gt;&gt;&gt; print(&quot;m.a: {:.3f}&quot;.format(np.asscalar(m.a.value)))</span>
+<span class="sd">            m.a: 0.001</span>
+<span class="sd">            &gt;&gt;&gt; print(&quot;m.b: {:.3f}&quot;.format(np.asscalar(m.b.value)))</span>
+<span class="sd">            m.b: 1.000</span>
+
+<span class="sd">            SciPy optimizers</span>
+<span class="sd">            ----------------</span>
+
+<span class="sd">            We can optimise the parameters of the model using a SciPy</span>
+<span class="sd">            optimizer by provided a string value for `method`:</span>
+<span class="sd">            &gt;&gt;&gt; m = Example(3., 4.)</span>
+<span class="sd">            &gt;&gt;&gt; m.optimize(X, Y, &#39;L-BFGS-B&#39;, disp=False, ftol=.0001)</span>
+<span class="sd">            message: &#39;SciPy optimizer completed successfully.&#39;</span>
+<span class="sd">            success: True</span>
+<span class="sd">                  x: array([..., ...])</span>
+
+<span class="sd">            As for TensorFlow optimizers, after the optimisation both </span>
+<span class="sd">            parameters are optimised towards 0, but are still positive. </span>
+<span class="sd">            The constraints on the parameters have been respected.</span>
+<span class="sd">            &gt;&gt;&gt; print(&quot;m.a: {:.3f}&quot;.format(np.asscalar(m.a.value)))</span>
+<span class="sd">            m.a: 0.000</span>
+<span class="sd">            &gt;&gt;&gt; print(&quot;m.b: {:.3f}&quot;.format(np.asscalar(m.b.value)))</span>
+<span class="sd">            m.b: 0.000</span>
+
+<span class="sd">            If we fix a parameter, it is not optimized:</span>
+<span class="sd">            &gt;&gt;&gt; m.a = 5.</span>
+<span class="sd">            &gt;&gt;&gt; m.b = 1.</span>
+<span class="sd">            &gt;&gt;&gt; m.b.fixed = True</span>
+<span class="sd">            &gt;&gt;&gt; m.optimize(X, Y, &#39;L-BFGS-B&#39;, disp=False, ftol=.0001)</span>
+<span class="sd">            message: &#39;SciPy optimizer completed successfully.&#39;</span>
+<span class="sd">            success: True</span>
+<span class="sd">                  x: array([...])</span>
+<span class="sd">            &gt;&gt;&gt; print(&quot;m.a: {:.3f}&quot;.format(np.asscalar(m.a.value)))</span>
+<span class="sd">            m.a: 0.000</span>
+<span class="sd">            &gt;&gt;&gt; print(&quot;m.b: {:.3f}&quot;.format(np.asscalar(m.b.value)))</span>
+<span class="sd">            m.b: 1.000</span>
+
+<span class="sd">            Miscellaneous</span>
+<span class="sd">            -------------</span>
+
+<span class="sd">            Optimisation still works, even with weird device contexts and</span>
+<span class="sd">            session targets.</span>
+<span class="sd">            &gt;&gt;&gt; # set up a distributed execution environment</span>
+<span class="sd">            &gt;&gt;&gt; clusterdict = \\</span>
+<span class="sd">            ...     { &#39;worker&#39;: [&#39;localhost:2226&#39;]</span>
+<span class="sd">            ...     , &#39;master&#39;: [&#39;localhost:2227&#39;]</span>
+<span class="sd">            ...     }</span>
+<span class="sd">            &gt;&gt;&gt; spec = tf.train.ClusterSpec(clusterdict)</span>
+<span class="sd">            &gt;&gt;&gt; worker = tf.train.Server(spec, job_name=&#39;worker&#39;, task_index=0)</span>
+<span class="sd">            &gt;&gt;&gt; worker.start()</span>
+<span class="sd">            &gt;&gt;&gt; master = tf.train.Server(spec, job_name=&#39;master&#39;, task_index=0)</span>
+<span class="sd">            &gt;&gt;&gt; # change m&#39;s device context</span>
+<span class="sd">            &gt;&gt;&gt; # we&#39;re about to do weird things with op placement, and we</span>
+<span class="sd">            &gt;&gt;&gt; # don&#39;t want it in the default graph where it can mess with</span>
+<span class="sd">            &gt;&gt;&gt; # other doctests, so change m&#39;s tf_graph as well.</span>
+<span class="sd">            &gt;&gt;&gt; m.tf_graph = tf.Graph()</span>
+<span class="sd">            &gt;&gt;&gt; m.tf_device = &#39;/job:worker/task:0&#39;</span>
+<span class="sd">            &gt;&gt;&gt; m.tf_session_target = master.target</span>
+
+<span class="sd">            TensorFlow:</span>
+<span class="sd">            &gt;&gt;&gt; m.a = 4.5</span>
+<span class="sd">            &gt;&gt;&gt; m.optimize(X, Y, opt)</span>
+<span class="sd">            message: &#39;Finished iterations.&#39;</span>
+<span class="sd">            success: True</span>
+<span class="sd">                  x: array([...])</span>
+<span class="sd">            &gt;&gt;&gt; print(&quot;m.a: {:.3f}&quot;.format(np.asscalar(m.a.value)))</span>
+<span class="sd">            m.a: 0.001</span>
+<span class="sd">            &gt;&gt;&gt; print(&quot;m.b: {:.3f}&quot;.format(np.asscalar(m.b.value)))</span>
+<span class="sd">            m.b: 1.000</span>
+<span class="sd">            </span>
+<span class="sd">            SciPy:</span>
+<span class="sd">            &gt;&gt;&gt; m.a = 4.5</span>
+<span class="sd">            &gt;&gt;&gt; m.optimize(X, Y, &#39;L-BFGS-B&#39;, disp=False, ftol=.0001)</span>
+<span class="sd">            message: &#39;SciPy optimizer completed successfully.&#39;</span>
+<span class="sd">            success: True</span>
+<span class="sd">                  x: array([...])</span>
+<span class="sd">            &gt;&gt;&gt; print(&quot;m.a: {:.3f}&quot;.format(np.asscalar(m.a.value)))</span>
+<span class="sd">            m.a: 0.001</span>
+<span class="sd">            &gt;&gt;&gt; print(&quot;m.b: {:.3f}&quot;.format(np.asscalar(m.b.value)))</span>
+<span class="sd">            m.b: 1.000</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">X_key</span> <span class="o">=</span> <span class="n">X</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">Y_key</span> <span class="o">=</span> <span class="n">Y</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;_Model__loss&quot;</span><span class="p">,</span> <span class="n">X_key</span><span class="p">,</span> <span class="n">Y_key</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="p">:</span>
+            <span class="n">X_tensor</span> <span class="o">=</span> <span class="p">(</span><span class="n">X</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="k">else</span>
+                        <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">as_dtype</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">dtype</span><span class="p">)))</span>
+            <span class="n">Y_tensor</span> <span class="o">=</span> <span class="p">(</span><span class="n">Y</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="k">else</span>
+                        <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">as_dtype</span><span class="p">(</span><span class="n">Y</span><span class="o">.</span><span class="n">dtype</span><span class="p">)))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_compile_loss</span><span class="p">(</span><span class="n">X_tensor</span><span class="p">,</span> <span class="n">Y_tensor</span><span class="p">),</span>
+                               <span class="n">X_tensor</span><span class="p">,</span> <span class="n">Y_tensor</span><span class="p">)</span>
+        <span class="n">loss</span><span class="p">,</span> <span class="n">X_tensor</span><span class="p">,</span> <span class="n">Y_tensor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+        <span class="n">feed_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feed_dict</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span> <span class="n">feed_dict</span><span class="p">[</span><span class="n">X_tensor</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span> <span class="n">feed_dict</span><span class="p">[</span><span class="n">Y_tensor</span><span class="p">]</span> <span class="o">=</span> <span class="n">Y</span>
+
+        <span class="n">variables</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">free_state</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">p</span><span class="o">.</span><span class="n">fixed</span><span class="p">]</span>
+        <span class="n">variables</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">variables</span><span class="p">)</span>
+        <span class="n">free_state</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">])</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_session</span><span class="p">()</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">method</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+                    <span class="n">success_msg</span> <span class="o">=</span> <span class="s2">&quot;SciPy optimizer completed successfully.&quot;</span>
+                    <span class="n">options</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;maxiter&#39;</span><span class="p">:</span> <span class="n">maxiter</span><span class="p">,</span> <span class="s1">&#39;disp&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+                    <span class="n">options</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kw</span><span class="p">)</span>
+                    <span class="n">optimizer</span> <span class="o">=</span> <span class="n">ScipyOptimizerInterface</span><span class="p">(</span>
+                        <span class="n">loss</span><span class="p">,</span> <span class="n">var_list</span><span class="o">=</span><span class="n">variables</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> 
+                        <span class="n">options</span><span class="o">=</span><span class="n">options</span>
+                    <span class="p">)</span>
+                    <span class="n">optimizer</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_session</span><span class="p">(),</span> <span class="n">feed_dict</span><span class="p">,</span> 
+                            <span class="n">step_callback</span><span class="o">=</span><span class="n">callback</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># treat method as TensorFlow optimizer.</span>
+                    <span class="n">success_msg</span> <span class="o">=</span> <span class="s2">&quot;Finished iterations.&quot;</span>
+                    <span class="n">opt_step</span> <span class="o">=</span> <span class="n">method</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="n">var_list</span><span class="o">=</span><span class="n">variables</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">maxiter</span><span class="p">):</span>
+                        <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">opt_step</span><span class="p">,</span> <span class="n">feed_dict</span><span class="o">=</span><span class="n">feed_dict</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">callback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="n">callback</span><span class="p">(</span><span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">free_state</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">OptimizeResult</span>\
+                        <span class="p">(</span> <span class="n">x</span><span class="o">=</span><span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">free_state</span><span class="p">)</span>
+                        <span class="p">,</span> <span class="n">success</span><span class="o">=</span><span class="kc">False</span>
+                        <span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="s2">&quot;Keyboard interrupt.&quot;</span>
+                        <span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">OptimizeResult</span>\
+                    <span class="p">(</span> <span class="n">x</span><span class="o">=</span><span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">free_state</span><span class="p">)</span>
+                    <span class="p">,</span> <span class="n">success</span><span class="o">=</span><span class="kc">True</span>
+                    <span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="n">success_msg</span>
+                    <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_compile_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
+        <span class="k">return</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">build_log_likelihood</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="GPModel"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.models.GPModel">[docs]</a><span class="k">class</span> <span class="nc">GPModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A base class for Guassian Process models.</span>
+
+<span class="sd">    A Gaussian process model is a model of the form</span>
+<span class="sd">        theta ~ p(theta)</span>
+<span class="sd">        f ~ GP(m(x), k(x, x&#39;; theta))</span>
+<span class="sd">        F = f(X)</span>
+<span class="sd">        Y|F ~ p(Y|F)</span>
+
+<span class="sd">    Adds functionality to compile various predictions. Inheriting </span>
+<span class="sd">    classes must define `.build_predict()`, which is then used by this </span>
+<span class="sd">    class&#39;s methods to provide various predictions. The mean and </span>
+<span class="sd">    variance are pushed through the likelihood to obtain the means and </span>
+<span class="sd">    variances of held out data.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@abstractmethod</span>
+<div class="viewcode-block" id="GPModel.build_prior_mean_var"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.models.GPModel.build_prior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_prior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">num_latent</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Builds an op for the mean and variance of the prior(s).</span>
+<span class="sd">        </span>
+<span class="sd">        In the returned tensors, the last index should always be the </span>
+<span class="sd">        latent function index.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            test_points (tf.Tensor): The points from the sample</span>
+<span class="sd">                space for which to predict means and variances</span>
+<span class="sd">                of the prior distribution(s). The shape should be</span>
+<span class="sd">                `[m, point_dims]`.</span>
+<span class="sd">            num_latent (tf.int32): The number of latent functions of </span>
+<span class="sd">                the GP.</span>
+<span class="sd">            full_cov (bool): If `False`, return an array of variances</span>
+<span class="sd">                at the test points. If `True`, return the full</span>
+<span class="sd">                covariance matrix of the posterior distribution.</span>
+<span class="sd">            </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            (tf.Tensor, tf.Tensor): A tensor that calculates the mean</span>
+<span class="sd">            at the test points with shape `[m, num_latent]`, a tensor</span>
+<span class="sd">            that calculates either the variances at the test points </span>
+<span class="sd">            (shape `[m, num_latent]`) or the full covariance matrix </span>
+<span class="sd">            (shape `[m, m, num_latent]`).</span>
+<span class="sd">            Both tensors have the same dtype.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">NotImplemented</span></div>
+
+    <span class="nd">@abstractmethod</span>
+<div class="viewcode-block" id="GPModel.build_posterior_mean_var"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.models.GPModel.build_posterior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_posterior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Builds an op for the mean and variance of the posterior(s).</span>
+
+<span class="sd">        In the returned tensors, the last index should always be the </span>
+<span class="sd">        latent function index. Suppose `m` is some model with two</span>
+<span class="sd">        latent functions:</span>
+
+<span class="sd">            test_points = tf.constant([[1, 2], [3, 4]])</span>
+<span class="sd">            mean, var = m.build_posterior_mean_var([[1,2],[3,4]], True)</span>
+<span class="sd">            mean[:, 0]  # means for the 0th latent func</span>
+<span class="sd">            mean[:, 1]  # means for the 1st latent func</span>
+<span class="sd">            var[:, :, 0]  # full covariance matrix for latent func 0</span>
+<span class="sd">            var[:, :, 1]  # full covariance matrix for latent func 1</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            X (tf.Tensor): The training inputs, shape `[n, point_dims]`</span>
+<span class="sd">            Y (tf.Tensor): The training outputs, shape `[n, num_latent]`</span>
+<span class="sd">            test_points (tf.Tensor): The points from the sample</span>
+<span class="sd">                space for which to predict means and variances</span>
+<span class="sd">                of the posterior distribution(s), shape </span>
+<span class="sd">                `[m, point_dims]`.</span>
+<span class="sd">            full_cov (bool): If `False`, return an array of variances</span>
+<span class="sd">                at the test points. If `True`, return the full</span>
+<span class="sd">                covariance matrix of the posterior distribution.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (tf.Tensor, tf.Tensor): A tensor that calculates the mean</span>
+<span class="sd">            at the test points with shape `[m, num_latent]`, a tensor</span>
+<span class="sd">            that calculates either the variances at the test points </span>
+<span class="sd">            (shape `[m, num_latent]`) or the full covariance matrix </span>
+<span class="sd">            (shape `[m, m, num_latent]`).</span>
+<span class="sd">            Both tensors have the same dtype.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">NotImplemented</span></div>
+
+    <span class="nd">@autoflow</span><span class="p">((</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]),</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="p">[]))</span>
+<div class="viewcode-block" id="GPModel.compute_prior_mean_var"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.models.GPModel.compute_prior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">compute_prior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">num_latent</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Computes the means and variances of the prior(s).</span>
+
+<span class="sd">        This is just an autoflowed version of </span>
+<span class="sd">        `.build_prior_mean_var(test_points, num_latent)`.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            test_points (np.ndarray): The points from the sample</span>
+<span class="sd">                space for which to predict means and variances</span>
+<span class="sd">                of the prior distribution(s). The shape should be</span>
+<span class="sd">                `[m, point_dims]`.</span>
+<span class="sd">            num_latent (int): The number of latent functions of the GP.</span>
+<span class="sd">            </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            (np.ndarray, np.ndarray): the mean at the test points </span>
+<span class="sd">            (shape `[m, num_latent]`), the variances at the test </span>
+<span class="sd">            points (shape `[m, num_latent]`).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_prior_mean_var</span><span class="p">(</span><span class="n">test_points</span><span class="p">,</span> <span class="n">num_latent</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span></div>
+
+    <span class="nd">@autoflow</span><span class="p">((</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]),</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="p">[]))</span>
+<div class="viewcode-block" id="GPModel.compute_prior_mean_cov"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.models.GPModel.compute_prior_mean_cov">[docs]</a>    <span class="k">def</span> <span class="nf">compute_prior_mean_cov</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">num_latent</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Computes the means and full covariance matrices.</span>
+
+<span class="sd">        This is just an autoflowed version of </span>
+<span class="sd">        `.build_prior_mean_var(test_points, num_latent, True)`.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            test_points (np.ndarray): The points from the sample</span>
+<span class="sd">                space for which to predict means and variances</span>
+<span class="sd">                of the prior distribution(s). The shape should be</span>
+<span class="sd">                `[m, point_dims]`.</span>
+<span class="sd">            num_latent (int): The number of latent functions of the GP.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (np.ndarray, np.ndarray): The means at the test points</span>
+<span class="sd">            (shape `[m, num_latent]`), the full covariance </span>
+<span class="sd">            matri(x|ces) for the prior distribution(s) (shape</span>
+<span class="sd">            `[m, m, num_latent]`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_prior_mean_var</span><span class="p">(</span><span class="n">test_points</span><span class="p">,</span> <span class="n">num_latent</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span></div>
+
+    <span class="nd">@autoflow</span><span class="p">((</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]),</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="p">[]),</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="p">[]))</span>
+<div class="viewcode-block" id="GPModel.compute_prior_samples"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.models.GPModel.compute_prior_samples">[docs]</a>    <span class="k">def</span> <span class="nf">compute_prior_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">num_latent</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">):</span> 
+        <span class="sd">&quot;&quot;&quot;Computes samples from the prior distribution(s).</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            test_points (np.ndarray): The points from the sample</span>
+<span class="sd">                space for which to predict means and variances</span>
+<span class="sd">                of the posterior distribution(s), shape </span>
+<span class="sd">                `[m, point_dims]`.</span>
+<span class="sd">            num_latent (int): The number of latent functions of the GP.</span>
+<span class="sd">            num_samples (int): The number of samples to take.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (np.ndarray): An array of samples from the prior</span>
+<span class="sd">            distributions, with shape `[num_samples, m, num_latent]`</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            For testing purposes, we create an example model whose</span>
+<span class="sd">            likelihood is always `0` and whose `.build_predict()`</span>
+<span class="sd">            returns mean `0` and variance `1` for every test point,</span>
+<span class="sd">            or an independent covariance matrix.</span>
+<span class="sd">            &gt;&gt;&gt; from overrides import overrides</span>
+<span class="sd">            &gt;&gt;&gt; from gptf import ParamAttributes, tfhacks</span>
+<span class="sd">            &gt;&gt;&gt; class Example(GPModel, ParamAttributes):</span>
+<span class="sd">            ...     def __init__(self, dtype):</span>
+<span class="sd">            ...         super().__init__()</span>
+<span class="sd">            ...         self.dtype = dtype</span>
+<span class="sd">            ...     @property</span>
+<span class="sd">            ...     def dtype(self):</span>
+<span class="sd">            ...         return self._dtype</span>
+<span class="sd">            ...     @dtype.setter</span>
+<span class="sd">            ...     def dtype(self, value):</span>
+<span class="sd">            ...         self.clear_cache()</span>
+<span class="sd">            ...         self._dtype = value</span>
+<span class="sd">            ...     @tf_method()</span>
+<span class="sd">            ...     @overrides</span>
+<span class="sd">            ...     def build_log_likelihood(self):</span>
+<span class="sd">            ...         NotImplemented</span>
+<span class="sd">            ...     @tf_method()</span>
+<span class="sd">            ...     @overrides</span>
+<span class="sd">            ...     def build_prior_mean_var\\</span>
+<span class="sd">            ...             (self, test_points, num_latent, full_cov=False):</span>
+<span class="sd">            ...         n = tf.shape(test_points)[0]</span>
+<span class="sd">            ...         mu = tf.zeros([n, 1], self.dtype)</span>
+<span class="sd">            ...         mu = tf.tile(mu, (1, num_latent))</span>
+<span class="sd">            ...         if full_cov:</span>
+<span class="sd">            ...             var = tf.expand_dims(tfhacks.eye(n, self.dtype), 2)</span>
+<span class="sd">            ...             var = tf.tile(var, (1, 1, num_latent))</span>
+<span class="sd">            ...         else:</span>
+<span class="sd">            ...             var = tf.ones([n, 1], self.dtype)</span>
+<span class="sd">            ...             var = tf.tile(var, (1, num_latent))</span>
+<span class="sd">            ...         return mu, var</span>
+<span class="sd">            ...     @tf_method()</span>
+<span class="sd">            ...     @overrides</span>
+<span class="sd">            ...     def build_posterior_mean_var\\</span>
+<span class="sd">            ...             (self, X, Y, test_points, full_cov=False):</span>
+<span class="sd">            ...         NotImplemented</span>
+<span class="sd">            &gt;&gt;&gt; m = Example(tf.float64)  # ignore the likelihood</span>
+<span class="sd">            &gt;&gt;&gt; test_points = np.array([[0.], [1.], [2.], [3.]])</span>
+
+<span class="sd">            The shape of the returned array is `(a, b, c)`, where `a`</span>
+<span class="sd">            is the number of samples, `b` is the number of test points</span>
+<span class="sd">            and `c` is the number of latent functions.</span>
+<span class="sd">            &gt;&gt;&gt; samples = m.compute_prior_samples(test_points, 1, 2)</span>
+<span class="sd">            &gt;&gt;&gt; samples.shape</span>
+<span class="sd">            (2, 4, 1)</span>
+
+<span class="sd">            `.compute_prior_samples()` respects the dtype of the tensors</span>
+<span class="sd">            returned by `.build_predict()`.</span>
+<span class="sd">            &gt;&gt;&gt; samples.dtype</span>
+<span class="sd">            dtype(&#39;float64&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; m.dtype = tf.float32</span>
+<span class="sd">            &gt;&gt;&gt; samples = m.compute_prior_samples(test_points, 1, 2)</span>
+<span class="sd">            &gt;&gt;&gt; samples.dtype</span>
+<span class="sd">            dtype(&#39;float32&#39;)</span>
+<span class="sd">            </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mu</span><span class="p">,</span> <span class="n">var</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_prior_mean_var</span><span class="p">(</span><span class="n">test_points</span><span class="p">,</span> <span class="n">num_latent</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">jitter</span> <span class="o">=</span> <span class="n">tfhacks</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">mu</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">var</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">06</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">batch_cholesky</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">+</span> <span class="n">jitter</span><span class="p">)</span>
+        <span class="n">V_shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">L</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">L</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span> <span class="n">num_samples</span><span class="p">]</span>
+        <span class="n">V</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">random_normal</span><span class="p">(</span><span class="n">V_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">L</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">mu</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">tf</span><span class="o">.</span><span class="n">batch_matmul</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">V</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span></div>
+        
+    <span class="nd">@autoflow</span><span class="p">((</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]),</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]),</span>
+              <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]))</span>
+<div class="viewcode-block" id="GPModel.compute_posterior_mean_var"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.models.GPModel.compute_posterior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">compute_posterior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Computes the means and variances of the posterior(s).</span>
+
+<span class="sd">        This is just an autoflowed version of </span>
+<span class="sd">        `.build_posterior_mean_var(X, Y, test_points)`.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            X (np.ndarray): The training inputs, shape `[n, point_dims]`</span>
+<span class="sd">            Y (np.ndarray): The training outputs, shape `[n, num_latent]`</span>
+<span class="sd">            test_points (np.ndarray): The points from the sample</span>
+<span class="sd">                space for which to predict means and variances</span>
+<span class="sd">                of the posterior distribution(s), shape </span>
+<span class="sd">                `[m, point_dims]`.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (np.ndarray, np.ndarray): The means at the test points</span>
+<span class="sd">            (shape `[m, num_latent]`), the variances at the test points</span>
+<span class="sd">            (shape `[m, num_latent]`).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_posterior_mean_var</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+    <span class="nd">@autoflow</span><span class="p">((</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]),</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]),</span>
+              <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]))</span>
+<div class="viewcode-block" id="GPModel.compute_posterior_mean_cov"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.models.GPModel.compute_posterior_mean_cov">[docs]</a>    <span class="k">def</span> <span class="nf">compute_posterior_mean_cov</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Computes the means and full covariance matrices.</span>
+
+<span class="sd">        This is just an autoflowed version of </span>
+<span class="sd">        `.build_predict(X, Y, test_points, full_cov=True)`.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            X (np.ndarray): The training inputs, shape `[n, point_dims]`</span>
+<span class="sd">            Y (np.ndarray): The training outputs, shape `[n, num_latent]`</span>
+<span class="sd">            test_points (np.ndarray): The points from the sample</span>
+<span class="sd">                space for which to predict means and variances</span>
+<span class="sd">                of the posterior distribution(s), shape </span>
+<span class="sd">                `[m, point_dims]`.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (np.ndarray, np.ndarray): The means at the test points</span>
+<span class="sd">            (shape `[m, num_latent]`), the full covriance </span>
+<span class="sd">            matri(x|ces) for the posterior distribution(s)</span>
+<span class="sd">            (shape `[m, m, num_latent]`).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_posterior_mean_var</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+    <span class="nd">@autoflow</span><span class="p">((</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]),</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]),</span> 
+              <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]),</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="p">[]))</span>
+<div class="viewcode-block" id="GPModel.compute_posterior_samples"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.models.GPModel.compute_posterior_samples">[docs]</a>    <span class="k">def</span> <span class="nf">compute_posterior_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">):</span> 
+        <span class="sd">&quot;&quot;&quot;Computes samples from the posterior distribution(s).</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            X (np.ndarray): The training inputs, shape `[n, point_dims]`</span>
+<span class="sd">            Y (np.ndarray): The training outputs, shape `[n, num_latent]`</span>
+<span class="sd">            test_points (np.ndarray): The points from the sample</span>
+<span class="sd">                space for which to predict means and variances</span>
+<span class="sd">                of the posterior distribution(s), shape </span>
+<span class="sd">                `[m, point_dims]`.</span>
+<span class="sd">            num_samples (int): The number of samples to take.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (np.ndarray): An array of samples from the posterior</span>
+<span class="sd">            distributions, with shape `[num_samples, m, num_latent]`</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            For testing purposes, we create an example model whose</span>
+<span class="sd">            likelihood is always `0` and whose `.build_predict()`</span>
+<span class="sd">            returns mean `0` and variance `1` for every test point,</span>
+<span class="sd">            or an independent covariance matrix.</span>
+<span class="sd">            &gt;&gt;&gt; from overrides import overrides</span>
+<span class="sd">            &gt;&gt;&gt; from gptf import ParamAttributes, tfhacks</span>
+<span class="sd">            &gt;&gt;&gt; class Example(GPModel, ParamAttributes):</span>
+<span class="sd">            ...     def __init__(self, dtype):</span>
+<span class="sd">            ...         super().__init__()</span>
+<span class="sd">            ...         self.dtype = dtype</span>
+<span class="sd">            ...     @property</span>
+<span class="sd">            ...     def dtype(self):</span>
+<span class="sd">            ...         return self._dtype</span>
+<span class="sd">            ...     @dtype.setter</span>
+<span class="sd">            ...     def dtype(self, value):</span>
+<span class="sd">            ...         self.clear_cache()</span>
+<span class="sd">            ...         self._dtype = value</span>
+<span class="sd">            ...     @tf_method()</span>
+<span class="sd">            ...     @overrides</span>
+<span class="sd">            ...     def build_log_likelihood(self):</span>
+<span class="sd">            ...         NotImplemented</span>
+<span class="sd">            ...     @tf_method()</span>
+<span class="sd">            ...     @overrides</span>
+<span class="sd">            ...     def build_prior_mean_var\\</span>
+<span class="sd">            ...             (self, test_points, num_latent, full_cov=False):</span>
+<span class="sd">            ...         NotImplemented</span>
+<span class="sd">            ...     @tf_method()</span>
+<span class="sd">            ...     @overrides</span>
+<span class="sd">            ...     def build_posterior_mean_var\\</span>
+<span class="sd">            ...             (self, X, Y, test_points, full_cov=False):</span>
+<span class="sd">            ...         n = tf.shape(test_points)[0]</span>
+<span class="sd">            ...         num_latent = tf.shape(Y)[1]</span>
+<span class="sd">            ...         mu = tf.zeros([n, 1], self.dtype)</span>
+<span class="sd">            ...         mu = tf.tile(mu, (1, num_latent))</span>
+<span class="sd">            ...         if full_cov:</span>
+<span class="sd">            ...             var = tf.expand_dims(tfhacks.eye(n, self.dtype), 2)</span>
+<span class="sd">            ...             var = tf.tile(var, (1, 1, num_latent))</span>
+<span class="sd">            ...         else:</span>
+<span class="sd">            ...             var = tf.ones([n, 1], self.dtype)</span>
+<span class="sd">            ...             var = tf.tile(var, (1, num_latent))</span>
+<span class="sd">            ...         return mu, var</span>
+<span class="sd">            &gt;&gt;&gt; m = Example(tf.float64)</span>
+<span class="sd">            &gt;&gt;&gt; X = np.array([[.5]])</span>
+<span class="sd">            &gt;&gt;&gt; Y = np.array([[.3]])</span>
+<span class="sd">            &gt;&gt;&gt; test_points = np.array([[0.], [1.], [2.], [3.]])</span>
+
+<span class="sd">            The shape of the returned array is `(a, b, c)`, where `a`</span>
+<span class="sd">            is the number of samples, `b` is the number of test points</span>
+<span class="sd">            and `c` is the number of latent functions.</span>
+<span class="sd">            &gt;&gt;&gt; samples = m.compute_posterior_samples(X, Y, test_points, 2)</span>
+<span class="sd">            &gt;&gt;&gt; samples.shape</span>
+<span class="sd">            (2, 4, 1)</span>
+
+<span class="sd">            `.compute_posterior_samples()` respects the dtype of the tensors</span>
+<span class="sd">            returned by `.build_predict()`.</span>
+<span class="sd">            &gt;&gt;&gt; samples.dtype</span>
+<span class="sd">            dtype(&#39;float64&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; m.dtype = tf.float32</span>
+<span class="sd">            &gt;&gt;&gt; samples = m.compute_posterior_samples(X, Y, test_points, 2)</span>
+<span class="sd">            &gt;&gt;&gt; samples.dtype</span>
+<span class="sd">            dtype(&#39;float32&#39;)</span>
+<span class="sd">            </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mu</span><span class="p">,</span> <span class="n">var</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_posterior_mean_var</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">jitter</span> <span class="o">=</span> <span class="n">tfhacks</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">mu</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">var</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">06</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">batch_cholesky</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">+</span> <span class="n">jitter</span><span class="p">)</span>
+        <span class="n">V_shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">L</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">L</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span> <span class="n">num_samples</span><span class="p">]</span>
+        <span class="n">V</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">random_normal</span><span class="p">(</span><span class="n">V_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">L</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">mu</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">tf</span><span class="o">.</span><span class="n">batch_matmul</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">V</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span></div>
+        <span class="c1">#samples = []</span>
+        <span class="c1">#for i in range(self.num_latent_functions):</span>
+        <span class="c1">#    L = tf.cholesky(var[:, :, i] + jitter)</span>
+        <span class="c1">#    V = tf.random_normal([tf.shape(L)[0], num_samples], dtype=L.dtype)</span>
+        <span class="c1">#    samples.append(mu[:, i:i + 1] + tf.matmul(L, V))  # broadcast</span>
+        <span class="c1">#return tf.transpose(tf.pack(samples))</span>
+
+    <span class="nd">@autoflow</span><span class="p">((</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]))</span>
+<div class="viewcode-block" id="GPModel.predict_y"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.models.GPModel.predict_y">[docs]</a>    <span class="k">def</span> <span class="nf">predict_y</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_points</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Computes the mean and variance of held-out data.&quot;&quot;&quot;</span>
+        <span class="bp">NotImplemented</span></div>
+
+    <span class="nd">@autoflow</span><span class="p">((</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]),</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]))</span>
+<div class="viewcode-block" id="GPModel.predict_density"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.models.GPModel.predict_density">[docs]</a>    <span class="k">def</span> <span class="nf">predict_density</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">test_values</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Computes the (log) density of the test values at the test points.&quot;&quot;&quot;</span>
+        <span class="bp">NotImplemented</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Blaine Rogers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

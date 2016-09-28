@@ -1,0 +1,493 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-gb">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>gptf.core.meanfunctions &#8212; gptf 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="gptf 1.0.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for gptf.core.meanfunctions</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Provides mean functions.&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">super</span>
+<span class="kn">from</span> <span class="nn">future.utils</span> <span class="k">import</span> <span class="n">with_metaclass</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="k">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span>
+
+<span class="kn">from</span> <span class="nn">overrides</span> <span class="k">import</span> <span class="n">overrides</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+
+<span class="kn">from</span> <span class="nn">.params</span> <span class="k">import</span> <span class="n">Parameterized</span><span class="p">,</span> <span class="n">ParamAttributes</span><span class="p">,</span> <span class="n">ParamList</span><span class="p">,</span> <span class="n">Param</span>
+<span class="kn">from</span> <span class="nn">.wrappedtf</span> <span class="k">import</span> <span class="n">tf_method</span>
+
+
+<div class="viewcode-block" id="MeanFunction"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.meanfunctions.MeanFunction">[docs]</a><span class="k">class</span> <span class="nc">MeanFunction</span><span class="p">(</span><span class="n">with_metaclass</span><span class="p">(</span><span class="n">ABCMeta</span><span class="p">,</span> <span class="n">Parameterized</span><span class="p">)):</span>
+    <span class="sd">&quot;&quot;&quot;Abstract base class for mean functions.</span>
+
+<span class="sd">    Inheriting classes must define `.__call__()`.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; class Ones(MeanFunction, ParamAttributes):</span>
+<span class="sd">        ...     @tf_method()</span>
+<span class="sd">        ...     @overrides</span>
+<span class="sd">        ...     def __call__(self, X):</span>
+<span class="sd">        ...         return tf.ones(tf.shape(X), dtype=X.dtype)</span>
+
+<span class="sd">        &gt;&gt;&gt; sess = tf.InteractiveSession()</span>
+<span class="sd">        &gt;&gt;&gt; X = tf.constant([1., 2., 3., 4.], dtype=tf.float64)</span>
+<span class="sd">        &gt;&gt;&gt; Ones()(X).eval()</span>
+<span class="sd">        array([ 1.,  1.,  1.,  1.])</span>
+
+<span class="sd">        You can do maths with mean functions! Addition and subtraction:</span>
+<span class="sd">        &gt;&gt;&gt; threes = Ones() + Ones() + Ones()</span>
+<span class="sd">        &gt;&gt;&gt; threes(X).eval()</span>
+<span class="sd">        array([ 3.,  3.,  3.,  3.])</span>
+<span class="sd">        &gt;&gt;&gt; (threes - Ones())(X).eval()</span>
+<span class="sd">        array([ 2.,  2.,  2.,  2.])</span>
+<span class="sd">        &gt;&gt;&gt; (-threes)(X).eval()</span>
+<span class="sd">        array([-3., -3., -3., -3.])</span>
+<span class="sd">        &gt;&gt;&gt; abs(-threes)(X).eval()</span>
+<span class="sd">        array([ 3.,  3.,  3.,  3.])</span>
+
+<span class="sd">        Multiplication and division:</span>
+<span class="sd">        &gt;&gt;&gt; (threes * threes)(X).eval()</span>
+<span class="sd">        array([ 9., 9., 9., 9.])</span>
+<span class="sd">        &gt;&gt;&gt; (Ones() / threes)(X).eval().round(3)</span>
+<span class="sd">        array([ 0.333, 0.333, 0.333, 0.333])</span>
+<span class="sd">        &gt;&gt;&gt; (1 / threes)(X).eval().round(3)  # this works as a special case</span>
+<span class="sd">        array([ 0.333, 0.333, 0.333, 0.333])</span>
+<span class="sd">        &gt;&gt;&gt; (threes * threes / threes * threes)(X).eval()</span>
+<span class="sd">        array([ 9., 9., 9., 9.])</span>
+
+<span class="sd">        &gt;&gt;&gt; sess.close()</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calls the mean function.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            X (tf.Tensor): The input data. Each row of X represents one</span>
+<span class="sd">                datum.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (tf.Tensor): The mean of the posterior distribution.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">NotImplemented</span>
+
+    <span class="k">def</span> <span class="nf">__pos__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Negative</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__abs__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Absolute</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Additive</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">other</span><span class="o">.</span><span class="n">__radd__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Additive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__radd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Additive</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span> <span class="o">+</span> <span class="n">Negative</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__rsub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">other</span> <span class="o">+</span> <span class="n">Negative</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Multiplicative</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Divisive</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">other</span><span class="o">.</span><span class="n">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Multiplicative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Multiplicative</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__div__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__truediv__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__rdiv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__rtruediv__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__truediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Divisive</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">other</span><span class="o">.</span><span class="n">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Divisive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__rtruediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">other</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Divisive</span><span class="p">(</span><span class="n">_one</span><span class="p">(),</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Divisive</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Zero"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.meanfunctions.Zero">[docs]</a><span class="k">class</span> <span class="nc">Zero</span><span class="p">(</span><span class="n">MeanFunction</span><span class="p">,</span> <span class="n">ParamAttributes</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_latent_functions</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initializer.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            num_latent_functions (int): The number of latent functions,</span>
+<span class="sd">                i.e. the number of columns of Y.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_latent_functions</span> <span class="o">=</span> <span class="n">num_latent_functions</span>
+
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calls the mean function.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; X = tf.constant([[ 1.], </span>
+<span class="sd">            ...                  [ 2.],</span>
+<span class="sd">            ...                  [ 3.],</span>
+<span class="sd">            ...                  [ 4.]], dtype=tf.float64)</span>
+<span class="sd">            &gt;&gt;&gt; mean_func = Zero()</span>
+<span class="sd">            &gt;&gt;&gt; sess = mean_func.get_session()</span>
+<span class="sd">            &gt;&gt;&gt; sess.run(mean_func(X))</span>
+<span class="sd">            array([[ 0.], </span>
+<span class="sd">                   [ 0.], </span>
+<span class="sd">                   [ 0.],</span>
+<span class="sd">                   [ 0.]])</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">X</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">as_dtype</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__imul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Zero</span><span class="p">()</span>
+
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Zero</span><span class="p">()</span>
+
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">other</span>
+
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__radd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">other</span></div>
+
+<div class="viewcode-block" id="Linear"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.meanfunctions.Linear">[docs]</a><span class="k">class</span> <span class="nc">Linear</span><span class="p">(</span><span class="n">MeanFunction</span><span class="p">,</span> <span class="n">ParamAttributes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;y_i = A x_i + b&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="n">b</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,))):</span>
+        <span class="sd">&quot;&quot;&quot;Initializer.</span>
+
+<span class="sd">        NB: `Y` is `self(X)`.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            A (Param | np.ndarray): A matrix which maps each element of</span>
+<span class="sd">                `X` to `Y`. If `X` is an `N`x`D` matrix and `Y` is </span>
+<span class="sd">                intended to be `N`x`Q`, then `A` should be `D`x`Q`.</span>
+<span class="sd">            b (Param | np.ndarray): An additive constant to `Y`. If</span>
+<span class="sd">                `Y` is intended to be `N`x`Q` then `b` should be a</span>
+<span class="sd">                rank 1 tensor of length `Q`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">A</span> <span class="o">=</span> <span class="n">A</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">Param</span><span class="p">)</span> <span class="k">else</span> <span class="n">Param</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="n">b</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">Param</span><span class="p">)</span> <span class="k">else</span> <span class="n">Param</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calls the mean function.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; X = tf.constant([[ 1., 2.], </span>
+<span class="sd">            ...                  [ 3., 4.],</span>
+<span class="sd">            ...                  [ 0., 0.],</span>
+<span class="sd">            ...                  [ 1., 3.]], dtype=tf.float64)            </span>
+<span class="sd">            &gt;&gt;&gt; A = np.array([[ 1., 2., 3., 4.],</span>
+<span class="sd">            ...               [ 1., 1., 1., 1.]])</span>
+<span class="sd">            &gt;&gt;&gt; b = np.array([ 1., 2., 3., 4.])</span>
+<span class="sd">            &gt;&gt;&gt; mean_func = Linear(A, b)</span>
+<span class="sd">            &gt;&gt;&gt; sess = mean_func.get_session()</span>
+<span class="sd">            &gt;&gt;&gt; sess.run(mean_func(X))</span>
+<span class="sd">            array([[  4.,   6.,   8.,  10.], </span>
+<span class="sd">                   [  8.,  12.,  16.,  20.], </span>
+<span class="sd">                   [  1.,   2.,   3.,   4.],</span>
+<span class="sd">                   [  5.,   7.,   9.,  11.]])</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">A</span><span class="o">.</span><span class="n">tensor</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="o">.</span><span class="n">tensor</span></div>
+
+<div class="viewcode-block" id="Constant"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.meanfunctions.Constant">[docs]</a><span class="k">class</span> <span class="nc">Constant</span><span class="p">(</span><span class="n">MeanFunction</span><span class="p">,</span> <span class="n">ParamAttributes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;y_i = c,,&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">])):</span>
+        <span class="sd">&quot;&quot;&quot;Initializer.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            c (Param | np.ndarray): The constant mean value; a rank 1</span>
+<span class="sd">                tensor.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">=</span> <span class="n">c</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">Param</span><span class="p">)</span> <span class="k">else</span> <span class="n">Param</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calls the mean function.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; X = tf.constant([[ 1.], </span>
+<span class="sd">            ...                  [ 2.],</span>
+<span class="sd">            ...                  [ 3.],</span>
+<span class="sd">            ...                  [ 4.]], dtype=tf.float64)            </span>
+<span class="sd">            &gt;&gt;&gt; c = np.array([ 1., 2., 3.])</span>
+<span class="sd">            &gt;&gt;&gt; mean_func = Constant(c)</span>
+<span class="sd">            &gt;&gt;&gt; sess = mean_func.get_session()</span>
+<span class="sd">            &gt;&gt;&gt; sess.run(mean_func(X))</span>
+<span class="sd">            array([[ 1., 2., 3.], </span>
+<span class="sd">                   [ 1., 2., 3.], </span>
+<span class="sd">                   [ 1., 2., 3.],</span>
+<span class="sd">                   [ 1., 2., 3.]])</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">tensor</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">X</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Negative"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.meanfunctions.Negative">[docs]</a><span class="k">class</span> <span class="nc">Negative</span><span class="p">(</span><span class="n">MeanFunction</span><span class="p">,</span> <span class="n">ParamAttributes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The negative of a mean function.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">negated</span> <span class="o">=</span> <span class="n">function</span>
+
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">neg</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">negated</span><span class="p">(</span><span class="n">X</span><span class="p">))</span>
+
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">negated</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Absolute"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.meanfunctions.Absolute">[docs]</a><span class="k">class</span> <span class="nc">Absolute</span><span class="p">(</span><span class="n">MeanFunction</span><span class="p">,</span> <span class="n">ParamAttributes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The absolute value of a mean function.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">absolute</span> <span class="o">=</span> <span class="n">function</span>
+
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">X</span><span class="p">))</span>
+
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__abs__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Additive"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.meanfunctions.Additive">[docs]</a><span class="k">class</span> <span class="nc">Additive</span><span class="p">(</span><span class="n">MeanFunction</span><span class="p">,</span> <span class="n">ParamList</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The addition of mean functions.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">functions</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">functions</span><span class="p">)</span>
+
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="n">vals</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">pack</span><span class="p">([</span><span class="n">f</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__iadd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">m</span> <span class="o">+=</span> <span class="n">other</span>
+        <span class="k">return</span> <span class="n">m</span>
+
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__radd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">m</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">m</span></div>
+
+<div class="viewcode-block" id="Multiplicative"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.meanfunctions.Multiplicative">[docs]</a><span class="k">class</span> <span class="nc">Multiplicative</span><span class="p">(</span><span class="n">MeanFunction</span><span class="p">,</span> <span class="n">ParamList</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The multiplication of mean functions.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">functions</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">functions</span><span class="p">)</span>
+
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="n">vals</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">pack</span><span class="p">([</span><span class="n">f</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_prod</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__imul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">m</span> <span class="o">+=</span> <span class="n">other</span>
+        <span class="k">return</span> <span class="n">m</span>
+
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">m</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">m</span></div>
+
+<div class="viewcode-block" id="Divisive"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.meanfunctions.Divisive">[docs]</a><span class="k">class</span> <span class="nc">Divisive</span><span class="p">(</span><span class="n">MeanFunction</span><span class="p">,</span> <span class="n">ParamAttributes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The division of mean functions.</span>
+<span class="sd">    </span>
+<span class="sd">    `Divisive(a, b)(X)` returns `a(X) / b(X)`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">numerator</span><span class="p">,</span> <span class="n">denominator</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">numerator</span> <span class="o">=</span> <span class="n">numerator</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">denominator</span> <span class="o">=</span> <span class="n">denominator</span>
+
+<div class="viewcode-block" id="Divisive.clone"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.meanfunctions.Divisive.clone">[docs]</a>    <span class="k">def</span> <span class="nf">clone</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Divisive</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">numerator</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">denominator</span><span class="p">)</span></div>
+
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">div</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">numerator</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">denominator</span><span class="p">(</span><span class="n">X</span><span class="p">))</span>
+    
+    <span class="k">def</span> <span class="nf">__imul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">numerator</span> <span class="o">*=</span> <span class="n">other</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+        <span class="n">m</span><span class="o">.</span><span class="n">numerator</span> <span class="o">*=</span> <span class="n">other</span>
+        <span class="k">return</span> <span class="n">m</span>
+
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+        <span class="n">m</span><span class="o">.</span><span class="n">numerator</span> <span class="o">=</span> <span class="n">other</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">numerator</span>
+        <span class="k">return</span> <span class="n">m</span>
+
+    <span class="k">def</span> <span class="nf">__idiv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__itruediv__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__itruediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">denominator</span> <span class="o">*=</span> <span class="n">other</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__truediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+        <span class="n">m</span><span class="o">.</span><span class="n">denominator</span> <span class="o">*=</span> <span class="n">other</span>
+        <span class="k">return</span> <span class="n">m</span>
+
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__rtruediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">Divisive</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">denominator</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">numerator</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">other</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">m</span><span class="o">.</span><span class="n">numerator</span> <span class="o">=</span> <span class="n">other</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">numerator</span>
+        <span class="k">return</span> <span class="n">m</span></div>
+
+<span class="k">class</span> <span class="nc">_one</span><span class="p">(</span><span class="n">MeanFunction</span><span class="p">,</span> <span class="n">ParamAttributes</span><span class="p">):</span>
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">ones</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">as_dtype</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__imul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">other</span>
+
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">other</span>
+
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">other</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Blaine Rogers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

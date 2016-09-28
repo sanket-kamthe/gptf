@@ -1,0 +1,1489 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-gb">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>gptf.core.params &#8212; gptf 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="gptf 1.0.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for gptf.core.params</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- encoding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Provides classes that deal with the fetching as setting of parameters.&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">super</span><span class="p">,</span> <span class="nb">object</span><span class="p">,</span> <span class="nb">filter</span><span class="p">,</span> <span class="nb">map</span><span class="p">,</span> <span class="nb">range</span>
+<span class="kn">from</span> <span class="nn">future.utils</span> <span class="k">import</span> <span class="n">with_metaclass</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="k">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">namedtuple</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">wraps</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">gc</span>
+<span class="kn">from</span> <span class="nn">weakref</span> <span class="k">import</span> <span class="n">WeakSet</span>
+<span class="kn">from</span> <span class="nn">contextlib</span> <span class="k">import</span> <span class="n">contextmanager</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">from</span> <span class="nn">overrides</span> <span class="k">import</span> <span class="n">overrides</span>
+
+<span class="kn">from</span> <span class="nn">.trees</span> <span class="k">import</span> <span class="n">AttributeTree</span><span class="p">,</span> <span class="n">Leaf</span><span class="p">,</span> <span class="n">ListTree</span><span class="p">,</span> <span class="n">Tree</span>
+<span class="kn">from</span> <span class="nn">.transforms</span> <span class="k">import</span> <span class="n">Transform</span><span class="p">,</span> <span class="n">Identity</span>
+<span class="kn">from</span> <span class="nn">.wrappedtf</span> <span class="k">import</span> <span class="n">WrappedTF</span><span class="p">,</span> <span class="n">tf_method</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="k">import</span> <span class="n">isclassof</span><span class="p">,</span> <span class="n">isattrof</span><span class="p">,</span> <span class="n">is_array_like</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="k">import</span> <span class="n">construct_table</span><span class="p">,</span> <span class="n">combine_fancy_tables</span><span class="p">,</span> <span class="n">prefix_lines</span>
+
+
+<span class="c1">#TODO: Implement priors.</span>
+
+<div class="viewcode-block" id="FixedParameterError"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.params.FixedParameterError">[docs]</a><span class="k">class</span> <span class="nc">FixedParameterError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Raised when the free state of a fixed parameter is accessed.&quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="ShapeChangeError"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.params.ShapeChangeError">[docs]</a><span class="k">class</span> <span class="nc">ShapeChangeError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Raised when the shape of a Param or DataHolder changes.&quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="DTypeChangeError"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.params.DTypeChangeError">[docs]</a><span class="k">class</span> <span class="nc">DTypeChangeError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Raised when the dtype of a Param or DataHolder changes.&quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="WrappedValue"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.params.WrappedValue">[docs]</a><span class="k">class</span> <span class="nc">WrappedValue</span><span class="p">(</span><span class="n">with_metaclass</span><span class="p">(</span><span class="n">ABCMeta</span><span class="p">,</span> <span class="n">WrappedTF</span><span class="p">)):</span>
+    <span class="sd">&quot;&quot;&quot;A class with a wrapped NumPy value, accessible through `.value`.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        value (np.ndarray): The value of the parameter.</span>
+<span class="sd">        on_shape_change (&#39;raise&#39; | &#39;pass&#39; | &#39;recompile&#39;): The action to take</span>
+<span class="sd">            when the shape of the data changes; see the setter for `.value`.</span>
+<span class="sd">        on_shape_change (&#39;raise&#39; | &#39;pass&#39; | &#39;recompile&#39;): The action to take</span>
+<span class="sd">            when the shape of the data changes; see the setter for `.value`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__ON_SHAPE_CHANGE_VALUES</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;raise&#39;</span><span class="p">,</span> <span class="s1">&#39;pass&#39;</span><span class="p">,</span> <span class="s1">&#39;recompile&#39;</span><span class="p">)</span>
+    <span class="n">__ON_DTYPE_CHANGE_VALUES</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;raise&#39;</span><span class="p">,</span> <span class="s1">&#39;pass&#39;</span><span class="p">,</span> <span class="s1">&#39;recompile&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">on_shape_change</span><span class="o">=</span><span class="s1">&#39;raise&#39;</span><span class="p">,</span> <span class="n">on_dtype_change</span><span class="o">=</span><span class="s1">&#39;raise&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialiser.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            on_shape_change (&#39;raise&#39; | &#39;pass&#39; | &#39;recompile&#39;): The initial</span>
+<span class="sd">                value for `.on_shape_change`. Defaults to &#39;raise&#39;.</span>
+<span class="sd">            on_dtype_change (&#39;raise&#39; | &#39;pass&#39; | &#39;recompile&#39;): The initial</span>
+<span class="sd">                value for `.on_dtype_change`. Defaults to &#39;raise&#39;.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">on_shape_change</span> <span class="o">=</span> <span class="n">on_shape_change</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">on_dtype_change</span> <span class="o">=</span> <span class="n">on_dtype_change</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_get_value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets (a copy of) the hidden numpy value.&quot;&quot;&quot;</span>
+        <span class="bp">NotImplemented</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_set_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sets the hidden numpy value.&quot;&quot;&quot;</span>
+        <span class="bp">NotImplemented</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_value</span><span class="p">()</span>
+
+    <span class="nd">@value</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sets the value of the data.</span>
+
+<span class="sd">        If the shape of the data changes, take one of the following actions</span>
+<span class="sd">        depending on the value of `self.on_shape_change`:</span>
+<span class="sd">          - on &#39;raise&#39;, raise a `gptf.core.params.ShapeChangeError`.</span>
+<span class="sd">          - on &#39;recompile&#39;, clear the cache of everything higher in the tree.</span>
+<span class="sd">          - on &#39;pass&#39;, do nothing.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; class Example(WrappedValue, AttributeTree):</span>
+<span class="sd">            ...     def __init__(self, initial_value, **kwargs):</span>
+<span class="sd">            ...         super().__init__(**kwargs)</span>
+<span class="sd">            ...         self._numpy_value = initial_value</span>
+<span class="sd">            ...     def _get_value(self):</span>
+<span class="sd">            ...         return self._numpy_value.copy()</span>
+<span class="sd">            ...     def _set_value(self, value):</span>
+<span class="sd">            ...         self._numpy_value[...] = value</span>
+
+<span class="sd">            Shape changes</span>
+<span class="sd">            -------------</span>
+
+<span class="sd">            On &#39;raise&#39;, we raise an error on shape change:</span>
+<span class="sd">            &gt;&gt;&gt; a = np.array([1,2,3])</span>
+<span class="sd">            &gt;&gt;&gt; b = np.array([1,2])</span>
+<span class="sd">            &gt;&gt;&gt; e = Example(a, on_shape_change=&#39;raise&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; e.value = b</span>
+<span class="sd">            Traceback (most recent call last):</span>
+<span class="sd">                ...</span>
+<span class="sd">            gptf.core.params.ShapeChangeError: message</span>
+
+<span class="sd">            On &#39;recompile&#39;, we clear the compiled function cache of everything</span>
+<span class="sd">            higher in the tree:</span>
+<span class="sd">            &gt;&gt;&gt; w = Example()</span>
+<span class="sd">            &gt;&gt;&gt; w.e = e</span>
+<span class="sd">            &gt;&gt;&gt; w.cache[0] = 123</span>
+<span class="sd">            &gt;&gt;&gt; w.e.on_shape_change = &#39;recompile&#39;</span>
+<span class="sd">            &gt;&gt;&gt; w.e.value = b</span>
+<span class="sd">            &gt;&gt;&gt; 0 in w.cache</span>
+<span class="sd">            False</span>
+
+<span class="sd">            On &#39;pass&#39;, we do nothing and assign the new value anyway.</span>
+<span class="sd">            &gt;&gt;&gt; w.cache[0] = 123</span>
+<span class="sd">            &gt;&gt;&gt; w.e.value = a</span>
+<span class="sd">            &gt;&gt;&gt; 0 in w.cache</span>
+<span class="sd">            True</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asanyarray</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_new_shape_action</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_new_dtype_action</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_value</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_new_shape_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Performs the appropriate action given a new shape for `.value`.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">value</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_shape_change</span> <span class="o">==</span> <span class="s1">&#39;raise&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ShapeChangeError</span><span class="p">(</span><span class="s2">&quot;cannot change shape of </span><span class="si">{}</span><span class="s2">&quot;</span>\
+                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">long_name</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_shape_change</span> <span class="o">==</span> <span class="s1">&#39;recompile&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">clear_ancestor_caches</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">clear_cache</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_shape_change</span> <span class="o">==</span> <span class="s1">&#39;pass&#39;</span><span class="p">:</span>
+            <span class="k">pass</span> 
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># this is more of a sanity check than anything else.</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;bad value of on_shape_change in value.setter???&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_new_dtype_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Performs the appropriate action given a new dtype for `.value`.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">value</span><span class="o">.</span><span class="n">dtype</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_dtype_change</span> <span class="o">==</span> <span class="s1">&#39;raise&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DTypeChangeError</span><span class="p">(</span><span class="s2">&quot;cannot change dtype of </span><span class="si">{}</span><span class="s2">&quot;</span>\
+                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">long_name</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_dtype_change</span> <span class="o">==</span> <span class="s1">&#39;recompile&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">clear_ancestor_caches</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">clear_cache</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_dtype_change</span> <span class="o">==</span> <span class="s1">&#39;pass&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">clear_cache</span><span class="p">()</span>  <span class="c1"># our tensorflow object has the wrong shape</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># this is more of a sanity check than anything else.</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;bad value of on_dtype_change in value.setter???&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">on_shape_change</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_shape_change</span>
+
+    <span class="nd">@on_shape_change</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">on_shape_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Checks that the new value of on_shape_change is valid.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__ON_SHAPE_CHANGE_VALUES</span><span class="p">:</span>
+            <span class="n">valuestr</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">repr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__ON_SHAPE_CHANGE_VALUES</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;on_shape_change must be one of </span><span class="si">{}</span><span class="s2">&quot;</span>
+                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">valuestr</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_on_shape_change</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">on_dtype_change</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_dtype_change</span>
+
+    <span class="nd">@on_dtype_change</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">on_dtype_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Checks that the new value of on_dtype_change is valid.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__ON_DTYPE_CHANGE_VALUES</span><span class="p">:</span>
+            <span class="n">valuestr</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">repr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__ON_DTYPE_CHANGE_VALUES</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;on_shape_change must be one of </span><span class="si">{}</span><span class="s2">&quot;</span>
+                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">valuestr</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_on_dtype_change</span> <span class="o">=</span> <span class="n">value</span></div>
+
+<div class="viewcode-block" id="Proxy"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.params.Proxy">[docs]</a><span class="k">class</span> <span class="nc">Proxy</span><span class="p">(</span><span class="n">Tree</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Places important state in an object shared between copies.&quot;&quot;&quot;</span>  
+<div class="viewcode-block" id="Proxy.Shared"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.params.Proxy.Shared">[docs]</a>    <span class="k">class</span> <span class="nc">Shared</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span> <span class="o">=</span> <span class="n">Proxy</span><span class="o">.</span><span class="n">Shared</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">copies</span> <span class="o">=</span> <span class="n">WeakSet</span><span class="p">([</span><span class="bp">self</span><span class="p">])</span>
+
+    <span class="nd">@overrides</span>
+<div class="viewcode-block" id="Proxy.copy"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.params.Proxy.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">copy</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">copy</span><span class="o">.</span><span class="n">_shared</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">copies</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">copy</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">copy</span></div></div>
+
+<span class="nd">@contextmanager</span>
+<div class="viewcode-block" id="no_gc"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.params.no_gc">[docs]</a><span class="k">def</span> <span class="nf">no_gc</span><span class="p">():</span>
+    <span class="n">gc</span><span class="o">.</span><span class="n">disable</span><span class="p">()</span>
+    <span class="k">yield</span>
+    <span class="n">gc</span><span class="o">.</span><span class="n">enable</span><span class="p">()</span></div>
+        
+<div class="viewcode-block" id="share_properties"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.params.share_properties">[docs]</a><span class="k">def</span> <span class="nf">share_properties</span><span class="p">(</span><span class="o">*</span><span class="n">properties</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Shares properties of a `Proxy` subclass between all copies.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        *properties (Tuple[str]): The (string) names of the properties</span>
+<span class="sd">            to override.</span>
+<span class="sd">        </span>
+<span class="sd">    Examples:</span>
+<span class="sd">        Here we set up an example class with a property and an</span>
+<span class="sd">        inheriting class that overrides that property.</span>
+<span class="sd">        &gt;&gt;&gt; @share_properties(&#39;a&#39;)</span>
+<span class="sd">        ... class Example(Proxy, Leaf):</span>
+<span class="sd">        ...     @property</span>
+<span class="sd">        ...     def a(self):</span>
+<span class="sd">        ...         print(&#39;getter called&#39;)</span>
+<span class="sd">        ...         return self._a</span>
+<span class="sd">        ...     @a.setter</span>
+<span class="sd">        ...     def a(self, value):</span>
+<span class="sd">        ...         print(&#39;setter called&#39;)</span>
+<span class="sd">        ...         self._a = value</span>
+<span class="sd">        ...     @a.deleter</span>
+<span class="sd">        ...     def a(self):</span>
+<span class="sd">        ...         print(&#39;deleter called&#39;)</span>
+<span class="sd">        ...         del self._a</span>
+
+<span class="sd">        The inheriting class shares the property between the copies</span>
+<span class="sd">        using the property&#39;s getter/setter/deleter methods.</span>
+<span class="sd">        &gt;&gt;&gt; e = Example()</span>
+<span class="sd">        &gt;&gt;&gt; copies = [e.copy() for _ in range(3)]</span>
+<span class="sd">        &gt;&gt;&gt; e.a = 1</span>
+<span class="sd">        setter called</span>
+<span class="sd">        setter called</span>
+<span class="sd">        setter called</span>
+<span class="sd">        setter called</span>
+<span class="sd">        &gt;&gt;&gt; all(copy.a == 1 for copy in copies)</span>
+<span class="sd">        getter called</span>
+<span class="sd">        getter called</span>
+<span class="sd">        getter called</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; del e.a</span>
+<span class="sd">        deleter called</span>
+<span class="sd">        deleter called</span>
+<span class="sd">        deleter called</span>
+<span class="sd">        deleter called</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="n">class_</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">properties</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">get_property</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">):</span>
+                <span class="c1"># closures!</span>
+                <span class="n">wrappedproperty</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">class_</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+                <span class="k">def</span> <span class="nf">getprop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">wrappedproperty</span><span class="o">.</span><span class="n">fget</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+                <span class="k">def</span> <span class="nf">setprop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+                    <span class="k">with</span> <span class="n">no_gc</span><span class="p">():</span>
+                        <span class="k">for</span> <span class="n">copy</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">copies</span><span class="p">:</span>
+                            <span class="n">wrappedproperty</span><span class="o">.</span><span class="n">fset</span><span class="p">(</span><span class="n">copy</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+                <span class="k">def</span> <span class="nf">delprop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                    <span class="k">with</span> <span class="n">no_gc</span><span class="p">():</span>
+                        <span class="k">for</span> <span class="n">copy</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">copies</span><span class="p">:</span>
+                            <span class="n">wrappedproperty</span><span class="o">.</span><span class="n">fdel</span><span class="p">(</span><span class="n">copy</span><span class="p">)</span>
+                <span class="n">doc</span> <span class="o">=</span> <span class="n">wrappedproperty</span><span class="o">.</span><span class="n">__doc__</span>
+                <span class="n">prop</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">getprop</span><span class="p">,</span> <span class="n">setprop</span><span class="p">,</span> <span class="n">delprop</span><span class="p">,</span> <span class="n">doc</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">prop</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">class_</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">get_property</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">class_</span>
+    <span class="k">return</span> <span class="n">wrapper</span></div>
+
+<span class="nd">@share_properties</span><span class="p">(</span><span class="s1">&#39;tf_device&#39;</span><span class="p">,</span> <span class="s1">&#39;tf_graph&#39;</span><span class="p">,</span> <span class="s1">&#39;tf_session_target&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;on_shape_change&#39;</span><span class="p">,</span> <span class="s1">&#39;on_dtype_change&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="ProxyWrappedValue"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.params.ProxyWrappedValue">[docs]</a><span class="k">class</span> <span class="nc">ProxyWrappedValue</span><span class="p">(</span><span class="n">WrappedValue</span><span class="p">,</span> <span class="n">Proxy</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sync various useful properties between copies.</span>
+<span class="sd">    </span>
+<span class="sd">    Shares one cache between all copies, and shares the `.tf_device`, </span>
+<span class="sd">    `.tf_graph`, `.tf_session_target`, `.on_shape_change` and</span>
+<span class="sd">    `.on_dtype_change` parameters.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">cache</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">cache</span>
+
+    <span class="nd">@cache</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">cache</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@cache</span><span class="o">.</span><span class="n">deleter</span>
+    <span class="k">def</span> <span class="nf">cache</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">cache</span>
+
+<div class="viewcode-block" id="ProxyWrappedValue.clear_all_ancestor_caches"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.params.ProxyWrappedValue.clear_all_ancestor_caches">[docs]</a>    <span class="k">def</span> <span class="nf">clear_all_ancestor_caches</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Clears the caches of the ancestors of all copies.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">no_gc</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">copy</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">copies</span><span class="p">:</span>
+                <span class="n">copy</span><span class="o">.</span><span class="n">clear_ancestor_caches</span><span class="p">()</span></div></div>
+
+<div class="viewcode-block" id="Param"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.params.Param">[docs]</a><span class="k">class</span> <span class="nc">Param</span><span class="p">(</span><span class="n">ProxyWrappedValue</span><span class="p">,</span> <span class="n">Leaf</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A parameter of a model.</span>
+
+<span class="sd">    Instances have all attributes of `WrappedValue` and the following:</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        value (np.ndarray): The value of the parameter.</span>
+<span class="sd">        tensor (tf.Tensor): A tensor representation of the parameter, </span>
+<span class="sd">            suitable for passing to TensorFlow ops.</span>
+<span class="sd">        feed_dict (Dict): Currently an empty dictionary.</span>
+<span class="sd">        free_state (tf.Variable): The free state form of the parameter, that</span>
+<span class="sd">            can be freely optimised.</span>
+<span class="sd">        fixed (bool): A flag indicating whether or not the variable is fixed.</span>
+<span class="sd">            Fixed parameters will not be optimised.</span>
+<span class="sd">        transform (.transforms.Transform): The transform used to move the</span>
+<span class="sd">            variable into a free state where it can be optimised.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        Getting and setting values</span>
+<span class="sd">        --------------------------</span>
+
+<span class="sd">        You can get and set the (numpy) value of a `Param` using its </span>
+<span class="sd">        `value` attribute:</span>
+<span class="sd">        &gt;&gt;&gt; p = Param(1.0)</span>
+<span class="sd">        &gt;&gt;&gt; p.value</span>
+<span class="sd">        array(1.0)</span>
+<span class="sd">        &gt;&gt;&gt; p.value = 2.0</span>
+<span class="sd">        &gt;&gt;&gt; p.value</span>
+<span class="sd">        array(2.0)</span>
+
+<span class="sd">        A tensor representing the paremeter can be acquired using the </span>
+<span class="sd">        `tensor` attribute.</span>
+<span class="sd">        &gt;&gt;&gt; isinstance(p.tensor, tf.Tensor)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; with p.get_session() as sess:</span>
+<span class="sd">        ...     print(sess.run(p.tensor))</span>
+<span class="sd">        2.0</span>
+
+<span class="sd">        Behind the scenes, this creates a `tf.Variable`, accessible using the</span>
+<span class="sd">        `free_state` attribute. We can use this variable in a session like so:</span>
+<span class="sd">        &gt;&gt;&gt; with p.get_session() as sess:</span>
+<span class="sd">        ...     print(&quot;.free_state: {}&quot;.format(sess.run(p.free_state)))</span>
+<span class="sd">        ...     print(&quot;.value: {}&quot;.format(p.value))</span>
+<span class="sd">        ...     # assigning to p.value changes p.free_state</span>
+<span class="sd">        ...     p.value += 1.0</span>
+<span class="sd">        ...     print(&quot;.free_state: {}&quot;.format(sess.run(p.free_state)))</span>
+<span class="sd">        ...     print(&quot;.value: {}&quot;.format(p.value))</span>
+<span class="sd">        ...     # assigning to p.free_state changes p.value</span>
+<span class="sd">        ...     _ = sess.run(p.free_state.assign_add(1.0))</span>
+<span class="sd">        ...     print(&quot;.free_state: {}&quot;.format(sess.run(p.free_state)))</span>
+<span class="sd">        ...     print(&quot;.value: {}&quot;.format(p.value))</span>
+<span class="sd">        .free_state: 2.0</span>
+<span class="sd">        .value: 2.0</span>
+<span class="sd">        .free_state: 3.0</span>
+<span class="sd">        .value: 3.0</span>
+<span class="sd">        .free_state: 4.0</span>
+<span class="sd">        .value: 4.0</span>
+
+<span class="sd">        The session returned by `p.get_session()` maintains the value of </span>
+<span class="sd">        `p.free_state` across uses:</span>
+<span class="sd">        &gt;&gt;&gt; with p.get_session() as sess:</span>
+<span class="sd">        ...     print(sess.run(p.free_state))</span>
+<span class="sd">        4.0</span>
+
+<span class="sd">        If we have multiple `Param`s, as long as they are in the same</span>
+<span class="sd">        tree of `WrappedTF`, each `Param`&#39;s `.get_session()` will return</span>
+<span class="sd">        the same session, and every `Param` in the tree will have its free</span>
+<span class="sd">        state maintained in that session.</span>
+<span class="sd">        &gt;&gt;&gt; class AttributeWrappedTF(WrappedTF, AttributeTree):</span>
+<span class="sd">        ...     pass</span>
+<span class="sd">        &gt;&gt;&gt; w = AttributeWrappedTF()</span>
+<span class="sd">        &gt;&gt;&gt; w.p = Param(1.0)</span>
+<span class="sd">        &gt;&gt;&gt; w.q = Param(2.0)</span>
+<span class="sd">        &gt;&gt;&gt; with w.p.get_session() as sess:</span>
+<span class="sd">        ...     print(sess.run(w.p.free_state))</span>
+<span class="sd">        ...     print(sess.run(w.q.free_state))</span>
+<span class="sd">        1.0</span>
+<span class="sd">        2.0</span>
+<span class="sd">        &gt;&gt;&gt; with w.p.get_session() as sess:</span>
+<span class="sd">        ...     print(sess.run(w.p.free_state))</span>
+<span class="sd">        ...     print(sess.run(w.q.free_state))</span>
+<span class="sd">        1.0</span>
+<span class="sd">        2.0</span>
+
+<span class="sd">        It is possible to use `tf.Session()` instead of `p.get_session()`.</span>
+<span class="sd">        In that case, we must run `p.on_session_birth()` after the session</span>
+<span class="sd">        has been installed as the default session and `p.on_session_death()`</span>
+<span class="sd">        just before the session closes.</span>
+<span class="sd">        &gt;&gt;&gt; p = Param(4.0)</span>
+<span class="sd">        &gt;&gt;&gt; with tf.Session() as sess:</span>
+<span class="sd">        ...     p.on_session_birth(sess)</span>
+<span class="sd">        ...     print(&quot;.free_state: {}&quot;.format(sess.run(p.free_state)))</span>
+<span class="sd">        ...     print(&quot;.value: {}&quot;.format(p.value))</span>
+<span class="sd">        ...     # assiging to p.value changes p.free_state</span>
+<span class="sd">        ...     p.value = .0</span>
+<span class="sd">        ...     print(&quot;.free_state: {}&quot;.format(sess.run(p.free_state)))</span>
+<span class="sd">        ...     print(&quot;.value: {}&quot;.format(p.value))</span>
+<span class="sd">        ...     # assigning to p.free_state does not change p.value</span>
+<span class="sd">        ...     _ = sess.run(p.free_state.assign_add(1.0))</span>
+<span class="sd">        ...     print(&quot;.free_state: {}&quot;.format(sess.run(p.free_state)))</span>
+<span class="sd">        ...     print(&quot;.value: {}&quot;.format(p.value))</span>
+<span class="sd">        ...     p.on_session_death(sess)</span>
+<span class="sd">        .free_state: 4.0</span>
+<span class="sd">        .value: 4.0</span>
+<span class="sd">        .free_state: 0.0</span>
+<span class="sd">        .value: 0.0</span>
+<span class="sd">        .free_state: 1.0</span>
+<span class="sd">        .value: 1.0</span>
+
+<span class="sd">        We advise the reader to use `p.get_session()`.</span>
+
+<span class="sd">        Attempting to set the tensor or free_state paremeters results in an</span>
+<span class="sd">        error:</span>
+<span class="sd">        &gt;&gt;&gt; p.tensor = tf.constant(1)</span>
+<span class="sd">        Traceback (most recent call last):</span>
+<span class="sd">            ...</span>
+<span class="sd">        AttributeError: can&#39;t set attribute</span>
+<span class="sd">        &gt;&gt;&gt; p.free_state = tf.Variable(1)</span>
+<span class="sd">        Traceback (most recent call last):</span>
+<span class="sd">            ...</span>
+<span class="sd">        AttributeError: can&#39;t set attribute</span>
+
+<span class="sd">        Fixing parameters</span>
+<span class="sd">        -----------------</span>
+
+<span class="sd">        A parameter can be fixed by setting the `.fixed` attribute to `True`.</span>
+<span class="sd">        A fixed parameter should not be optimised. Attempting to</span>
+<span class="sd">        access the `.free_state` attribute of a fixed parameter will result</span>
+<span class="sd">        in a `FixedParameterError`:</span>
+<span class="sd">        &gt;&gt;&gt; p = Param(2.0)</span>
+<span class="sd">        &gt;&gt;&gt; p.fixed = True</span>
+<span class="sd">        &gt;&gt;&gt; p.free_state</span>
+<span class="sd">        Traceback (most recent call last):</span>
+<span class="sd">            ...</span>
+<span class="sd">        gptf.core.params.FixedParameterError: message</span>
+
+<span class="sd">        Ultimately, however, it is the responsibility of the optimiser to </span>
+<span class="sd">        respect this flag. See the `Parameterised` and `Model` classes for</span>
+<span class="sd">        more details.</span>
+
+<span class="sd">        Transforms</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        Constraints can be applied to a parameter in the form of `Transform`s.</span>
+<span class="sd">        A `Transform` is used to transform the parameter into a free state,</span>
+<span class="sd">        where it can then be optimized. The transform can be set either by</span>
+<span class="sd">        specifying `transform` paramater of the constructor or after creation</span>
+<span class="sd">        using the `.transform` attribute. The default transform is</span>
+<span class="sd">        `gptf.transforms.Identity`.</span>
+<span class="sd">        </span>
+<span class="sd">        &gt;&gt;&gt; from gptf import transforms</span>
+<span class="sd">        &gt;&gt;&gt; Param(1.0).transform</span>
+<span class="sd">        gptf.core.transforms.Identity()</span>
+<span class="sd">        &gt;&gt;&gt; p = Param(1.0, transform=transforms.Exp())</span>
+<span class="sd">        &gt;&gt;&gt; p.transform</span>
+<span class="sd">        gptf.core.transforms.Exp(lower=1e-06)</span>
+<span class="sd">        &gt;&gt;&gt; p.transform = Identity()</span>
+<span class="sd">        &gt;&gt;&gt; p.transform</span>
+<span class="sd">        gptf.core.transforms.Identity()</span>
+
+<span class="sd">        The associated free state can be obtained using the `.free_state`</span>
+<span class="sd">        parameter.</span>
+<span class="sd">        &gt;&gt;&gt; p = Param(1.0, transform=transforms.Exp())</span>
+<span class="sd">        &gt;&gt;&gt; with p.get_session() as sess:</span>
+<span class="sd">        ...     print(p.value)</span>
+<span class="sd">        ...     print(&quot;{:.3e}&quot;.format(sess.run(p.free_state)))</span>
+<span class="sd">        1.0</span>
+<span class="sd">        -1.000e-06</span>
+
+<span class="sd">        The free state can then be freely optimised, and `p.value` and </span>
+<span class="sd">        `p.tensor` will remain constrained by the transform.</span>
+<span class="sd">        &gt;&gt;&gt; p = Param(1.0, transform=transforms.Exp())  # p.value &gt; 0</span>
+<span class="sd">        &gt;&gt;&gt; with p.get_session() as sess:</span>
+<span class="sd">        ...     _ = sess.run(p.free_state.assign(-100))</span>
+<span class="sd">        ...     print(p.value == sess.run(p.tensor))</span>
+<span class="sd">        ...     print(p.value &gt; 0)</span>
+<span class="sd">        True</span>
+<span class="sd">        True</span>
+
+<span class="sd">        Tensorflow will take the transform into account when calculating</span>
+<span class="sd">        the derivative of `p.tensor` w.r.t. its free state:</span>
+<span class="sd">        &gt;&gt;&gt; from math import e</span>
+<span class="sd">        &gt;&gt;&gt; p = Param(e)</span>
+<span class="sd">        &gt;&gt;&gt; grad_identity = tf.gradients([p.tensor], [p.free_state])[0]</span>
+<span class="sd">        &gt;&gt;&gt; with p.get_session() as sess:</span>
+<span class="sd">        ...     print(sess.run(grad_identity))</span>
+<span class="sd">        1.0</span>
+<span class="sd">        &gt;&gt;&gt; p.transform = transforms.Exp()</span>
+<span class="sd">        &gt;&gt;&gt; grad_exp = tf.gradients([p.tensor], [p.free_state])[0]</span>
+<span class="sd">        &gt;&gt;&gt; with p.get_session() as sess:</span>
+<span class="sd">        ...     print(&quot;{:.3f}&quot;.format(sess.run(grad_exp)))</span>
+<span class="sd">        2.718</span>
+
+<span class="sd">        Copies</span>
+<span class="sd">        ------</span>
+
+<span class="sd">        You can create a copy of a `Param` using `Param.copy()`. The</span>
+<span class="sd">        new copy represents the same parameter, so the value and</span>
+<span class="sd">        various items of state (see below) are the same.</span>
+<span class="sd">        &gt;&gt;&gt; p = Param(1.0, transform=transforms.Exp())</span>
+<span class="sd">        &gt;&gt;&gt; copy = p.copy()</span>
+
+<span class="sd">        Copies have the same value as the original, and updating the</span>
+<span class="sd">        value of the copy updates the value of the original.</span>
+<span class="sd">        &gt;&gt;&gt; np.array_equal(p.value, copy.value)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; p.value = 5.0</span>
+<span class="sd">        &gt;&gt;&gt; copy.value</span>
+<span class="sd">        array(5.0)</span>
+
+<span class="sd">        Copies have the same transform, and setting the transform</span>
+<span class="sd">        of a copy sets the transform of the original.</span>
+<span class="sd">        &gt;&gt;&gt; copy.transform is p.transform</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; copy.transform = transforms.Identity()</span>
+<span class="sd">        &gt;&gt;&gt; p.transform</span>
+<span class="sd">        gptf.core.transforms.Identity()</span>
+
+<span class="sd">        Copies have the same &quot;fixed&quot; flag. Fixing a copy fixes the</span>
+<span class="sd">        original and vice-versa.</span>
+<span class="sd">        &gt;&gt;&gt; p.fixed = True</span>
+<span class="sd">        &gt;&gt;&gt; copy.fixed</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; copy.fixed = False</span>
+<span class="sd">        &gt;&gt;&gt; p.fixed</span>
+<span class="sd">        False</span>
+
+<span class="sd">        Copies have the same free state.</span>
+<span class="sd">        &gt;&gt;&gt; p.free_state is copy.free_state</span>
+<span class="sd">        True</span>
+
+<span class="sd">        This means that it is *very important* that every copy of of a</span>
+<span class="sd">        `Param` has the same device context and graph, or odd things</span>
+<span class="sd">        happen.</span>
+<span class="sd">        &gt;&gt;&gt; class AttributeWrappedTF(AttributeTree, WrappedTF):</span>
+<span class="sd">        ...     pass</span>
+<span class="sd">        &gt;&gt;&gt; treeparam = Param(1.0)</span>
+<span class="sd">        &gt;&gt;&gt; w = AttributeWrappedTF()</span>
+<span class="sd">        &gt;&gt;&gt; w.param = treeparam</span>
+<span class="sd">        &gt;&gt;&gt; w.child = AttributeWrappedTF()</span>
+<span class="sd">        &gt;&gt;&gt; w.child.param = treeparam  # creates a copy of the param</span>
+<span class="sd">        &gt;&gt;&gt; w.tf_graph = tf.Graph()</span>
+<span class="sd">        &gt;&gt;&gt; w.tf_device = &#39;/job:spoon/task:0&#39;</span>
+<span class="sd">        &gt;&gt;&gt; w.child.tf_device = &#39;/job:knife/task:0&#39;</span>
+<span class="sd">        </span>
+<span class="sd">        In the above example, where should we place</span>
+<span class="sd">        `treeparam.free_state`? Should it be on `&#39;/job:spoon/task:0&#39;`</span>
+<span class="sd">        where `w.param` is, or on `&#39;/job:knife/task:0&#39;` where</span>
+<span class="sd">        `w.child.param` is? Currently, there is no system in place</span>
+<span class="sd">        to resolve this. In this situation, one should define the </span>
+<span class="sd">        device context of `treeparam` explicitly:</span>
+<span class="sd">        &gt;&gt;&gt; treeparam.tf_device = &#39;/job:spoon&#39;</span>
+
+<span class="sd">        To create a new param with the same value, pass the value to</span>
+<span class="sd">        `Param.__init__()`.</span>
+<span class="sd">        &gt;&gt;&gt; notacopy = Param(p.value, transform=p.transform)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">initial_value</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">Identity</span><span class="p">(),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialiser.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            initial_value (np.array_like): The initial value of the parameter.</span>
+<span class="sd">            transform (gptf.transforms.Transform): The transform of the</span>
+<span class="sd">                paramter. Defaults to `gptf.transforms.Identity()`.</span>
+<span class="sd">            **kwargs: passed through to the constructor of WrappedValue.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">numpy_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">initial_value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">transform</span> <span class="o">=</span> <span class="n">transform</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">fixed</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@tf_method</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">_get_value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variable</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">numpy_value</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="nd">@tf_method</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">_set_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variable</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">:</span>
+            <span class="n">sess</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span>
+            <span class="n">free_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">np_backward</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">numpy_value</span><span class="p">[</span><span class="o">...</span><span class="p">]</span> <span class="o">=</span> \
+                    <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_variable</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">free_state</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">numpy_value</span><span class="p">[</span><span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@tf_method</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">rename_output</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a tensor representing the value of the parameter.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            (tf.Tensor) The forward transform of the parameter applied to its</span>
+<span class="sd">            free state.</span>
+<span class="sd">            </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_variable</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s1">&#39;_Param__tensor&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">cache</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="s1">&#39;_Param__tensor&#39;</span><span class="p">]</span> <span class="o">=</span>\
+                    <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">tf_forward</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_variable</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="s1">&#39;_Param__tensor&#39;</span><span class="p">]</span>
+        <span class="c1">#return self.transform.tf_forward(self._variable)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">feed_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{}</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@tf_method</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">rename_output</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">free_state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a variable that maps to the free state of the parameter.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">fixed</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_variable</span><span class="p">()</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variable</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">FixedParameterError</span><span class="p">(</span><span class="s2">&quot;cannot access free state of fixed Param&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fixed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">fixed</span>
+
+    <span class="nd">@fixed</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">fixed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">fixed</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The transform between the free space and value space.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">transform</span>
+
+    <span class="nd">@transform</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sets the transform of the parameter.</span>
+
+<span class="sd">        If the parameter is in a variable, clears the cache of anything</span>
+<span class="sd">        higher in the tree that might rely on `self.tensor`.</span>
+<span class="sd">        </span>
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; from .transforms import Identity, transforms.Exp</span>
+<span class="sd">            &gt;&gt;&gt; class AttributeWrappedTF(WrappedTF, AttributeTree):</span>
+<span class="sd">            ...     pass</span>
+<span class="sd">            &gt;&gt;&gt; w = AttributeWrappedTF()</span>
+<span class="sd">            &gt;&gt;&gt; w.p = Param(1.)</span>
+<span class="sd">            &gt;&gt;&gt; w.cache[0] = 123</span>
+<span class="sd">            &gt;&gt;&gt; w.p.transform = transforms.Exp()</span>
+<span class="sd">            &gt;&gt;&gt; 0 in w.cache  # p has no variable, so no cache is cleared</span>
+<span class="sd">            True</span>
+<span class="sd">            &gt;&gt;&gt; w.p.free_state  # force p to move into variable</span>
+<span class="sd">            &gt;&gt;&gt; w.p.transform = Identity</span>
+<span class="sd">            &gt;&gt;&gt; 0 in w.cache  # cache is cleared</span>
+<span class="sd">            False</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variable</span><span class="p">:</span>
+            <span class="c1"># anything that caches anything that relies on self.tensor needs</span>
+            <span class="c1"># to clear its cache.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">clear_all_ancestor_caches</span><span class="p">()</span>
+            <span class="n">old_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
+            <span class="k">if</span> <span class="s1">&#39;_Param__tensor&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">cache</span><span class="p">:</span>
+                <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="s1">&#39;_Param__tensor&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">transform</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">old_value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">transform</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@overrides</span>
+<div class="viewcode-block" id="Param.on_session_birth"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.params.Param.on_session_birth">[docs]</a>    <span class="k">def</span> <span class="nf">on_session_birth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> is already initialised in another session, </span><span class="si">{}</span><span class="s2">.&quot;</span>
+                <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">long_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="n">session</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_variable</span><span class="p">()</span>
+        <span class="n">session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">initializer</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">on_session_birth</span><span class="p">(</span><span class="n">session</span><span class="p">)</span></div>
+
+    <span class="nd">@overrides</span>
+<div class="viewcode-block" id="Param.on_session_death"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.params.Param.on_session_death">[docs]</a>    <span class="k">def</span> <span class="nf">on_session_death</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">session</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> is not initialised in </span><span class="si">{}</span><span class="s2">&quot;</span>
+                <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">long_name</span><span class="p">,</span> <span class="n">session</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variable</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">numpy_value</span><span class="p">[</span><span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tensor</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">on_session_death</span><span class="p">(</span><span class="n">session</span><span class="p">)</span></div>
+
+    <span class="nd">@overrides</span>
+<div class="viewcode-block" id="Param.clear_cache"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.params.Param.clear_cache">[docs]</a>    <span class="k">def</span> <span class="nf">clear_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Save the variable value before it is cleared from the cache.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variable</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">numpy_value</span><span class="p">[</span><span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">clear_cache</span><span class="p">()</span></div>
+
+    <span class="nd">@property</span>
+    <span class="nd">@tf_method</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">rename_output</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">initializer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialises the internal `tf.Variable` to the correct value.</span>
+<span class="sd">        </span>
+<span class="sd">        This op is automatically run for sessions obtained using </span>
+<span class="sd">        `.get_session()`.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_variable</span><span class="p">()</span>
+        <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">control_dependencies</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_variable</span><span class="o">.</span><span class="n">initializer</span><span class="p">]):</span>
+            <span class="n">free_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">np_backward</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">numpy_value</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variable</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">free_state</span><span class="p">)</span>
+            
+    <span class="nd">@tf_method</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_ensure_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates a variable if necessary.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variable</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_variable</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">numpy_value</span><span class="p">)</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the variable if there is one.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns `None` (falsity) if there is no variable, or a `tf.Variable`</span>
+<span class="sd">        (truth) if there is one. Hence variable existence may be checked using</span>
+<span class="sd">        `if self._variable`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;_Param__variable&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="nd">@_variable</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sets the variable.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="s1">&#39;_Param__variable&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span></div>
+
+<div class="viewcode-block" id="DataHolder"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.params.DataHolder">[docs]</a><span class="k">class</span> <span class="nc">DataHolder</span><span class="p">(</span><span class="n">ProxyWrappedValue</span><span class="p">,</span> <span class="n">Leaf</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Holds data to be fed into TensorFlow for computation.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        value (np.ndarray): The value of the data.</span>
+<span class="sd">        tensor (tf.placeholder): A placeholder for the data, </span>
+<span class="sd">            suitable for passing to TensorFlow ops.</span>
+<span class="sd">        feed_dict (Dict[tf.placeholder, np.array_like]): A feed dictionary</span>
+<span class="sd">            that feeds the value of the data into the placeholder op.</span>
+<span class="sd">        on_shape_change (&#39;raise&#39; | &#39;pass&#39; | &#39;recompile&#39;): The action to take</span>
+<span class="sd">            when the shape of the data changes; see the setter for `.value`.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        Getting and setting values</span>
+<span class="sd">        --------------------------</span>
+
+<span class="sd">        To get and set the value of the data, use the `.value` property:</span>
+<span class="sd">        &gt;&gt;&gt; a = np.array([1,2,3])</span>
+<span class="sd">        &gt;&gt;&gt; b = np.array([4,5,6])</span>
+<span class="sd">        &gt;&gt;&gt; d = DataHolder(a)</span>
+<span class="sd">        &gt;&gt;&gt; d.value</span>
+<span class="sd">        array([1, 2, 3])</span>
+<span class="sd">        &gt;&gt;&gt; d.value = b</span>
+<span class="sd">        &gt;&gt;&gt; d.value</span>
+<span class="sd">        array([4, 5, 6])</span>
+
+<span class="sd">        See the docs for `gptf.core.params.WrappedValue` for more info.</span>
+<span class="sd">        </span>
+<span class="sd">        To access the value from TensorFlow, first build an op that relies</span>
+<span class="sd">        on the `.tensor` attribute:</span>
+<span class="sd">        &gt;&gt;&gt; d = DataHolder(a)</span>
+<span class="sd">        &gt;&gt;&gt; op = tf.add(d.tensor, 1)</span>
+
+<span class="sd">        Then evaluate the op in a session, passing in the feed dictionary</span>
+<span class="sd">        to `tf.Session.run()`:</span>
+<span class="sd">        &gt;&gt;&gt; with d.get_session() as sess:</span>
+<span class="sd">        ...     sess.run(op, feed_dict=d.feed_dict)</span>
+<span class="sd">        array([2, 3, 4])</span>
+
+<span class="sd">        Copies</span>
+<span class="sd">        ------</span>
+
+<span class="sd">        You can create a copy of a `DataHolder` using `.copy()`. The</span>
+<span class="sd">        new copy represents the same data, so the value and</span>
+<span class="sd">        various items of state (see below) are the same.</span>
+<span class="sd">        &gt;&gt;&gt; d = DataHolder([1., 1., 1.])</span>
+<span class="sd">        &gt;&gt;&gt; copy = d.copy()</span>
+
+<span class="sd">        Copies have the same value as the original, and updating the</span>
+<span class="sd">        value of the copy updates the value of the original.</span>
+<span class="sd">        &gt;&gt;&gt; np.array_equal(d.value, copy.value)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; d.value = [5., 4., 3.]</span>
+<span class="sd">        &gt;&gt;&gt; copy.value</span>
+<span class="sd">        array([ 5., 4., 3.])</span>
+
+<span class="sd">        Copies have the same placeholder.</span>
+<span class="sd">        &gt;&gt;&gt; d.tensor is copy.tensor</span>
+<span class="sd">        True</span>
+
+<span class="sd">        This means that it, just in the case of `Param`s, it is </span>
+<span class="sd">        *very important* that every copy of a `DataHolder` has the</span>
+<span class="sd">        same device context and graph, or odd things happen.</span>
+<span class="sd">        &gt;&gt;&gt; class AttributeWrappedTF(AttributeTree, WrappedTF):</span>
+<span class="sd">        ...     pass</span>
+<span class="sd">        &gt;&gt;&gt; treedata = DataHolder(1.0)</span>
+<span class="sd">        &gt;&gt;&gt; w = AttributeWrappedTF()</span>
+<span class="sd">        &gt;&gt;&gt; w.param = treedata</span>
+<span class="sd">        &gt;&gt;&gt; w.child = AttributeWrappedTF()</span>
+<span class="sd">        &gt;&gt;&gt; w.child.param = treedata  # creates a copy of the data</span>
+<span class="sd">        &gt;&gt;&gt; w.tf_graph = tf.Graph()</span>
+<span class="sd">        &gt;&gt;&gt; w.tf_device = &#39;/job:spoon/task:0&#39;</span>
+<span class="sd">        &gt;&gt;&gt; w.child.tf_device = &#39;/job:knife/task:0&#39;</span>
+<span class="sd">        </span>
+<span class="sd">        In circumstances like the above, where copies have</span>
+<span class="sd">        conflicting parental device contexts, set the device</span>
+<span class="sd">        context explicitly.</span>
+<span class="sd">        &gt;&gt;&gt; treedata.tf_device = &#39;/job:spoon&#39;</span>
+<span class="sd">        </span>
+<span class="sd">        To create a new dataholder with the same value, pass the value</span>
+<span class="sd">        to `DataHolder.__init__()`.</span>
+<span class="sd">        &gt;&gt;&gt; notacopy = DataHolder(d.value)</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">initial_value</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialiser.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            initial_value (np.array_like): The initial value of the data.</span>
+<span class="sd">            **kwargs: passed through to the constructor of WrappedValue.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">numpy_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">initial_value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_placeholder</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">_get_value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">numpy_value</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">_set_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">numpy_value</span><span class="p">[</span><span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assert_placeholder</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_placeholder</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">feed_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assert_placeholder</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">{</span> <span class="bp">self</span><span class="o">.</span><span class="n">_placeholder</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">numpy_value</span> <span class="p">}</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_placeholder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;_DataHolder__placeholder&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="nd">@_placeholder</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">_placeholder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="s1">&#39;_DataHolder__placeholder&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@tf_method</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_assert_placeholder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_placeholder</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">dtype</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">as_dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">numpy_value</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_placeholder</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span> <span class="c1">#self._shared.numpy_value.shape)</span></div>
+
+<div class="viewcode-block" id="Parameterized"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.params.Parameterized">[docs]</a><span class="k">class</span> <span class="nc">Parameterized</span><span class="p">(</span><span class="n">WrappedTF</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An object that contains parameters and data.</span>
+
+<span class="sd">    This object is designed to be part of a tree, with `Param`s and </span>
+<span class="sd">    `DataHolder`s at the leaves.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        fixed (bool): A flag indicating whether or not any child `Param`s </span>
+<span class="sd">            should be fixed. Setting this attribute also sets the `.fixed` </span>
+<span class="sd">            attribute of anything lower in the tree.</span>
+<span class="sd">        feed_dict (Dict[tf.placeholder, np.array_like]): A feed dictionary</span>
+<span class="sd">            that feeds the values of DataHolders into their placeholder ops.</span>
+<span class="sd">        params (List[Param]): A list of all the `Param`s lower in the tree,</span>
+<span class="sd">            sorted by their long name.</span>
+<span class="sd">        data_holders (List[Param]): A list of all the `DataHolder`s lower in </span>
+<span class="sd">            the tree, sorted by their long name.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; from gptf import transforms</span>
+<span class="sd">        &gt;&gt;&gt; class Parameterized(Parameterized, AttributeTree):</span>
+<span class="sd">        ...     pass</span>
+<span class="sd">        &gt;&gt;&gt; m = Parameterized()</span>
+<span class="sd">        &gt;&gt;&gt; m.param = Param(1.)</span>
+<span class="sd">        &gt;&gt;&gt; m.child = Parameterized()</span>
+<span class="sd">        &gt;&gt;&gt; m.child.a = Param([2., 3., 4.], transform=transforms.Exp())</span>
+<span class="sd">        &gt;&gt;&gt; m.child.b = Param([[1.0]])</span>
+<span class="sd">        &gt;&gt;&gt; m.X = DataHolder([1., 2., 3., 4., 5.])</span>
+<span class="sd">        &gt;&gt;&gt; m.Y = DataHolder([10., 23.3, 3., 42., .1])</span>
+<span class="sd">        &gt;&gt;&gt; m.child.data = DataHolder(23)</span>
+
+<span class="sd">        The `.params` and `.data` attributes return all instances of their</span>
+<span class="sd">        associated types lower in the tree.</span>
+<span class="sd">        &gt;&gt;&gt; set(m.params) == {m.param, m.child.a, m.child.b}</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; set(m.data_holders) == {m.X, m.Y, m.child.data}</span>
+<span class="sd">        True</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ARRAY_DISPLAY_LENGTH</span> <span class="o">=</span> <span class="mi">5</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fixed</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fixed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fixed</span>
+
+    <span class="nd">@fixed</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">fixed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="n">iterator</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="nb">next</span><span class="p">(</span><span class="n">iterator</span><span class="p">)</span>  <span class="c1"># skip self to prevent recursion bugs</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">filter</span><span class="p">(</span><span class="n">isattrof</span><span class="p">(</span><span class="s1">&#39;fixed&#39;</span><span class="p">),</span> <span class="n">iterator</span><span class="p">):</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">fixed</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">feed_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The union of the `.feed_dict`s of objects lower in the tree.&quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">iterator</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="nb">next</span><span class="p">(</span><span class="n">iterator</span><span class="p">)</span>  <span class="c1"># skip self to prevent recursion bugs</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">filter</span><span class="p">(</span><span class="n">isattrof</span><span class="p">(</span><span class="s1">&#39;feed_dict&#39;</span><span class="p">),</span> <span class="n">iterator</span><span class="p">):</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">feed_dict</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A sorted list of the `Param`s lower in the tree.&quot;&quot;&quot;</span>
+        <span class="n">l</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="n">isclassof</span><span class="p">(</span><span class="n">Param</span><span class="p">),</span> <span class="bp">self</span><span class="p">))</span>
+        <span class="n">l</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">long_name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">l</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">data_holders</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A sorted list of the `DataHolder`s lower in the tree.&quot;&quot;&quot;</span>
+        <span class="n">l</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="n">isclassof</span><span class="p">(</span><span class="n">DataHolder</span><span class="p">),</span> <span class="bp">self</span><span class="p">))</span>
+        <span class="n">l</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">long_name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">l</span>
+
+<div class="viewcode-block" id="Parameterized.summary"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.params.Parameterized.summary">[docs]</a>    <span class="k">def</span> <span class="nf">summary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array_len</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s2">&quot;fancy&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A string table summarizing `self`.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            array_len (int): The maximum number of elements to display</span>
+<span class="sd">                of each array value.</span>
+<span class="sd">            fmt (&#39;fancy&#39;, &#39;plain&#39;, &#39;html&#39;): The format for the table.</span>
+<span class="sd">                `&#39;fancy&#39;` returns a table with fancy formatting using box</span>
+<span class="sd">                drawing characters and ANSI terminal escape codes.</span>
+<span class="sd">                `&#39;plain&#39;` returns a table using only ascii characters.</span>
+<span class="sd">                `&#39;html&#39;` returns an html table.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (str): A summary of this object&#39;s parameters and data.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">heading</span> <span class="o">=</span> <span class="s2">&quot;Parameterized object </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">long_name</span><span class="p">)</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_summary</span><span class="p">(</span><span class="n">array_len</span><span class="p">,</span> <span class="n">fmt</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_summary</span><span class="p">(</span><span class="n">array_len</span><span class="p">,</span> <span class="n">fmt</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">fmt</span> <span class="o">==</span> <span class="s2">&quot;fancy&quot;</span><span class="p">:</span>
+            <span class="n">headinglength</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">heading</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="s2">&quot;nt&quot;</span><span class="p">:</span>
+                <span class="n">heading</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[1m&quot;</span> <span class="o">+</span> <span class="n">heading</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[0m&quot;</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">params</span> <span class="ow">or</span> <span class="n">data</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">heading</span>
+            <span class="n">headingtable</span> <span class="o">=</span> <span class="s2">&quot;┍━&quot;</span> <span class="o">+</span> <span class="s2">&quot;━&quot;</span> <span class="o">*</span> <span class="n">headinglength</span> <span class="o">+</span> <span class="s2">&quot;━┑</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="n">headingtable</span> <span class="o">+=</span> <span class="s2">&quot;│ &quot;</span> <span class="o">+</span> <span class="n">heading</span> <span class="o">+</span> <span class="s2">&quot; │</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="n">headingtable</span> <span class="o">+=</span> <span class="s2">&quot;┕━&quot;</span> <span class="o">+</span> <span class="s2">&quot;━&quot;</span> <span class="o">*</span> <span class="n">headinglength</span> <span class="o">+</span> <span class="s2">&quot;━┙&quot;</span>
+            <span class="n">tables</span> <span class="o">=</span> <span class="p">[</span><span class="n">headingtable</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">params</span><span class="p">:</span>
+                <span class="n">tables</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;┌─────────┐&quot;</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">linesep</span>\
+                            <span class="o">+</span> <span class="s2">&quot;│ Params: │&quot;</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">linesep</span>\
+                            <span class="o">+</span> <span class="s2">&quot;└─────────┘&quot;</span><span class="p">)</span>
+                <span class="n">tables</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">data</span><span class="p">:</span>
+                <span class="n">tables</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;┌───────┐&quot;</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">linesep</span>\
+                            <span class="o">+</span> <span class="s2">&quot;│ Data: │&quot;</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">linesep</span>\
+                            <span class="o">+</span> <span class="s2">&quot;└───────┘&quot;</span><span class="p">)</span>
+                <span class="n">tables</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">combine_fancy_tables</span><span class="p">(</span><span class="o">*</span><span class="n">tables</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">fmt</span> <span class="o">==</span> <span class="s2">&quot;plain&quot;</span><span class="p">:</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="n">heading</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">params</span><span class="p">:</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;Params:&quot;</span><span class="p">])</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefix_lines</span><span class="p">(</span><span class="s2">&quot;    &quot;</span><span class="p">,</span> <span class="n">params</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">data</span><span class="p">:</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;Data:&quot;</span><span class="p">])</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefix_lines</span><span class="p">(</span><span class="s2">&quot;    &quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">params</span> <span class="ow">or</span> <span class="n">data</span><span class="p">:</span> <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">linesep</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">fmt</span> <span class="o">==</span> <span class="s2">&quot;html&quot;</span><span class="p">:</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;&lt;table id=&#39;parameterized&#39; width=100%&gt;&quot;</span><span class="p">,</span>
+                     <span class="s2">&quot;  &lt;tr&gt;&lt;th&gt;</span><span class="si">{}</span><span class="s2">&lt;/th&gt;&lt;/tr&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">heading</span><span class="p">)]</span>
+            <span class="k">if</span> <span class="n">params</span><span class="p">:</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;  &lt;tr&gt;&lt;td&gt;&lt;b&gt;Params&lt;/b&gt;&lt;/td&gt;&lt;/tr&gt;&quot;</span><span class="p">)</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;  &lt;tr&gt;&lt;td&gt;</span><span class="si">{}</span><span class="s2">&lt;/td&gt;&lt;/tr&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">params</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">data</span><span class="p">:</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;  &lt;tr&gt;&lt;td&gt;&lt;b&gt;Data&lt;/b&gt;&lt;/td&gt;&lt;/tr&gt;&quot;</span><span class="p">)</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;  &lt;tr&gt;&lt;td&gt;</span><span class="si">{}</span><span class="s2">&lt;/td&gt;&lt;/tr&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&lt;/table&gt;&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">linesep</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Parameterized.param_summary"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.params.Parameterized.param_summary">[docs]</a>    <span class="k">def</span> <span class="nf">param_summary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array_len</span><span class="o">=</span><span class="n">ARRAY_DISPLAY_LENGTH</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s2">&quot;fancy&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A string table summarizing the parameters of `self`.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            fmt (&#39;fancy&#39;, &#39;plain&#39;, &#39;html&#39;): The format for the table.</span>
+<span class="sd">                `&#39;fancy&#39;` returns a table with fancy formatting using box</span>
+<span class="sd">                drawing characters and ANSI terminal escape codes.</span>
+<span class="sd">                `&#39;plain&#39;` returns a table using only ascii characters.</span>
+<span class="sd">                `&#39;html&#39;` returns an html table.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (str): A string containing a table specifying the name,</span>
+<span class="sd">            value, transform and prior of each parameter.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; from gptf import transforms</span>
+<span class="sd">            &gt;&gt;&gt; class Parameterized(Parameterized, AttributeTree):</span>
+<span class="sd">            ...     pass</span>
+<span class="sd">            &gt;&gt;&gt; p = Parameterized()</span>
+<span class="sd">            &gt;&gt;&gt; p.fallback_name = &#39;p&#39;</span>
+<span class="sd">            &gt;&gt;&gt; p.child = Parameterized()</span>
+<span class="sd">            &gt;&gt;&gt; p.param = Param(1.)</span>
+<span class="sd">            &gt;&gt;&gt; p.child.a = Param([1., 2., 3.])</span>
+<span class="sd">            &gt;&gt;&gt; p.child.b = Param([[1.]], transform=transforms.Exp())</span>
+<span class="sd">            &gt;&gt;&gt; print(p.param_summary(fmt=&#39;plain&#39;))  # doctest:-NORMALIZE_WHITESPACE</span>
+<span class="sd">            name      | value                 | transform | prior</span>
+<span class="sd">            ----------+-----------------------+-----------+------</span>
+<span class="sd">            p.child.a | [1.000, 2.000, 3.000] | identity  | nyi  </span>
+<span class="sd">            p.child.b | &lt;np.ndarray&gt;          | +ve (Exp) | nyi  </span>
+<span class="sd">            p.param   | 1.000                 | identity  | nyi  </span>
+<span class="sd">            </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">params</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="n">names</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_name_str</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">long_name</span><span class="p">,</span> <span class="n">fmt</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">params</span><span class="p">)</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_value_str</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">array_len</span><span class="p">,</span> <span class="n">fmt</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">params</span><span class="p">)</span>
+        <span class="n">transforms</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">transform</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">params</span><span class="p">)</span>
+        <span class="n">priors</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="s2">&quot;nyi&quot;</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">params</span><span class="p">)</span>
+
+        <span class="n">columns</span> <span class="o">=</span> <span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">transforms</span><span class="p">,</span> <span class="n">priors</span><span class="p">)</span>
+        <span class="n">headers</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="s2">&quot;transform&quot;</span><span class="p">,</span> <span class="s2">&quot;prior&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">construct_table</span><span class="p">(</span><span class="n">columns</span><span class="p">,</span> <span class="n">headers</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="n">fmt</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Parameterized.data_summary"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.params.Parameterized.data_summary">[docs]</a>    <span class="k">def</span> <span class="nf">data_summary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array_len</span><span class="o">=</span><span class="n">ARRAY_DISPLAY_LENGTH</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s2">&quot;fancy&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A string table summarizing the data of `self`.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            array_len (int): The maximum number of elements to display</span>
+<span class="sd">                of each array value.</span>
+<span class="sd">            fmt (&#39;fancy&#39;, &#39;plain&#39;, &#39;html&#39;): The format for the table.</span>
+<span class="sd">                `&#39;fancy&#39;` returns a table with fancy formatting using box</span>
+<span class="sd">                drawing characters and ANSI terminal escape codes.</span>
+<span class="sd">                `&#39;plain&#39;` returns a table using only ascii characters.</span>
+<span class="sd">                `&#39;html&#39;` returns an html table.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (str): A string containing a table specifying the name,</span>
+<span class="sd">            value, transform and prior of each parameter.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; class Parameterized(Parameterized, AttributeTree):</span>
+<span class="sd">            ...     pass</span>
+<span class="sd">            &gt;&gt;&gt; p = Parameterized()</span>
+<span class="sd">            &gt;&gt;&gt; p.fallback_name = &#39;p&#39;</span>
+<span class="sd">            &gt;&gt;&gt; p.child = Parameterized()</span>
+<span class="sd">            &gt;&gt;&gt; p.data = DataHolder(1.)</span>
+<span class="sd">            &gt;&gt;&gt; p.child.a = DataHolder([1., 2., 3.])</span>
+<span class="sd">            &gt;&gt;&gt; p.child.b = DataHolder([[1.]])</span>
+<span class="sd">            &gt;&gt;&gt; print(p.data_summary(fmt=&#39;plain&#39;))  # doctest:-NORMALIZE_WHITESPACE</span>
+<span class="sd">            name      | value                </span>
+<span class="sd">            ----------+----------------------</span>
+<span class="sd">            p.child.a | [1.000, 2.000, 3.000]</span>
+<span class="sd">            p.child.b | &lt;np.ndarray&gt;         </span>
+<span class="sd">            p.data    | 1.000                </span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_holders</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">data</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="n">names</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_name_str</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">long_name</span><span class="p">,</span> <span class="n">fmt</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data</span><span class="p">)</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_value_str</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">array_len</span><span class="p">,</span> <span class="n">fmt</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data</span><span class="p">)</span>
+
+        <span class="n">columns</span> <span class="o">=</span> <span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+        <span class="n">headers</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">construct_table</span><span class="p">(</span><span class="n">columns</span><span class="p">,</span> <span class="n">headers</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="n">fmt</span><span class="p">)</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_name_str</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">fmt</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Maybe add ANSI escape codes to prettify a name.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            name (str): The name to prettify.</span>
+<span class="sd">            fmt (&#39;fancy&#39; | &#39;plain&#39; | &#39;html&#39;): The style to format with.</span>
+<span class="sd">                If &#39;fancy&#39; and not Windows, emboldens the last part of the</span>
+<span class="sd">                name.</span>
+<span class="sd">                </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">fmt</span> <span class="o">==</span> <span class="s2">&quot;fancy&quot;</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="s2">&quot;nt&quot;</span><span class="p">:</span>
+            <span class="n">parts</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+            <span class="n">parts</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[1m&quot;</span> <span class="o">+</span> <span class="n">parts</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[0m&quot;</span>
+            <span class="k">return</span> <span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">fmt</span> <span class="o">==</span> <span class="s2">&quot;html&quot;</span><span class="p">:</span>
+            <span class="n">parts</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+            <span class="n">parts</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&lt;b&gt;&quot;</span> <span class="o">+</span> <span class="n">parts</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;&lt;/b&gt;&quot;</span>
+            <span class="k">return</span> <span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">name</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_value_str</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">max_len</span><span class="p">,</span> <span class="n">fmt</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Constructs a string representation of a numpy value.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            value (np.ndarray): The array to represent.</span>
+<span class="sd">            max_len (np.ndarray): The maximum length a 1d array can be before</span>
+<span class="sd">                it is truncated.</span>
+<span class="sd">            fmt (&#39;fancy&#39; | &#39;plain&#39; | &#39;html&#39;): The style to format with.</span>
+<span class="sd">                Currently ignored.</span>
+<span class="sd">        </span>
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; a = np.array(1.)</span>
+<span class="sd">            &gt;&gt;&gt; b = np.arange(5)</span>
+<span class="sd">            &gt;&gt;&gt; c = np.arange(6)</span>
+<span class="sd">            &gt;&gt;&gt; d = np.array([[1.]])</span>
+
+<span class="sd">            A zero-dimensional array produces a scalar representation:</span>
+<span class="sd">            &gt;&gt;&gt; Parameterized._value_str(a, 5, &#39;&#39;)</span>
+<span class="sd">            &#39;1.000&#39;</span>
+
+<span class="sd">            One dimensional arrays are repreduced up to `max_len`:</span>
+<span class="sd">            &gt;&gt;&gt; Parameterized._value_str(b, 5, &#39;&#39;)</span>
+<span class="sd">            &#39;[0, 1, 2, 3, 4]&#39;</span>
+<span class="sd">            &gt;&gt;&gt; Parameterized._value_str(c, 5, &#39;&#39;)</span>
+<span class="sd">            &#39;[0, 1, 2, 3, ...]&#39;</span>
+
+<span class="sd">            Multidemensional arrays appears as a placeholder value.</span>
+<span class="sd">            &gt;&gt;&gt; Parameterized._value_str(d, 5, &#39;&#39;)</span>
+<span class="sd">            &#39;&lt;np.ndarray&gt;&#39;</span>
+<span class="sd">          </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">tostring</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
+            <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asscalar</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+                <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{:.3f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&lt;np.ndarray&gt;&quot;</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">max_len</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s2">&quot;[&quot;</span> <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">tostring</span><span class="p">,</span> <span class="n">value</span><span class="p">[:</span><span class="n">max_len</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]))</span> \
+                        <span class="o">+</span> <span class="s2">&quot;, ...]&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s2">&quot;[&quot;</span> <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">tostring</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot;]&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">tostring</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
+
+<span class="c1"># en-gb compatibility patch</span>
+<span class="n">Parameterised</span> <span class="o">=</span> <span class="n">Parameterized</span>
+
+<div class="viewcode-block" id="ParamAttributes"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.params.ParamAttributes">[docs]</a><span class="k">class</span> <span class="nc">ParamAttributes</span><span class="p">(</span><span class="n">Parameterized</span><span class="p">,</span> <span class="n">AttributeTree</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parameters are accessed using attributes.&quot;&quot;&quot;</span>
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the value of `Param`s and `DataHolder`s on assignment.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            name (str): The name of the attribute.</span>
+<span class="sd">            value: The value to set.</span>
+<span class="sd">        </span>
+<span class="sd">        Examples:</span>
+<span class="sd">            Assigning a numerical, numpy or string value to a `Param` or </span>
+<span class="sd">            `DataHolder` child assigns to that child&#39;s value instead.</span>
+<span class="sd">            &gt;&gt;&gt; p = ParamAttributes()</span>
+<span class="sd">            &gt;&gt;&gt; p.param = Param(1.0)</span>
+<span class="sd">            &gt;&gt;&gt; p.param = 2.0</span>
+<span class="sd">            &gt;&gt;&gt; isinstance(p.param, Param)</span>
+<span class="sd">            True</span>
+<span class="sd">            &gt;&gt;&gt; p.param.value</span>
+<span class="sd">            array(2.0)</span>
+<span class="sd">            &gt;&gt;&gt; p.data = DataHolder(1.0)</span>
+<span class="sd">            &gt;&gt;&gt; p.data = 2.0</span>
+<span class="sd">            &gt;&gt;&gt; isinstance(p.data, DataHolder)</span>
+<span class="sd">            True</span>
+<span class="sd">            &gt;&gt;&gt; p.data.value</span>
+<span class="sd">            array(2.0)</span>
+
+<span class="sd">            Assigning anything else overwrites the attribute:</span>
+<span class="sd">            &gt;&gt;&gt; class Example():</span>
+<span class="sd">            ...     pass</span>
+<span class="sd">            &gt;&gt;&gt; p.param = Example()</span>
+<span class="sd">            &gt;&gt;&gt; isinstance(p.param, Example)</span>
+<span class="sd">            True</span>
+<span class="sd">            &gt;&gt;&gt; p.data = Example()</span>
+<span class="sd">            &gt;&gt;&gt; isinstance(p.data, Example)</span>
+<span class="sd">            True</span>
+
+<span class="sd">            Children still know who their parents are.</span>
+<span class="sd">            &gt;&gt;&gt; p.param = Param(1.0)</span>
+<span class="sd">            &gt;&gt;&gt; p.param.parent is p</span>
+<span class="sd">            True</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+            <span class="n">curr</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> 
+            <span class="k">if</span> <span class="p">((</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">curr</span><span class="p">,</span> <span class="n">Param</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">curr</span><span class="p">,</span> <span class="n">DataHolder</span><span class="p">))</span> <span class="ow">and</span> 
+                <span class="n">is_array_like</span><span class="p">(</span><span class="n">value</span><span class="p">)):</span>
+                <span class="c1"># okay to assign to curr.value</span>
+                <span class="n">curr</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+                <span class="k">return</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__setattr__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ParamList"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.params.ParamList">[docs]</a><span class="k">class</span> <span class="nc">ParamList</span><span class="p">(</span><span class="n">Parameterized</span><span class="p">,</span> <span class="n">ListTree</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A list of `Param` or `DataHolder` objects.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        You can set the value of children by assigning to their index:</span>
+<span class="sd">        &gt;&gt;&gt; p = ParamList()</span>
+<span class="sd">        &gt;&gt;&gt; p.append(Param(1.))</span>
+<span class="sd">        &gt;&gt;&gt; p.append(DataHolder(1.))</span>
+<span class="sd">        &gt;&gt;&gt; p[0] = 3.</span>
+<span class="sd">        &gt;&gt;&gt; isinstance(p[0], Param)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; p[0].value</span>
+<span class="sd">        array(3.0)</span>
+<span class="sd">        &gt;&gt;&gt; p[1] = 5.</span>
+<span class="sd">        &gt;&gt;&gt; isinstance(p[1], DataHolder)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; p[1].value</span>
+<span class="sd">        array(5.0)</span>
+
+<span class="sd">        You can still overwrite parameters etc with new ones:</span>
+<span class="sd">        &gt;&gt;&gt; p[0] = ParamAttributes()</span>
+<span class="sd">        &gt;&gt;&gt; isinstance(p[0], Param)</span>
+<span class="sd">        False</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">initial_values</span><span class="o">=</span><span class="p">()):</span>
+        <span class="sd">&quot;&quot;&quot;Initialiser.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            initial_values (Sequence[Tree], optional): The initial </span>
+<span class="sd">                value for the children of this paramlist.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ListTree</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">initial_values</span><span class="p">)</span>
+
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;If `self[key]` is `Param` or `DataHolder` and value is </span>
+<span class="sd">        `np.array_like`, set `self[key].value` instead.&quot;&quot;&quot;</span>
+        <span class="n">curr</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">if</span> <span class="p">((</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">curr</span><span class="p">,</span> <span class="n">Param</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">curr</span><span class="p">,</span> <span class="n">DataHolder</span><span class="p">))</span> <span class="ow">and</span> 
+            <span class="n">is_array_like</span><span class="p">(</span><span class="n">value</span><span class="p">)):</span>
+            <span class="c1"># okay to assign to curr.value</span>
+            <span class="n">curr</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__setitem__</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="autoflow"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.params.autoflow">[docs]</a><span class="k">def</span> <span class="nf">autoflow</span><span class="p">(</span><span class="o">*</span><span class="n">placeholder_specs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Wraps up a TensorFlow method so that it takes NumPy and gives NumPy.</span>
+
+<span class="sd">    When an autoflowed method is called, we construct placeholder to </span>
+<span class="sd">    represent the passed arguments, apply `tf_method` </span>
+<span class="sd">    to the wrapped method and evaluate it on the placeholders to produce </span>
+<span class="sd">    a TensorFlow op. We then evaluate the op in a session, passing in the </span>
+<span class="sd">    appropriate feed dictionaries, and return the resulting NumPy array.</span>
+
+<span class="sd">    We also cache the op, so that multiple calls to the function construct</span>
+<span class="sd">    the op only once. This cache is cleared when device contexts change,</span>
+<span class="sd">    when transforms on `Param`s change, and any number of other similar</span>
+<span class="sd">    circumstances.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        *placeholder_specs: some tuples that specify how the placeholders </span>
+<span class="sd">            for the arguments of the decorated method should be </span>
+<span class="sd">            constructed. Each tuple will be used as the arguments to a </span>
+<span class="sd">            call to `tf.placeholder()`. The first tuple will be used to</span>
+<span class="sd">            construct the placeholder for the first argument of the</span>
+<span class="sd">            decorated function, the second for the second, and so on.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A decorator that autoflows the decorated method.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        The decorator syntax looks like this:</span>
+<span class="sd">        &gt;&gt;&gt; class MyClass(Parameterized, AttributeTree):</span>
+<span class="sd">        ...     @autoflow((tf.float64,), (tf.float64,))</span>
+<span class="sd">        ...     def tf_add(self, a, b):</span>
+<span class="sd">        ...         return tf.add(a, b)</span>
+<span class="sd">        ...</span>
+<span class="sd">        ...     @autoflow((tf.float64, [3, None]))</span>
+<span class="sd">        ...     def tf_reduce_sum(self, a):</span>
+<span class="sd">        ...         return tf.reduce_sum(a, 1)</span>
+
+<span class="sd">        Now we can leverage the mighty power of tensorflow without ever</span>
+<span class="sd">        having to get our hands dirty:</span>
+<span class="sd">        &gt;&gt;&gt; m = MyClass()</span>
+<span class="sd">        &gt;&gt;&gt; m.tf_add(5, 9)</span>
+<span class="sd">        14.0</span>
+<span class="sd">        &gt;&gt;&gt; a = np.array([1., 2., 3.])</span>
+<span class="sd">        &gt;&gt;&gt; b = np.array([4., 5., 6.])</span>
+<span class="sd">        &gt;&gt;&gt; m.tf_add(a, b)</span>
+<span class="sd">        array([ 5., 7., 9.])</span>
+
+<span class="sd">        `MyClass.tf_reduce_sum` will only allow arguments that match the</span>
+<span class="sd">        shape `[1, None]`; that is, rank 2 tensors whose first dimension</span>
+<span class="sd">        is `5`.</span>
+<span class="sd">        &gt;&gt;&gt; # shape is (3, 2), compatible with [3, None]</span>
+<span class="sd">        &gt;&gt;&gt; m.tf_reduce_sum([[1., 2.], [2., 3.], [3., 4.]])</span>
+<span class="sd">        array([ 3., 5., 7.])</span>
+<span class="sd">        &gt;&gt;&gt; # shape is (2, 1), not compatible with [3, None]</span>
+<span class="sd">        &gt;&gt;&gt; m.tf_reduce_sum([[1.], [2.]])</span>
+<span class="sd">        Traceback (most recent call last):</span>
+<span class="sd">            ...</span>
+<span class="sd">        ValueError: Cannot feed value of shape (2, 1)...</span>
+
+<span class="sd">        Autoflowed methods still work if the device context changes:</span>
+<span class="sd">        &gt;&gt;&gt; # set up a distributed execution environment</span>
+<span class="sd">        &gt;&gt;&gt; clusterdict = \\</span>
+<span class="sd">        ...     { &#39;worker&#39;: [&#39;localhost:2224&#39;]</span>
+<span class="sd">        ...     , &#39;master&#39;: [&#39;localhost:2225&#39;]</span>
+<span class="sd">        ...     }</span>
+<span class="sd">        &gt;&gt;&gt; spec = tf.train.ClusterSpec(clusterdict)</span>
+<span class="sd">        &gt;&gt;&gt; worker = tf.train.Server(spec, job_name=&#39;worker&#39;, task_index=0)</span>
+<span class="sd">        &gt;&gt;&gt; worker.start()</span>
+<span class="sd">        &gt;&gt;&gt; master = tf.train.Server(spec, job_name=&#39;master&#39;, task_index=0)</span>
+<span class="sd">        &gt;&gt;&gt; # change m&#39;s device context</span>
+<span class="sd">        &gt;&gt;&gt; # we&#39;re about to do weird things with op placement, and we</span>
+<span class="sd">        &gt;&gt;&gt; # don&#39;t want it in the default graph where it can mess with</span>
+<span class="sd">        &gt;&gt;&gt; # other doctests, so change m&#39;s tf_graph as well.</span>
+<span class="sd">        &gt;&gt;&gt; m.tf_graph = tf.Graph()</span>
+<span class="sd">        &gt;&gt;&gt; m.tf_device = &#39;/job:worker/task:0&#39;</span>
+<span class="sd">        &gt;&gt;&gt; m.tf_session_target = master.target</span>
+<span class="sd">        &gt;&gt;&gt; # autoflow</span>
+<span class="sd">        &gt;&gt;&gt; m.tf_add(3, 2)</span>
+<span class="sd">        5.0</span>
+<span class="sd">        &gt;&gt;&gt; m.tf_reduce_sum([[1., 2., 3.], [4., 5., 6.], [7., 8., 9.]])</span>
+<span class="sd">        array([  6., 15., 24.])</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">decorator</span><span class="p">(</span><span class="n">method</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A decorator that autoflows a method.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            method (Callable[[Parameterized, ...], tf.Tensor]): A method </span>
+<span class="sd">                of a `Parameterized` that returns a TensorFlow op.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (Callable[[Parameterized, ...], np.ndarray]): A method that</span>
+<span class="sd">            returns a NumPy array through autoflow magic.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nd">@tf_method</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="nd">@wraps</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="o">*</span><span class="n">np_args</span><span class="p">):</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;_Parameterized__autoflow__</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">method</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">instance</span><span class="o">.</span><span class="n">cache</span><span class="p">:</span>
+                <span class="n">storage</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">tf_args</span> <span class="o">=</span> <span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="o">*</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">placeholder_specs</span><span class="p">]</span>
+                <span class="n">storage</span> <span class="o">=</span>\
+                        <span class="p">{</span> <span class="s1">&#39;op&#39;</span><span class="p">:</span> <span class="n">method</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="o">*</span><span class="n">tf_args</span><span class="p">)</span>
+                        <span class="p">,</span> <span class="s1">&#39;tf_args&#39;</span><span class="p">:</span> <span class="n">tf_args</span>
+                        <span class="p">}</span>
+                <span class="n">instance</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">storage</span>
+            <span class="n">feed_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">storage</span><span class="p">[</span><span class="s1">&#39;tf_args&#39;</span><span class="p">],</span> <span class="n">np_args</span><span class="p">))</span>
+            <span class="n">feed_dict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">feed_dict</span><span class="p">)</span>
+            
+            <span class="k">with</span> <span class="n">instance</span><span class="o">.</span><span class="n">get_session</span><span class="p">()</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">storage</span><span class="p">[</span><span class="s1">&#39;op&#39;</span><span class="p">],</span> <span class="n">feed_dict</span><span class="o">=</span><span class="n">feed_dict</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">wrapper</span>
+    <span class="k">return</span> <span class="n">decorator</span></div>
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Blaine Rogers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

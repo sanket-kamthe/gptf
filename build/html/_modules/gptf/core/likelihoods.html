@@ -1,0 +1,312 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-gb">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>gptf.core.likelihoods &#8212; gptf 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="gptf 1.0.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for gptf.core.likelihoods</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Provides facilities for calculating likelihoods, densities etc.&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">super</span><span class="p">,</span> <span class="nb">map</span>
+<span class="kn">from</span> <span class="nn">future.utils</span> <span class="k">import</span> <span class="n">with_metaclass</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="k">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span>
+
+<span class="kn">from</span> <span class="nn">overrides</span> <span class="k">import</span> <span class="n">overrides</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">densities</span><span class="p">,</span> <span class="n">transforms</span>
+<span class="kn">from</span> <span class="nn">.params</span> <span class="k">import</span> <span class="n">Parameterized</span><span class="p">,</span> <span class="n">ParamAttributes</span><span class="p">,</span> <span class="n">Param</span>
+<span class="kn">from</span> <span class="nn">.wrappedtf</span> <span class="k">import</span> <span class="n">tf_method</span>
+
+
+<div class="viewcode-block" id="Likelihood"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.likelihoods.Likelihood">[docs]</a><span class="k">class</span> <span class="nc">Likelihood</span><span class="p">(</span><span class="n">with_metaclass</span><span class="p">(</span><span class="n">ABCMeta</span><span class="p">,</span> <span class="n">Parameterized</span><span class="p">)):</span>
+    <span class="sd">&quot;&quot;&quot;Abstract base class for likelihoods.</span>
+
+<span class="sd">    Inheriting classes must implement `.logp()`, `.conditional_mean()`</span>
+<span class="sd">    and `.conditional_variance()`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gauss_hermite_points</span> <span class="o">=</span> <span class="mi">20</span>
+
+    <span class="nd">@abstractmethod</span>
+<div class="viewcode-block" id="Likelihood.logp"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.likelihoods.Likelihood.logp">[docs]</a>    <span class="k">def</span> <span class="nf">logp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The log density of the data given the function values.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            F (tf.Tensor): A set of proposed function values.</span>
+<span class="sd">            Y (tf.Tensor): The data.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (tf.Tensor): The log density of the data; `p(Y|F)`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">NotImplemented</span></div>
+
+    <span class="nd">@abstractmethod</span>
+<div class="viewcode-block" id="Likelihood.conditional_mean"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.likelihoods.Likelihood.conditional_mean">[docs]</a>    <span class="k">def</span> <span class="nf">conditional_mean</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">F</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Computes the mean of the data given values of the latent func.</span>
+
+<span class="sd">        If this object represents :math:`p(y|f)`, then this method </span>
+<span class="sd">        computes</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \int y p(y|f) dy</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            F (tf.Tensor): Proposed values for the latent function.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (tf.Tensor): The mean of the data given the value of the</span>
+<span class="sd">            latent function.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">NotImplemented</span></div>
+
+    <span class="nd">@abstractmethod</span>
+<div class="viewcode-block" id="Likelihood.conditional_variance"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.likelihoods.Likelihood.conditional_variance">[docs]</a>    <span class="k">def</span> <span class="nf">conditional_variance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">F</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Computes the variance of the data given values of the latent func.</span>
+
+<span class="sd">        If this object represents :math:`p(y|f)`, then this method </span>
+<span class="sd">        computes</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \int y^2 p(y|f) dy - (\int y p(y|f) dy)^2</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            F (tf.Tensor): Proposed values for the latent function.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (tf.Tensor): The variance of the data given the value of the</span>
+<span class="sd">            latent function.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">NotImplemented</span></div>
+
+    <span class="nd">@tf_method</span><span class="p">()</span>
+<div class="viewcode-block" id="Likelihood.predict_mean_and_var"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.likelihoods.Likelihood.predict_mean_and_var">[docs]</a>    <span class="k">def</span> <span class="nf">predict_mean_and_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mu_F</span><span class="p">,</span> <span class="n">var_F</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The mean &amp; variance of Y given a mean &amp; variance of the latent func.</span>
+
+<span class="sd">        if :math:`q(f) = N(mu_F, var_F)` and this object represents </span>
+<span class="sd">        :math:`p(y|f)`,</span>
+<span class="sd">        then this method computes the predictive mean</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \int\int y p(y|f) q(f) df dy</span>
+
+<span class="sd">        and the predictive variance</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \int\int y^2 p(y|f) q(f) df dy </span>
+<span class="sd">            - (\int\int y p(y|f) q(f) df dy)^2</span>
+
+<span class="sd">        Here, we implement a Gauss-Hermite quadrature routine, but some</span>
+<span class="sd">        likelihoods (e.g. Gaussian) will implement specific cases.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x_gh</span><span class="p">,</span> <span class="n">w_gh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polynomial</span><span class="o">.</span><span class="n">hermite</span><span class="o">.</span><span class="n">hermgauss</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gauss_hermite_points</span>
+        <span class="p">)</span>
+
+        <span class="n">shape</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">mu_F</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">reshape</span><span class="p">(</span><span class="n">X</span><span class="p">):</span> <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">mu_F</span><span class="p">,</span> <span class="n">var_F</span><span class="p">,</span> <span class="n">w_gh</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">reshape</span><span class="p">,</span> <span class="p">(</span><span class="n">mu_F</span><span class="p">,</span> <span class="n">var_F</span><span class="p">,</span> <span class="n">w_gh</span><span class="p">))</span>
+
+        <span class="n">w_gh</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">x_gh</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="o">*</span> <span class="n">tf</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.</span> <span class="o">*</span> <span class="n">var_F</span><span class="p">)</span> <span class="o">+</span> <span class="n">mu_F</span>
+
+        <span class="c1"># here&#39;s the quadrature for the mean</span>
+        <span class="n">E_y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conditional_mean</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="n">w_gh</span><span class="p">),</span> <span class="n">shape</span><span class="p">)</span>
+
+        <span class="c1"># here&#39;s the quadrature for the variance</span>
+        <span class="n">integrand</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conditional_variance</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="o">+</span>
+                     <span class="n">tf</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conditional_mean</span><span class="p">(</span><span class="n">X</span><span class="p">)))</span>
+        <span class="n">V_y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">integrand</span><span class="p">,</span> <span class="n">w_gh</span><span class="p">),</span> <span class="n">shape</span><span class="p">)</span> <span class="o">-</span> <span class="n">tf</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">E_y</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">E_y</span><span class="p">,</span> <span class="n">V_y</span></div>
+
+    <span class="nd">@tf_method</span><span class="p">()</span>
+<div class="viewcode-block" id="Likelihood.predict_density"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.likelihoods.Likelihood.predict_density">[docs]</a>    <span class="k">def</span> <span class="nf">predict_density</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mu_F</span><span class="p">,</span> <span class="n">var_F</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The (log) density of Y given a mean &amp; variance of the latent func.</span>
+
+<span class="sd">        if :math:`q(f) = N(mu_F, var_F)` and this object represents </span>
+<span class="sd">        :math:`p(y|f)`,</span>
+<span class="sd">        then this method computes the predictive density</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \int p(y=Y|f) q(f) df</span>
+
+<span class="sd">        Here, we implement a Gauss-Hermite quadrature routine, but some</span>
+<span class="sd">        likelihoods (e.g. Gaussian, Poisson) will implement specific cases.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x_gh</span><span class="p">,</span> <span class="n">w_gh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polynomial</span><span class="o">.</span><span class="n">hermite</span><span class="o">.</span><span class="n">hermgauss</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gauss_hermite_points</span>
+        <span class="p">)</span>
+
+        <span class="n">shape</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">mu_F</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">reshape</span><span class="p">(</span><span class="n">X</span><span class="p">):</span> <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">mu_F</span><span class="p">,</span> <span class="n">var_F</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">w_gh</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">reshape</span><span class="p">,</span> <span class="p">(</span><span class="n">mu_F</span><span class="p">,</span> <span class="n">var_F</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">w_gh</span><span class="p">))</span>
+
+        <span class="n">w_gh</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">x_gh</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="o">*</span> <span class="n">tf</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.</span> <span class="o">*</span> <span class="n">var_F</span><span class="p">)</span> <span class="o">+</span> <span class="n">mu_F</span>
+
+        <span class="c1"># broadcast Y to match X</span>
+        <span class="n">Y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_gauss_hermite_points</span><span class="p">])</span>
+
+        <span class="n">logp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">logp</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">logp</span><span class="p">),</span> <span class="n">w_gh</span><span class="p">)),</span> <span class="n">shape</span><span class="p">)</span></div>
+
+    <span class="nd">@tf_method</span><span class="p">()</span>
+<div class="viewcode-block" id="Likelihood.variational_expectations"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.likelihoods.Likelihood.variational_expectations">[docs]</a>    <span class="k">def</span> <span class="nf">variational_expectations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mu_F</span><span class="p">,</span> <span class="n">var_F</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compute the expected log density of the data.</span>
+
+<span class="sd">        if `q(f) = N(mu_F, var_F)` and this object represents `p(y|f)`,</span>
+<span class="sd">        then this method computes the predictive density</span>
+<span class="sd">            \int (\log p(y|f)) q(f) df</span>
+
+<span class="sd">        Here, we implement a Gauss-Hermite quadrature routine, but some</span>
+<span class="sd">        likelihoods (e.g. Gaussian, Poisson) will implement specific cases.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x_gh</span><span class="p">,</span> <span class="n">w_gh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polynomial</span><span class="o">.</span><span class="n">hermite</span><span class="o">.</span><span class="n">hermgauss</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gauss_hermite_points</span>
+        <span class="p">)</span>
+
+        <span class="n">shape</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">mu_F</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">reshape</span><span class="p">(</span><span class="n">X</span><span class="p">):</span> <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">mu_F</span><span class="p">,</span> <span class="n">var_F</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">w_gh</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">reshape</span><span class="p">,</span> <span class="p">(</span><span class="n">mu_F</span><span class="p">,</span> <span class="n">var_F</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">w_gh</span><span class="p">))</span>
+
+        <span class="n">w_gh</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">x_gh</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="o">*</span> <span class="n">tf</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.</span> <span class="o">*</span> <span class="n">var_F</span><span class="p">)</span> <span class="o">+</span> <span class="n">mu_F</span>
+
+        <span class="c1"># broadcast Y to match X</span>
+        <span class="n">Y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_gauss_hermite_points</span><span class="p">])</span>
+
+        <span class="n">logp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">logp</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">logp</span><span class="p">,</span> <span class="n">w_gh</span><span class="p">),</span> <span class="n">shape</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="Gaussian"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.likelihoods.Gaussian">[docs]</a><span class="k">class</span> <span class="nc">Gaussian</span><span class="p">(</span><span class="n">Likelihood</span><span class="p">,</span> <span class="n">ParamAttributes</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variance</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialiser.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            variance (Param | float): The variance of the likelihood.</span>
+<span class="sd">                Defaults to 1.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variance</span> <span class="o">=</span> <span class="p">(</span><span class="n">variance</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">variance</span><span class="p">,</span> <span class="n">Param</span><span class="p">)</span>
+                         <span class="k">else</span> <span class="n">Param</span><span class="p">(</span><span class="n">variance</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transforms</span><span class="o">.</span><span class="n">Exp</span><span class="p">()))</span>
+
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+<div class="viewcode-block" id="Gaussian.logp"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.likelihoods.Gaussian.logp">[docs]</a>    <span class="k">def</span> <span class="nf">logp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">densities</span><span class="o">.</span><span class="n">gaussian</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">variance</span><span class="o">.</span><span class="n">tensor</span><span class="p">)</span></div>
+
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+<div class="viewcode-block" id="Gaussian.conditional_mean"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.likelihoods.Gaussian.conditional_mean">[docs]</a>    <span class="k">def</span> <span class="nf">conditional_mean</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">F</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">F</span><span class="p">)</span></div>
+
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+<div class="viewcode-block" id="Gaussian.conditional_variance"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.likelihoods.Gaussian.conditional_variance">[docs]</a>    <span class="k">def</span> <span class="nf">conditional_variance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">F</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">F</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">variance</span><span class="o">.</span><span class="n">tensor</span><span class="p">)</span></div>
+
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+<div class="viewcode-block" id="Gaussian.predict_mean_and_var"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.likelihoods.Gaussian.predict_mean_and_var">[docs]</a>    <span class="k">def</span> <span class="nf">predict_mean_and_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mu_F</span><span class="p">,</span> <span class="n">var_F</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">mu_F</span><span class="p">),</span> <span class="n">var_F</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">variance</span><span class="o">.</span><span class="n">tensor</span></div>
+
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+<div class="viewcode-block" id="Gaussian.predict_density"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.likelihoods.Gaussian.predict_density">[docs]</a>    <span class="k">def</span> <span class="nf">predict_density</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mu_F</span><span class="p">,</span> <span class="n">var_F</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">densities</span><span class="o">.</span><span class="n">gaussian</span><span class="p">(</span><span class="n">mu_F</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">var_F</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">variance</span><span class="o">.</span><span class="n">tensor</span><span class="p">)</span></div>
+
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+<div class="viewcode-block" id="Gaussian.variational_expectations"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.likelihoods.Gaussian.variational_expectations">[docs]</a>    <span class="k">def</span> <span class="nf">variational_expectations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mu_F</span><span class="p">,</span> <span class="n">var_F</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="o">-.</span><span class="mi">5</span> <span class="o">*</span> <span class="n">tf</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">-</span> <span class="o">.</span><span class="mi">5</span> <span class="o">*</span> <span class="n">tf</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variance</span><span class="o">.</span><span class="n">tensor</span><span class="p">)</span> <span class="o">-</span>
+                <span class="o">.</span><span class="mi">5</span> <span class="o">*</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">Y</span> <span class="o">-</span> <span class="n">mu_F</span><span class="p">)</span> <span class="o">+</span> <span class="n">var_F</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">variance</span><span class="o">.</span><span class="n">tensor</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Blaine Rogers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

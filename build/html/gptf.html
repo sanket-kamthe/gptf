@@ -1,0 +1,997 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-gb">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>gptf package &#8212; gptf 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="gptf 1.0.0 documentation" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="gptf-package">
+<h1>gptf package<a class="headerlink" href="#gptf-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="gptf.core.html">gptf.core package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gptf.core.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gptf.core.html#module-gptf.core.densities">gptf.core.densities module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gptf.core.html#module-gptf.core.kernels">gptf.core.kernels module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gptf.core.html#module-gptf.core.likelihoods">gptf.core.likelihoods module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gptf.core.html#module-gptf.core.meanfunctions">gptf.core.meanfunctions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gptf.core.html#module-gptf.core.models">gptf.core.models module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gptf.core.html#module-gptf.core.params">gptf.core.params module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gptf.core.html#module-gptf.core.tfhacks">gptf.core.tfhacks module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gptf.core.html#module-gptf.core.transforms">gptf.core.transforms module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gptf.core.html#module-gptf.core.trees">gptf.core.trees module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gptf.core.html#module-gptf.core.utils">gptf.core.utils module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gptf.core.html#module-gptf.core.wrappedtf">gptf.core.wrappedtf module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gptf.core.html#module-gptf.core">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-gptf.distributed">
+<span id="gptf-distributed-module"></span><h2>gptf.distributed module<a class="headerlink" href="#module-gptf.distributed" title="Permalink to this headline">¶</a></h2>
+<p>Provides classes for Robust Bayesian Committee Machines.</p>
+<dl class="class">
+<dt id="gptf.distributed.BCMReduction">
+<em class="property">class </em><code class="descclassname">gptf.distributed.</code><code class="descname">BCMReduction</code><span class="sig-paren">(</span><em>children</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#BCMReduction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.distributed.BCMReduction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gptf.distributed.Reduction" title="gptf.distributed.Reduction"><code class="xref py py-class docutils literal"><span class="pre">gptf.distributed.Reduction</span></code></a></p>
+<p>Combines the predictions of its children using the BCM model.</p>
+<p>In the Bayesian Committee Machine (BCM) model, the variance of the
+posterior distribution is the harmonic mean of the posterior
+variances of the child experts, with a correction term based on
+the prior variance. The mean of the posterior is a weighted sum of
+the means of the child experts multiplied by the posterior variance.</p>
+<div class="math">
+\[\begin{split}σ^{-2}_BCM &amp;= (\sum_{k=1}^{M} σ^{-2}_k)
+              + (1 - M) σ^{-2}_{\star\star} \\
+μ_BCM &amp;= σ^2_BCM \sum_{k=1}^{M} μ_k σ^{-2}_k\end{split}\]</div>
+<p>where <span class="math">\(μ_BCM\)</span> and <span class="math">\(σ^2_BCM\)</span> are the final posterior
+mean and variance, <span class="math">\(M\)</span> is the number of child experts,
+<span class="math">\(σ^{-2}_{\star\star}\)</span> is the prior precision and
+<span class="math">\(μ_k\)</span> and <span class="math">\(σ^2_k\)</span> are the posterior mean and variance
+for the :math:<a href="#id1"><span class="problematic" id="id2">`</span></a>k`th child.</p>
+<p>Attributes: See <code class="code docutils literal"><span class="pre">GPModel</span></code> and <code class="code docutils literal"><span class="pre">ParamList</span></code>.</p>
+<dl class="method">
+<dt id="gptf.distributed.BCMReduction.build_posterior_mean_var">
+<code class="descname">build_posterior_mean_var</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em>, <em>test_points</em>, <em>full_cov=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#BCMReduction.build_posterior_mean_var"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.distributed.BCMReduction.build_posterior_mean_var" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds an op for the mean and variance of the posterior(s).</p>
+<p>In the returned tensors, the last index should always be the
+latent function index. Suppose <code class="code docutils literal"><span class="pre">m</span></code> is some model with two
+latent functions:</p>
+<blockquote>
+<div>test_points = tf.constant([[1, 2], [3, 4]])
+mean, var = m.build_posterior_mean_var([[1,2],[3,4]], True)
+mean[:, 0]  # means for the 0th latent func
+mean[:, 1]  # means for the 1st latent func
+var[:, :, 0]  # full covariance matrix for latent func 0
+var[:, :, 1]  # full covariance matrix for latent func 1</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>X</strong> (<em>tf.Tensor</em>) &#8211; The training inputs, shape <code class="code docutils literal"><span class="pre">[n,</span> <span class="pre">point_dims]</span></code></li>
+<li><strong>Y</strong> (<em>tf.Tensor</em>) &#8211; The training outputs, shape <code class="code docutils literal"><span class="pre">[n,</span> <span class="pre">num_latent]</span></code></li>
+<li><strong>test_points</strong> (<em>tf.Tensor</em>) &#8211; The points from the sample
+space for which to predict means and variances
+of the posterior distribution(s), shape
+<code class="code docutils literal"><span class="pre">[m,</span> <span class="pre">point_dims]</span></code>.</li>
+<li><strong>full_cov</strong> (<em>bool</em>) &#8211; If <code class="code docutils literal"><span class="pre">False</span></code>, return an array of variances
+at the test points. If <code class="code docutils literal"><span class="pre">True</span></code>, return the full
+covariance matrix of the posterior distribution.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A tensor that calculates the mean
+at the test points with shape <code class="code docutils literal"><span class="pre">[m,</span> <span class="pre">num_latent]</span></code>, a tensor
+that calculates either the variances at the test points
+(shape <code class="code docutils literal"><span class="pre">[m,</span> <span class="pre">num_latent]</span></code>) or the full covariance matrix
+(shape <code class="code docutils literal"><span class="pre">[m,</span> <span class="pre">m,</span> <span class="pre">num_latent]</span></code>).
+Both tensors have the same dtype.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(tf.Tensor, tf.Tensor)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="gptf.distributed.PoEReduction">
+<em class="property">class </em><code class="descclassname">gptf.distributed.</code><code class="descname">PoEReduction</code><span class="sig-paren">(</span><em>children</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#PoEReduction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.distributed.PoEReduction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gptf.distributed.Reduction" title="gptf.distributed.Reduction"><code class="xref py py-class docutils literal"><span class="pre">gptf.distributed.Reduction</span></code></a></p>
+<p>Combines the predictions of its children using the PoE model.</p>
+<p>In the Product of Experts (PoE) model, the variance of the
+posterior distribution is the harmonic mean of the posterior
+variances of the child experts. The mean of the posterior is a
+weighted sum of the means of the child experts multiplied by
+the posterior variance.</p>
+<div class="math">
+\[\begin{split}σ^{-2}_PoE &amp;= \sum_{k=1}^{M} σ^{-2}_k \\
+μ_PoE &amp;= σ^2_PoE \sum_{k=1}^{M} μ_k σ^{-2}_k\end{split}\]</div>
+<p>where <span class="math">\(μ_PoE\)</span> and <span class="math">\(σ^2_PoE\)</span> are the final posterior
+mean and variance, <span class="math">\(M\)</span> is the number of child experts and
+<span class="math">\(μ_k\)</span> and <span class="math">\(σ^2_k\)</span> are the posterior mean and variance
+for the :math:<a href="#id3"><span class="problematic" id="id4">`</span></a>k`th child.</p>
+<p>Attributes: See <code class="code docutils literal"><span class="pre">GPModel</span></code> and <code class="code docutils literal"><span class="pre">ParamList</span></code>.</p>
+<dl class="method">
+<dt id="gptf.distributed.PoEReduction.build_posterior_mean_var">
+<code class="descname">build_posterior_mean_var</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em>, <em>test_points</em>, <em>full_cov=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#PoEReduction.build_posterior_mean_var"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.distributed.PoEReduction.build_posterior_mean_var" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds an op for the mean and variance of the posterior(s).</p>
+<p>In the returned tensors, the last index should always be the
+latent function index. Suppose <code class="code docutils literal"><span class="pre">m</span></code> is some model with two
+latent functions:</p>
+<blockquote>
+<div>test_points = tf.constant([[1, 2], [3, 4]])
+mean, var = m.build_posterior_mean_var([[1,2],[3,4]], True)
+mean[:, 0]  # means for the 0th latent func
+mean[:, 1]  # means for the 1st latent func
+var[:, :, 0]  # full covariance matrix for latent func 0
+var[:, :, 1]  # full covariance matrix for latent func 1</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>X</strong> (<em>tf.Tensor</em>) &#8211; The training inputs, shape <code class="code docutils literal"><span class="pre">[n,</span> <span class="pre">point_dims]</span></code></li>
+<li><strong>Y</strong> (<em>tf.Tensor</em>) &#8211; The training outputs, shape <code class="code docutils literal"><span class="pre">[n,</span> <span class="pre">num_latent]</span></code></li>
+<li><strong>test_points</strong> (<em>tf.Tensor</em>) &#8211; The points from the sample
+space for which to predict means and variances
+of the posterior distribution(s), shape
+<code class="code docutils literal"><span class="pre">[m,</span> <span class="pre">point_dims]</span></code>.</li>
+<li><strong>full_cov</strong> (<em>bool</em>) &#8211; If <code class="code docutils literal"><span class="pre">False</span></code>, return an array of variances
+at the test points. If <code class="code docutils literal"><span class="pre">True</span></code>, return the full
+covariance matrix of the posterior distribution.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A tensor that calculates the mean
+at the test points with shape <code class="code docutils literal"><span class="pre">[m,</span> <span class="pre">num_latent]</span></code>, a tensor
+that calculates either the variances at the test points
+(shape <code class="code docutils literal"><span class="pre">[m,</span> <span class="pre">num_latent]</span></code>) or the full covariance matrix
+(shape <code class="code docutils literal"><span class="pre">[m,</span> <span class="pre">m,</span> <span class="pre">num_latent]</span></code>).
+Both tensors have the same dtype.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(tf.Tensor, tf.Tensor)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="gptf.distributed.PriorDivisorReduction">
+<em class="property">class </em><code class="descclassname">gptf.distributed.</code><code class="descname">PriorDivisorReduction</code><span class="sig-paren">(</span><em>child</em>, <em>weightfunction</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#PriorDivisorReduction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.distributed.PriorDivisorReduction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="gptf.core.html#gptf.core.models.GPModel" title="gptf.core.models.GPModel"><code class="xref py py-class docutils literal"><span class="pre">gptf.core.models.GPModel</span></code></a>, <a class="reference internal" href="gptf.core.html#gptf.core.params.ParamAttributes" title="gptf.core.params.ParamAttributes"><code class="xref py py-class docutils literal"><span class="pre">gptf.core.params.ParamAttributes</span></code></a></p>
+<p>Divides by the prior in proportion to the weight.</p>
+<p>This is mostly a convenience cljkass for constructing a hierarchical
+rBCM. It delegates the <code class="code docutils literal"><span class="pre">.build_log_likelihood()</span></code> and
+<code class="code docutils literal"><span class="pre">.build_prior_mean_var()</span></code> methods to the child expert, and corrects
+the posterior mean and variance with a prior division term.</p>
+<dl class="attribute">
+<dt id="gptf.distributed.PriorDivisorReduction.child">
+<code class="descname">child</code><a class="headerlink" href="#gptf.distributed.PriorDivisorReduction.child" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>GPModel</em> &#8211; The expert to correct the opinion of.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">weightfunction (Callable[[Sequence[GPModel], tf.Tensor,</code></dt>
+<dd><p>tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]):
+A function used to calculate the weight of the expert.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gptf.distributed.PriorDivisorReduction.build_log_likelihood">
+<code class="descname">build_log_likelihood</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#PriorDivisorReduction.build_log_likelihood"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.distributed.PriorDivisorReduction.build_log_likelihood" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds the log likelihood of the model w.r.t. the data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>X</strong> (<em>tf.Tensor</em>) &#8211; The training inputs.</li>
+<li><strong>Y</strong> (<em>tf.Tensor</em>) &#8211; The training outputs.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A tensor that, when run, calculates the log
+likelihood of the model.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(tf.Tensor)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="gptf.distributed.PriorDivisorReduction.build_posterior_mean_var">
+<code class="descname">build_posterior_mean_var</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em>, <em>test_points</em>, <em>full_cov=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#PriorDivisorReduction.build_posterior_mean_var"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.distributed.PriorDivisorReduction.build_posterior_mean_var" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds an op for the mean and variance of the posterior(s).</p>
+<p>In the returned tensors, the last index should always be the
+latent function index. Suppose <code class="code docutils literal"><span class="pre">m</span></code> is some model with two
+latent functions:</p>
+<blockquote>
+<div>test_points = tf.constant([[1, 2], [3, 4]])
+mean, var = m.build_posterior_mean_var([[1,2],[3,4]], True)
+mean[:, 0]  # means for the 0th latent func
+mean[:, 1]  # means for the 1st latent func
+var[:, :, 0]  # full covariance matrix for latent func 0
+var[:, :, 1]  # full covariance matrix for latent func 1</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>X</strong> (<em>tf.Tensor</em>) &#8211; The training inputs, shape <code class="code docutils literal"><span class="pre">[n,</span> <span class="pre">point_dims]</span></code></li>
+<li><strong>Y</strong> (<em>tf.Tensor</em>) &#8211; The training outputs, shape <code class="code docutils literal"><span class="pre">[n,</span> <span class="pre">num_latent]</span></code></li>
+<li><strong>test_points</strong> (<em>tf.Tensor</em>) &#8211; The points from the sample
+space for which to predict means and variances
+of the posterior distribution(s), shape
+<code class="code docutils literal"><span class="pre">[m,</span> <span class="pre">point_dims]</span></code>.</li>
+<li><strong>full_cov</strong> (<em>bool</em>) &#8211; If <code class="code docutils literal"><span class="pre">False</span></code>, return an array of variances
+at the test points. If <code class="code docutils literal"><span class="pre">True</span></code>, return the full
+covariance matrix of the posterior distribution.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A tensor that calculates the mean
+at the test points with shape <code class="code docutils literal"><span class="pre">[m,</span> <span class="pre">num_latent]</span></code>, a tensor
+that calculates either the variances at the test points
+(shape <code class="code docutils literal"><span class="pre">[m,</span> <span class="pre">num_latent]</span></code>) or the full covariance matrix
+(shape <code class="code docutils literal"><span class="pre">[m,</span> <span class="pre">m,</span> <span class="pre">num_latent]</span></code>).
+Both tensors have the same dtype.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(tf.Tensor, tf.Tensor)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="gptf.distributed.PriorDivisorReduction.build_prior_mean_var">
+<code class="descname">build_prior_mean_var</code><span class="sig-paren">(</span><em>test_points</em>, <em>num_latent</em>, <em>full_cov=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#PriorDivisorReduction.build_prior_mean_var"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.distributed.PriorDivisorReduction.build_prior_mean_var" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds an op for the mean and variance of the prior(s).</p>
+<p>In the returned tensors, the last index should always be the
+latent function index.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>test_points</strong> (<em>tf.Tensor</em>) &#8211; The points from the sample
+space for which to predict means and variances
+of the prior distribution(s). The shape should be
+<code class="code docutils literal"><span class="pre">[m,</span> <span class="pre">point_dims]</span></code>.</li>
+<li><strong>num_latent</strong> (<em>tf.int32</em>) &#8211; The number of latent functions of
+the GP.</li>
+<li><strong>full_cov</strong> (<em>bool</em>) &#8211; If <code class="code docutils literal"><span class="pre">False</span></code>, return an array of variances
+at the test points. If <code class="code docutils literal"><span class="pre">True</span></code>, return the full
+covariance matrix of the posterior distribution.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A tensor that calculates the mean
+at the test points with shape <code class="code docutils literal"><span class="pre">[m,</span> <span class="pre">num_latent]</span></code>, a tensor
+that calculates either the variances at the test points
+(shape <code class="code docutils literal"><span class="pre">[m,</span> <span class="pre">num_latent]</span></code>) or the full covariance matrix
+(shape <code class="code docutils literal"><span class="pre">[m,</span> <span class="pre">m,</span> <span class="pre">num_latent]</span></code>).
+Both tensors have the same dtype.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(tf.Tensor, tf.Tensor)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="gptf.distributed.Reduction">
+<em class="property">class </em><code class="descclassname">gptf.distributed.</code><code class="descname">Reduction</code><span class="sig-paren">(</span><em>initial_values=()</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#Reduction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.distributed.Reduction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="gptf.core.html#gptf.core.models.GPModel" title="gptf.core.models.GPModel"><code class="xref py py-class docutils literal"><span class="pre">gptf.core.models.GPModel</span></code></a>, <a class="reference internal" href="gptf.core.html#gptf.core.params.ParamList" title="gptf.core.params.ParamList"><code class="xref py py-class docutils literal"><span class="pre">gptf.core.params.ParamList</span></code></a></p>
+<p>Common code for distributed GP reductions.</p>
+<dl class="method">
+<dt id="gptf.distributed.Reduction.build_log_likelihood">
+<code class="descname">build_log_likelihood</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#Reduction.build_log_likelihood"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.distributed.Reduction.build_log_likelihood" title="Permalink to this definition">¶</a></dt>
+<dd><p>The sum of the log likelihoods of the children.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gptf.distributed.Reduction.build_prior_mean_var">
+<code class="descname">build_prior_mean_var</code><span class="sig-paren">(</span><em>test_points</em>, <em>num_latent</em>, <em>full_cov=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#Reduction.build_prior_mean_var"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.distributed.Reduction.build_prior_mean_var" title="Permalink to this definition">¶</a></dt>
+<dd><p>The arithetic mean of the prior mean / variance of the chilren.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="gptf.distributed.cao_fleet_weights">
+<code class="descclassname">gptf.distributed.</code><code class="descname">cao_fleet_weights</code><span class="sig-paren">(</span><em>experts</em>, <em>X</em>, <em>Y</em>, <em>points</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#cao_fleet_weights"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.distributed.cao_fleet_weights" title="Permalink to this definition">¶</a></dt>
+<dd><p>The predictive power of the experts at the points.</p>
+<p>The predictive power is calculated as</p>
+<div class="math">
+\[β_k(x_\star)=\frac{1}{2} (\ln (σ^\star_k)^2
+                           - \ln σ^{-2}_k(x_\star))\]</div>
+<p>where <span class="math">\(β_k(x_\star)\)</span> is the predictive power of the
+<span class="math">\(k`th expert at the point :math:`x_\star\)</span>,
+<span class="math">\((σ^\star_k)^2\)</span> is the prior variance of the <span class="math">\(k`th
+expert and :math:`σ^{-2}_k(x_\star)\)</span> is the posterior variance
+of the <span class="math">\(k`th expert at the point :math:`x_\star\)</span>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>experts</strong> (<em>Sequence[GPModel]</em>) &#8211; the experts to calculate
+the weights of.</li>
+<li><strong>X</strong> (<em>tf.Tensor</em>) &#8211; the training inputs, shape <code class="code docutils literal"><span class="pre">[n,</span> <span class="pre">point_dims]</span></code>.</li>
+<li><strong>Y</strong> (<em>tf.Tensor</em>) &#8211; the training outputs, shape <code class="code docutils literal"><span class="pre">[n,</span> <span class="pre">num_latent]</span></code>.</li>
+<li><strong>points</strong> (<em>tf.Tensor</em>) &#8211; the points at which to calculate the
+weights of the model, shape <code class="code docutils literal"><span class="pre">[m,</span> <span class="pre">point_dims]</span></code>.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The weights of the experts at the
+points. Each tensor has shape <code class="code docutils literal"><span class="pre">(num_points,</span> <span class="pre">num_latent)</span></code>.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(Tuple[tf.Tensor])</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="gptf.distributed.chunks">
+<code class="descclassname">gptf.distributed.</code><code class="descname">chunks</code><span class="sig-paren">(</span><em>n</em>, <em>iterable</em>, <em>padvalue=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#chunks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.distributed.chunks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterator for equal-sized chunks of an iterable.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>n</strong> (<em>int</em>) &#8211; The size of each chunk.</li>
+<li><strong>iterable</strong> (<em>Iterable</em>) &#8211; The iterable to seperate.</li>
+<li><strong>padvalue</strong> &#8211; A value to pad the last chunk with if <code class="code docutils literal"><span class="pre">n</span></code> does not
+evenly divide len(list).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">chunks</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;abcdefg&#39;</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+<span class="go">(&#39;a&#39;, &#39;b&#39;, &#39;c&#39;)</span>
+<span class="go">(&#39;d&#39;, &#39;e&#39;, &#39;f&#39;)</span>
+<span class="go">(&#39;g&#39;, &#39;x&#39;, &#39;x&#39;)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="gptf.distributed.distributed_tree_rBCM">
+<code class="descclassname">gptf.distributed.</code><code class="descname">distributed_tree_rBCM</code><span class="sig-paren">(</span><em>experts</em>, <em>weightfunction</em>, <em>clusterspec</em>, <em>worker_job='worker'</em>, <em>param_server_job='ps'</em>, <em>target_job=None</em>, <em>target_protocol='grpc'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#distributed_tree_rBCM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.distributed.distributed_tree_rBCM" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructs a TreerBCM and distributes its computations.</p>
+<dl class="docutils">
+<dt>Preconditions:</dt>
+<dd>if <code class="code docutils literal"><span class="pre">experts</span></code> is a sequence, the number of worker tasks must
+evenly divide <code class="code docutils literal"><span class="pre">len(experts)</span></code>.</dd>
+</dl>
+<p>If <code class="code docutils literal"><span class="pre">experts</span></code> is a sequence, the architecture of the <code class="code docutils literal"><span class="pre">TreerBCM</span></code> will
+be <code class="code docutils literal"><span class="pre">[n,</span> <span class="pre">m]</span></code>, where <code class="code docutils literal"><span class="pre">n</span></code> is the number of worker tasks and
+<code class="code docutils literal"><span class="pre">m</span> <span class="pre">=</span> <span class="pre">len(experts)</span> <span class="pre">/</span> <span class="pre">n</span></code>. Each <code class="code docutils literal"><span class="pre">gPoEReduction</span></code> will be pinned to a
+different worker task.</p>
+<p>If <code class="code docutils literal"><span class="pre">experts</span></code> is a <code class="code docutils literal"><span class="pre">GPModel</span></code>, the architecture of the <code class="code docutils literal"><span class="pre">TreerBCM</span></code> will
+be <code class="code docutils literal"><span class="pre">[n]</span></code>, where <code class="code docutils literal"><span class="pre">n</span></code> is the number of worker tasks. <code class="code docutils literal"><span class="pre">experts</span></code> will be
+copied to fill out the architecture, with each copy being pinned to
+a different worker task.</p>
+<p><code class="code docutils literal"><span class="pre">Param`s</span> <span class="pre">will</span> <span class="pre">be</span> <span class="pre">pinned</span> <span class="pre">to</span> <span class="pre">parameter</span> <span class="pre">server</span> <span class="pre">tasks</span> <span class="pre">in</span> <span class="pre">a</span> <span class="pre">round-robin</span>
+<span class="pre">fashion,</span> <span class="pre">based</span> <span class="pre">on</span> <span class="pre">the</span> <span class="pre">order</span> <span class="pre">they</span> <span class="pre">appear</span> <span class="pre">in</span> <span class="pre">`TreerBCM.params</span></code>.</p>
+<p>Additionally, the <code class="code docutils literal"><span class="pre">.tf_graph</span></code> of the <code class="code docutils literal"><span class="pre">TreerBCM</span></code> will be set to a
+new graph and the <code class="code docutils literal"><span class="pre">.tf_session_target</span></code> will be set to either the
+first task of the target job or the first task of the parameter
+server job.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>experts</strong> (<em>GPModel | Sequence[GPModel]</em>) &#8211; The experts to
+combine the opinions of. If this is a <code class="code docutils literal"><span class="pre">GPModel</span></code>, then it
+will be shallow-copied to fill out the architecture.
+If it is a sequence of <a href="#id5"><span class="problematic" id="id6">`</span></a>GPModel`s, then the architecture
+will have as many nodes in its final layer as
+there are in the sequence.</li>
+<li><strong>(Callable[[Sequence[GPModel], tf.Tensor,</strong> (<em>weightfunction</em>) &#8211; tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]):
+A function used to calculate the weight of the experts.</li>
+<li><strong>clusterspec</strong> (<em>tf.train.ClusterSpec</em>) &#8211; The cluster to
+distribute tasks over.</li>
+<li><strong>worker_job</strong> (<em>str</em>) &#8211; The job to assign computationally
+expensive tasks to.</li>
+<li><strong>param_server_job</strong> (<em>str</em>) &#8211; The job to assign paramaters to.</li>
+<li><strong>target_job</strong> (<em>str | None</em>) &#8211; The job to coordinate other jobs
+from. This is used to find the <code class="code docutils literal"><span class="pre">tf_session_target</span></code>.
+If <code class="code docutils literal"><span class="pre">None</span></code>, the first task of <code class="code docutils literal"><span class="pre">param_server_job</span></code>
+will be used as the session target. Otherwise, the
+first task of the specified job is used.</li>
+<li><strong>target_protocol</strong> (<em>str</em>) &#8211; The protocol to use when connecting to
+the target server. Defaults to &#8216;grpc&#8217;.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="gptf.distributed.equal_weights">
+<code class="descclassname">gptf.distributed.</code><code class="descname">equal_weights</code><span class="sig-paren">(</span><em>experts</em>, <em>X</em>, <em>Y</em>, <em>points</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#equal_weights"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.distributed.equal_weights" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gives each expert an equal weight.</p>
+<div class="math">
+\[\forall k \in 0..M,\ β_k = 1 / M\]</div>
+<p>where <span class="math">\(β_k\)</span> is the weight of the <span class="math">\(k`th expert at
+every point and :math:`M\)</span> is the number of experts.</p>
+<p>The dtype returned matches the dtype of <code class="code docutils literal"><span class="pre">points</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>experts</strong> (<em>Sequence[GPModel]</em>) &#8211; the experts to calculate
+the weights of.</li>
+<li><strong>X</strong> (<em>tf.Tensor</em>) &#8211; the training inputs, shape <code class="code docutils literal"><span class="pre">[n,</span> <span class="pre">point_dims]</span></code>.</li>
+<li><strong>Y</strong> (<em>tf.Tensor</em>) &#8211; the training outputs, shape <code class="code docutils literal"><span class="pre">[n,</span> <span class="pre">num_latent]</span></code>.</li>
+<li><strong>points</strong> (<em>tf.Tensor</em>) &#8211; the points at which to calculate the
+weights of the model, shape <code class="code docutils literal"><span class="pre">[m,</span> <span class="pre">point_dims]</span></code>.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The weights of the experts at the
+points. Each tensor has shape <code class="code docutils literal"><span class="pre">(num_points,</span> <span class="pre">num_latent)</span></code>.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(Tuple[tf.Tensor])</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="gptf.distributed.gPoEReduction">
+<em class="property">class </em><code class="descclassname">gptf.distributed.</code><code class="descname">gPoEReduction</code><span class="sig-paren">(</span><em>children</em>, <em>weightfunction</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#gPoEReduction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.distributed.gPoEReduction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gptf.distributed.Reduction" title="gptf.distributed.Reduction"><code class="xref py py-class docutils literal"><span class="pre">gptf.distributed.Reduction</span></code></a></p>
+<p>Combines the predictions of its children using the gPoE model.</p>
+<p>The generalised Product of Experts (gPoE) model is similar to the
+PoE model, except that we give each expert a weight. The variance
+of the posterior distribution is a weighted harmonic mean of the
+posterior variances of the child experts. The mean of the
+posterior is a weighted sum of the means of the child experts
+multiplied by the posterior variance.</p>
+<div class="math">
+\[\begin{split}σ^{-2}_gPoE &amp;= \sum_{k=1}^{M} β_k σ^{-2}_c \\
+μ_gPoE &amp;= σ^2_gPoE \sum_{k=1}^{M} β_k μ_k σ^{-2}_k\end{split}\]</div>
+<p>where <span class="math">\(μ_gPoE\)</span> and <span class="math">\(σ^2_PoE\)</span> are the final posterior
+mean and variance, <span class="math">\(M\)</span> is the number of child experts and
+<span class="math">\(μ_k\)</span> and <span class="math">\(σ^2_k\)</span> are the posterior mean and variance
+for the <span class="math">\(k`th child and :math:`β_k\)</span> is the weight of the
+:math:<a href="#id7"><span class="problematic" id="id8">`</span></a>k`th child.</p>
+<p>Note that when <span class="math">\(\sum_{k} β_k = 1\)</span>, the model falls back to
+the prior outside the range of the data.</p>
+<dl class="attribute">
+<dt>
+<code class="descname">weightfunction (Callable[[Sequence[GPModel], tf.Tensor,</code></dt>
+<dd><p>tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]):
+A function used to calculate the weight of the experts.</p>
+</dd></dl>
+
+<p>For other attributes, see <code class="code docutils literal"><span class="pre">GPModel</span></code> and <code class="code docutils literal"><span class="pre">ParamList</span></code>.</p>
+<dl class="method">
+<dt id="gptf.distributed.gPoEReduction.build_posterior_mean_var">
+<code class="descname">build_posterior_mean_var</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em>, <em>test_points</em>, <em>full_cov=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#gPoEReduction.build_posterior_mean_var"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.distributed.gPoEReduction.build_posterior_mean_var" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds an op for the mean and variance of the posterior(s).</p>
+<p>In the returned tensors, the last index should always be the
+latent function index. Suppose <code class="code docutils literal"><span class="pre">m</span></code> is some model with two
+latent functions:</p>
+<blockquote>
+<div>test_points = tf.constant([[1, 2], [3, 4]])
+mean, var = m.build_posterior_mean_var([[1,2],[3,4]], True)
+mean[:, 0]  # means for the 0th latent func
+mean[:, 1]  # means for the 1st latent func
+var[:, :, 0]  # full covariance matrix for latent func 0
+var[:, :, 1]  # full covariance matrix for latent func 1</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>X</strong> (<em>tf.Tensor</em>) &#8211; The training inputs, shape <code class="code docutils literal"><span class="pre">[n,</span> <span class="pre">point_dims]</span></code></li>
+<li><strong>Y</strong> (<em>tf.Tensor</em>) &#8211; The training outputs, shape <code class="code docutils literal"><span class="pre">[n,</span> <span class="pre">num_latent]</span></code></li>
+<li><strong>test_points</strong> (<em>tf.Tensor</em>) &#8211; The points from the sample
+space for which to predict means and variances
+of the posterior distribution(s), shape
+<code class="code docutils literal"><span class="pre">[m,</span> <span class="pre">point_dims]</span></code>.</li>
+<li><strong>full_cov</strong> (<em>bool</em>) &#8211; If <code class="code docutils literal"><span class="pre">False</span></code>, return an array of variances
+at the test points. If <code class="code docutils literal"><span class="pre">True</span></code>, return the full
+covariance matrix of the posterior distribution.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A tensor that calculates the mean
+at the test points with shape <code class="code docutils literal"><span class="pre">[m,</span> <span class="pre">num_latent]</span></code>, a tensor
+that calculates either the variances at the test points
+(shape <code class="code docutils literal"><span class="pre">[m,</span> <span class="pre">num_latent]</span></code>) or the full covariance matrix
+(shape <code class="code docutils literal"><span class="pre">[m,</span> <span class="pre">m,</span> <span class="pre">num_latent]</span></code>).
+Both tensors have the same dtype.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(tf.Tensor, tf.Tensor)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="gptf.distributed.ones_weights">
+<code class="descclassname">gptf.distributed.</code><code class="descname">ones_weights</code><span class="sig-paren">(</span><em>experts</em>, <em>X</em>, <em>Y</em>, <em>points</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#ones_weights"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.distributed.ones_weights" title="Permalink to this definition">¶</a></dt>
+<dd><p>All weights are 1.</p>
+<p>The dtype returned matches the dtype of <code class="code docutils literal"><span class="pre">points</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>experts</strong> (<em>Sequence[GPModel]</em>) &#8211; the experts to calculate
+the weights of.</li>
+<li><strong>X</strong> (<em>tf.Tensor</em>) &#8211; the training inputs, shape <code class="code docutils literal"><span class="pre">[n,</span> <span class="pre">point_dims]</span></code>.</li>
+<li><strong>Y</strong> (<em>tf.Tensor</em>) &#8211; the training outputs, shape <code class="code docutils literal"><span class="pre">[n,</span> <span class="pre">num_latent]</span></code>.</li>
+<li><strong>points</strong> (<em>tf.Tensor</em>) &#8211; the points at which to calculate the
+weights of the model, shape <code class="code docutils literal"><span class="pre">[m,</span> <span class="pre">point_dims]</span></code>.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The weights of the experts at the
+points. Each tensor has shape <code class="code docutils literal"><span class="pre">(num_points,</span> <span class="pre">num_latent)</span></code>.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(Tuple[tf.Tensor])</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="gptf.distributed.rBCMReduction">
+<em class="property">class </em><code class="descclassname">gptf.distributed.</code><code class="descname">rBCMReduction</code><span class="sig-paren">(</span><em>children</em>, <em>weightfunction</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#rBCMReduction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.distributed.rBCMReduction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gptf.distributed.Reduction" title="gptf.distributed.Reduction"><code class="xref py py-class docutils literal"><span class="pre">gptf.distributed.Reduction</span></code></a></p>
+<p>Combines the predictions of its children using the rBCM model.</p>
+<p>In the Bayesian Committee Machine (rBCM) model, the variance of the
+posterior distribution is the harmonic mean of the posterior
+variances of the child experts, with a correction term based on
+the prior variance and the sum of the weights. The mean of the
+posterior is a weighted sum of the means of the child experts.</p>
+<div class="math">
+\[\begin{split}σ^{-2}_rBCM &amp;= (\sum_{k=1}^{M} β_k σ^{-2}_k)
+              + (1 - \sum_{k=1}^{M} β_k) σ^{-2}_{\star\star}\\
+μ_rBCM &amp;= σ^2_rBCM \sum_{k=1}^{M} β_k μ_k σ^{-2}_k\end{split}\]</div>
+<p>where <span class="math">\(μ_rBCM\)</span> and <span class="math">\(σ^2_rBCM\)</span> are the final posterior
+mean and variance, <span class="math">\(M\)</span> is the number of child experts,
+<span class="math">\(σ^{-2}_{\star\star}\)</span> is the prior precision and
+<span class="math">\(μ_k\)</span> and <span class="math">\(σ^2_k\)</span> are the posterior mean and variance
+for the <span class="math">\(k`th child and :math:`β_k\)</span> is the weight of the
+:math:<a href="#id9"><span class="problematic" id="id10">`</span></a>k`th child.</p>
+<p>The model always falls back to the prior outside of the range of
+the data.</p>
+<dl class="attribute">
+<dt>
+<code class="descname">weightfunction (Callable[[Sequence[GPModel], tf.Tensor,</code></dt>
+<dd><p>tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]):
+A function used to calculate the weight of the experts.</p>
+</dd></dl>
+
+<p>For other attributes, see <code class="code docutils literal"><span class="pre">GPModel</span></code> and <code class="code docutils literal"><span class="pre">ParamList</span></code>.</p>
+<dl class="method">
+<dt id="gptf.distributed.rBCMReduction.build_posterior_mean_var">
+<code class="descname">build_posterior_mean_var</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em>, <em>test_points</em>, <em>full_cov=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#rBCMReduction.build_posterior_mean_var"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.distributed.rBCMReduction.build_posterior_mean_var" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds an op for the mean and variance of the posterior(s).</p>
+<p>In the returned tensors, the last index should always be the
+latent function index. Suppose <code class="code docutils literal"><span class="pre">m</span></code> is some model with two
+latent functions:</p>
+<blockquote>
+<div>test_points = tf.constant([[1, 2], [3, 4]])
+mean, var = m.build_posterior_mean_var([[1,2],[3,4]], True)
+mean[:, 0]  # means for the 0th latent func
+mean[:, 1]  # means for the 1st latent func
+var[:, :, 0]  # full covariance matrix for latent func 0
+var[:, :, 1]  # full covariance matrix for latent func 1</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>X</strong> (<em>tf.Tensor</em>) &#8211; The training inputs, shape <code class="code docutils literal"><span class="pre">[n,</span> <span class="pre">point_dims]</span></code></li>
+<li><strong>Y</strong> (<em>tf.Tensor</em>) &#8211; The training outputs, shape <code class="code docutils literal"><span class="pre">[n,</span> <span class="pre">num_latent]</span></code></li>
+<li><strong>test_points</strong> (<em>tf.Tensor</em>) &#8211; The points from the sample
+space for which to predict means and variances
+of the posterior distribution(s), shape
+<code class="code docutils literal"><span class="pre">[m,</span> <span class="pre">point_dims]</span></code>.</li>
+<li><strong>full_cov</strong> (<em>bool</em>) &#8211; If <code class="code docutils literal"><span class="pre">False</span></code>, return an array of variances
+at the test points. If <code class="code docutils literal"><span class="pre">True</span></code>, return the full
+covariance matrix of the posterior distribution.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A tensor that calculates the mean
+at the test points with shape <code class="code docutils literal"><span class="pre">[m,</span> <span class="pre">num_latent]</span></code>, a tensor
+that calculates either the variances at the test points
+(shape <code class="code docutils literal"><span class="pre">[m,</span> <span class="pre">num_latent]</span></code>) or the full covariance matrix
+(shape <code class="code docutils literal"><span class="pre">[m,</span> <span class="pre">m,</span> <span class="pre">num_latent]</span></code>).
+Both tensors have the same dtype.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(tf.Tensor, tf.Tensor)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="gptf.distributed.tree_rBCM">
+<code class="descclassname">gptf.distributed.</code><code class="descname">tree_rBCM</code><span class="sig-paren">(</span><em>experts</em>, <em>weightfunction</em>, <em>architecture</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#tree_rBCM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.distributed.tree_rBCM" title="Permalink to this definition">¶</a></dt>
+<dd><p>An rBCM, expressed as a tree of reductions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>experts</strong> (<em>GPModel | Sequence[GPModel]</em>) &#8211; <p>The experts to
+combine the opinions of. If this is a <code class="code docutils literal"><span class="pre">GPModel</span></code>, then it
+will be shallow-copied to fill out the architecture.
+If it is a sequence of <a href="#id11"><span class="problematic" id="id12">`</span></a>GPModel`s, then the architecture
+will have to have as many nodes in its final layer as
+there are in the sequence, i.e.</p>
+<blockquote>
+<div>len(experts) == reduce(operator.mul,architecture,1)</div></blockquote>
+</li>
+<li><strong>(Callable[[Sequence[GPModel], tf.Tensor,</strong> (<em>weightfunction</em>) &#8211; tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]):
+A function used to calculate the weight of the experts.</li>
+<li><strong>architecture</strong> (<em>Sequence[int]</em>) &#8211; The branching factors at each
+layer of the rBCM.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-gptf.gpr">
+<span id="gptf-gpr-module"></span><h2>gptf.gpr module<a class="headerlink" href="#module-gptf.gpr" title="Permalink to this headline">¶</a></h2>
+<p>GP regression with Gaussian noise.</p>
+<dl class="class">
+<dt id="gptf.gpr.GPR">
+<em class="property">class </em><code class="descclassname">gptf.gpr.</code><code class="descname">GPR</code><span class="sig-paren">(</span><em>kernel</em>, <em>meanfunction=&lt;gptf.core.meanfunctions.Zero object</em>, <em>fallback_name unnamed</em>, <em>id 0x7fb127c74710&gt;</em>, <em>noise_variance=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/gpr.html#GPR"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.gpr.GPR" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="gptf.core.html#gptf.core.models.GPModel" title="gptf.core.models.GPModel"><code class="xref py py-class docutils literal"><span class="pre">gptf.core.models.GPModel</span></code></a>, <a class="reference internal" href="gptf.core.html#gptf.core.params.ParamAttributes" title="gptf.core.params.ParamAttributes"><code class="xref py py-class docutils literal"><span class="pre">gptf.core.params.ParamAttributes</span></code></a></p>
+<p>Gaussian process regression with Gaussian noise.</p>
+<dl class="attribute">
+<dt id="gptf.gpr.GPR.inputs">
+<code class="descname">inputs</code><a class="headerlink" href="#gptf.gpr.GPR.inputs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>DataHolder</em> &#8211; The input data, size <code class="code docutils literal"><span class="pre">N`x`D</span></code>. By default,
+this is set to recompile the model if the shape changes.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gptf.gpr.GPR.values">
+<code class="descname">values</code><a class="headerlink" href="#gptf.gpr.GPR.values" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>DataHolder</em> &#8211; The input data, size <code class="code docutils literal"><span class="pre">N`x`D</span></code>. By default,
+this is set to recompile the model if the shape changes.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gptf.gpr.GPR.kernel">
+<code class="descname">kernel</code><a class="headerlink" href="#gptf.gpr.GPR.kernel" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>gptf.kernels.Kernel</em> &#8211; The kernel of the GP.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gptf.gpr.GPR.meanfunc">
+<code class="descname">meanfunc</code><a class="headerlink" href="#gptf.gpr.GPR.meanfunc" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>gptf.meanfunctions.MeanFunctions</em> &#8211; The mean function
+of the GP.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="gptf.gpr.GPR.likelihood">
+<code class="descname">likelihood</code><a class="headerlink" href="#gptf.gpr.GPR.likelihood" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>gptf.likelihoods.Gaussian</em> &#8211; The likelihood of the GP</p>
+</dd></dl>
+
+<p class="rubric">Examples</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gptf</span> <span class="k">import</span> <span class="n">kernels</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gp</span> <span class="o">=</span> <span class="n">GPR</span><span class="p">(</span><span class="n">kernels</span><span class="o">.</span><span class="n">RBF</span><span class="p">(</span><span class="n">variance</span><span class="o">=</span><span class="mf">10.</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gp</span><span class="o">.</span><span class="n">fallback_name</span> <span class="o">=</span> <span class="s2">&quot;gp&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gp</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">variance</span> <span class="o">=</span> <span class="o">.</span><span class="mi">25</span> <span class="c1"># reduce noise</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">gp</span><span class="o">.</span><span class="n">summary</span><span class="p">(</span><span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;plain&#39;</span><span class="p">))</span>
+<span class="go">Parameterized object gp</span>
+
+<span class="go">Params:</span>
+<span class="go">    name                   | value  | transform | prior</span>
+<span class="go">    -----------------------+--------+-----------+------</span>
+<span class="go">    gp.kernel.lengthscales | 1.000  | +ve (Exp) | nyi</span>
+<span class="go">    gp.kernel.variance     | 10.000 | +ve (Exp) | nyi</span>
+<span class="go">    gp.likelihood.variance | 0.250  | +ve (Exp) | nyi</span>
+</pre></div>
+</div>
+<p>To generate some sample training outputs, we&#8217;ll compute a
+sample from the prior with one latent function at our
+training inputs.
+&gt;&gt;&gt; X = np.random.uniform(0., 5., (50, 1)) # 500 unique 1d points
+&gt;&gt;&gt; Y = gp.compute_prior_samples(X, 1, 1)[0]</p>
+<p>Then we&#8217;ll add some noise:
+&gt;&gt;&gt; sigma = np.sqrt(gp.likelihood.variance.value)
+&gt;&gt;&gt; Y += np.random.normal(0., sigma, Y.shape)</p>
+<p>Then we&#8217;ll mess with the value of the parameters. When
+we optimise the model, they should return to something close
+to their original state.
+&gt;&gt;&gt; gp.kernel.variance = 5.
+&gt;&gt;&gt; gp.kernel.lengthscales = 5.
+&gt;&gt;&gt; gp.likelihood.variance = 5.
+&gt;&gt;&gt; gp.optimize(X, Y, disp=False)
+message: &#8216;SciPy optimizer completed successfully.&#8217;
+success: True</p>
+<blockquote>
+<div>x: array([...,...,...])</div></blockquote>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">vaguely_close_to</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">v</span> <span class="o">=</span> <span class="n">param</span><span class="o">.</span><span class="n">value</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="n">v</span> <span class="o">-</span> <span class="n">v</span><span class="o">*.</span><span class="mi">25</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">b</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">vaguely_close_to</span><span class="p">(</span><span class="n">gp</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">lengthscales</span><span class="p">,</span> <span class="mf">1.</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">vaguely_close_to</span><span class="p">(</span><span class="n">gp</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">variance</span><span class="p">,</span> <span class="mf">10.</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">vaguely_close_to</span><span class="p">(</span><span class="n">gp</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">variance</span><span class="p">,</span> <span class="o">.</span><span class="mi">25</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="gptf.gpr.GPR.build_log_likelihood">
+<code class="descname">build_log_likelihood</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/gpr.html#GPR.build_log_likelihood"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.gpr.GPR.build_log_likelihood" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds the log likelihood of the model w.r.t. the data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>X</strong> (<em>tf.Tensor</em>) &#8211; The training inputs.</li>
+<li><strong>Y</strong> (<em>tf.Tensor</em>) &#8211; The training outputs.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A tensor that, when run, calculates the log
+likelihood of the model.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(tf.Tensor)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="gptf.gpr.GPR.build_posterior_mean_var">
+<code class="descname">build_posterior_mean_var</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em>, <em>test_points</em>, <em>full_cov=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/gpr.html#GPR.build_posterior_mean_var"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.gpr.GPR.build_posterior_mean_var" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds an op for the mean and variance of the posterior(s).</p>
+<p>In the returned tensors, the last index should always be the
+latent function index. Suppose <code class="code docutils literal"><span class="pre">m</span></code> is some model with two
+latent functions:</p>
+<blockquote>
+<div>test_points = tf.constant([[1, 2], [3, 4]])
+mean, var = m.build_posterior_mean_var([[1,2],[3,4]], True)
+mean[:, 0]  # means for the 0th latent func
+mean[:, 1]  # means for the 1st latent func
+var[:, :, 0]  # full covariance matrix for latent func 0
+var[:, :, 1]  # full covariance matrix for latent func 1</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>X</strong> (<em>tf.Tensor</em>) &#8211; The training inputs, shape <code class="code docutils literal"><span class="pre">[n,</span> <span class="pre">point_dims]</span></code></li>
+<li><strong>Y</strong> (<em>tf.Tensor</em>) &#8211; The training outputs, shape <code class="code docutils literal"><span class="pre">[n,</span> <span class="pre">num_latent]</span></code></li>
+<li><strong>test_points</strong> (<em>tf.Tensor</em>) &#8211; The points from the sample
+space for which to predict means and variances
+of the posterior distribution(s), shape
+<code class="code docutils literal"><span class="pre">[m,</span> <span class="pre">point_dims]</span></code>.</li>
+<li><strong>full_cov</strong> (<em>bool</em>) &#8211; If <code class="code docutils literal"><span class="pre">False</span></code>, return an array of variances
+at the test points. If <code class="code docutils literal"><span class="pre">True</span></code>, return the full
+covariance matrix of the posterior distribution.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A tensor that calculates the mean
+at the test points with shape <code class="code docutils literal"><span class="pre">[m,</span> <span class="pre">num_latent]</span></code>, a tensor
+that calculates either the variances at the test points
+(shape <code class="code docutils literal"><span class="pre">[m,</span> <span class="pre">num_latent]</span></code>) or the full covariance matrix
+(shape <code class="code docutils literal"><span class="pre">[m,</span> <span class="pre">m,</span> <span class="pre">num_latent]</span></code>).
+Both tensors have the same dtype.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(tf.Tensor, tf.Tensor)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="gptf.gpr.GPR.build_prior_mean_var">
+<code class="descname">build_prior_mean_var</code><span class="sig-paren">(</span><em>test_points</em>, <em>num_latent</em>, <em>full_cov=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/gpr.html#GPR.build_prior_mean_var"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.gpr.GPR.build_prior_mean_var" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds an op for the mean and variance of the prior(s).</p>
+<p>In the returned tensors, the last index should always be the
+latent function index.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>test_points</strong> (<em>tf.Tensor</em>) &#8211; The points from the sample
+space for which to predict means and variances
+of the prior distribution(s). The shape should be
+<code class="code docutils literal"><span class="pre">[m,</span> <span class="pre">point_dims]</span></code>.</li>
+<li><strong>num_latent</strong> (<em>tf.int32</em>) &#8211; The number of latent functions of
+the GP.</li>
+<li><strong>full_cov</strong> (<em>bool</em>) &#8211; If <code class="code docutils literal"><span class="pre">False</span></code>, return an array of variances
+at the test points. If <code class="code docutils literal"><span class="pre">True</span></code>, return the full
+covariance matrix of the posterior distribution.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A tensor that calculates the mean
+at the test points with shape <code class="code docutils literal"><span class="pre">[m,</span> <span class="pre">num_latent]</span></code>, a tensor
+that calculates either the variances at the test points
+(shape <code class="code docutils literal"><span class="pre">[m,</span> <span class="pre">num_latent]</span></code>) or the full covariance matrix
+(shape <code class="code docutils literal"><span class="pre">[m,</span> <span class="pre">m,</span> <span class="pre">num_latent]</span></code>).
+Both tensors have the same dtype.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(tf.Tensor, tf.Tensor)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-gptf">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-gptf" title="Permalink to this headline">¶</a></h2>
+<p>Provides a GPflow / GPy like interface for distributed GPs.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">gptf package</a><ul>
+<li><a class="reference internal" href="#subpackages">Subpackages</a></li>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-gptf.distributed">gptf.distributed module</a></li>
+<li><a class="reference internal" href="#module-gptf.gpr">gptf.gpr module</a></li>
+<li><a class="reference internal" href="#module-gptf">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/gptf.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Blaine Rogers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+      |
+      <a href="_sources/gptf.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

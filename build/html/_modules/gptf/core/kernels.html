@@ -1,0 +1,761 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-gb">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>gptf.core.kernels &#8212; gptf 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="gptf 1.0.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for gptf.core.kernels</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Provides kernels.&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">super</span>
+<span class="kn">from</span> <span class="nn">future.utils</span> <span class="k">import</span> <span class="n">with_metaclass</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="k">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">copy</span>
+
+<span class="kn">from</span> <span class="nn">overrides</span> <span class="k">import</span> <span class="n">overrides</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+
+<span class="kn">from</span> <span class="nn">.params</span> <span class="k">import</span> <span class="n">Param</span><span class="p">,</span> <span class="n">Parameterized</span><span class="p">,</span> <span class="n">ParamAttributes</span><span class="p">,</span> <span class="n">ParamList</span><span class="p">,</span> <span class="n">autoflow</span>
+<span class="kn">from</span> <span class="nn">.transforms</span> <span class="k">import</span> <span class="n">Exp</span>
+<span class="kn">from</span> <span class="nn">.wrappedtf</span> <span class="k">import</span> <span class="n">tf_method</span>
+
+
+<div class="viewcode-block" id="Kernel"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.Kernel">[docs]</a><span class="k">class</span> <span class="nc">Kernel</span><span class="p">(</span><span class="n">with_metaclass</span><span class="p">(</span><span class="n">ABCMeta</span><span class="p">,</span> <span class="n">Parameterized</span><span class="p">)):</span>
+    <span class="sd">&quot;&quot;&quot;Base class for kernels.</span>
+
+<span class="sd">    Inheriting classes must define `.K()`, `.Kdiag()`.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; class Ones(Kernel, ParamAttributes):</span>
+<span class="sd">        ...     @tf_method()</span>
+<span class="sd">        ...     @overrides</span>
+<span class="sd">        ...     def K(self, X, X2):</span>
+<span class="sd">        ...         if X2 is None:</span>
+<span class="sd">        ...             X2 = X</span>
+<span class="sd">        ...         return tf.ones((tf.shape(X)[0], tf.shape(X2)[0]), </span>
+<span class="sd">        ...                        dtype=X.dtype)</span>
+<span class="sd">        ...     @tf_method()</span>
+<span class="sd">        ...     @overrides</span>
+<span class="sd">        ...     def Kdiag(self, X):</span>
+<span class="sd">        ...         return tf.ones((tf.shape(X)[0],), dtype=X.dtype)</span>
+
+<span class="sd">        &gt;&gt;&gt; sess = tf.InteractiveSession()</span>
+<span class="sd">        &gt;&gt;&gt; X = tf.constant([[1.]], dtype=tf.float64)</span>
+<span class="sd">        &gt;&gt;&gt; X2 = tf.constant([[1.], [2.]], dtype=tf.float64)</span>
+<span class="sd">        &gt;&gt;&gt; Ones().K(X, X2).eval()</span>
+<span class="sd">        array([[ 1., 1.]])</span>
+
+<span class="sd">        You can do maths with kernels! Addition and subtraction:</span>
+<span class="sd">        &gt;&gt;&gt; threes = Ones() + Ones() + Ones()</span>
+<span class="sd">        &gt;&gt;&gt; threes.K(X, X2).eval()</span>
+<span class="sd">        array([[ 3., 3.]])</span>
+<span class="sd">        &gt;&gt;&gt; (threes - Ones()).K(X, X2).eval()</span>
+<span class="sd">        array([[ 2., 2.]])</span>
+<span class="sd">        &gt;&gt;&gt; (-threes).K(X, X2).eval()</span>
+<span class="sd">        array([[-3., -3.]])</span>
+<span class="sd">        &gt;&gt;&gt; abs(-threes).K(X, X2).eval()</span>
+<span class="sd">        array([[ 3.,  3.]])</span>
+
+<span class="sd">        Multiplication and division:</span>
+<span class="sd">        &gt;&gt;&gt; (threes * threes).K(X, X2).eval()</span>
+<span class="sd">        array([[ 9., 9.]])</span>
+<span class="sd">        &gt;&gt;&gt; (Ones() / threes).K(X, X2).eval().round(3)</span>
+<span class="sd">        array([[ 0.333, 0.333]])</span>
+<span class="sd">        &gt;&gt;&gt; (1 / threes).K(X, X2).eval().round(3)  # 1 / Kernel works</span>
+<span class="sd">        array([[ 0.333, 0.333]])</span>
+<span class="sd">        &gt;&gt;&gt; (threes * threes / threes * threes).K(X, X2).eval()</span>
+<span class="sd">        array([[ 9., 9.]])</span>
+
+<span class="sd">        &gt;&gt;&gt; sess.close()</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@abstractmethod</span>
+<div class="viewcode-block" id="Kernel.K"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.Kernel.K">[docs]</a>    <span class="k">def</span> <span class="nf">K</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Builds a tensor that computes the covariance function.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            X (tf.Tensor): A tensor of shape `N`x`D`.</span>
+<span class="sd">            X2 (tf.Tensor | None): A tensor of shape `M`x`D`. If `None`,</span>
+<span class="sd">                the second argument will be assumed symmetrical.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (tf.Tensor): The covariance function K(X, X2). Shape `N`x`M`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">NotImplemented</span></div>
+
+    <span class="nd">@abstractmethod</span>
+<div class="viewcode-block" id="Kernel.Kdiag"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.Kernel.Kdiag">[docs]</a>    <span class="k">def</span> <span class="nf">Kdiag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Builds a tensor that computes the diagonal of `self.K(X)`</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            X (tf.Tensor): A tensor of shape `N`x`D`.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (tf.Tensor): The diagonal of `self.K(X)`. Shape `N`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">NotImplemented</span></div>
+
+    <span class="nd">@autoflow</span><span class="p">((</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)),</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)))</span>
+<div class="viewcode-block" id="Kernel.compute_K"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.Kernel.compute_K">[docs]</a>    <span class="k">def</span> <span class="nf">compute_K</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Z</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;An autoflowed version of K(X, Z)&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Z</span><span class="p">)</span></div>
+
+    <span class="nd">@autoflow</span><span class="p">((</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)))</span>
+<div class="viewcode-block" id="Kernel.compute_K_symm"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.Kernel.compute_K_symm">[docs]</a>    <span class="k">def</span> <span class="nf">compute_K_symm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;An autoflowed version of K(X)&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">(</span><span class="n">X</span><span class="p">)</span></div>
+
+    <span class="nd">@autoflow</span><span class="p">((</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)))</span>
+<div class="viewcode-block" id="Kernel.compute_Kdiag"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.Kernel.compute_Kdiag">[docs]</a>    <span class="k">def</span> <span class="nf">compute_Kdiag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;An autoflowed version of Kdiag(X)&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">(</span><span class="n">X</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__pos__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Negative</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__abs__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Absolute</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Additive</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">other</span><span class="o">.</span><span class="n">__radd__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Additive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__radd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Additive</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span> <span class="o">+</span> <span class="n">Negative</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__rsub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">other</span> <span class="o">+</span> <span class="n">Negative</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Multiplicative</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Divisive</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">other</span><span class="o">.</span><span class="n">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Multiplicative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Multiplicative</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__div__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__truediv__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__rdiv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__rtruediv__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__truediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Divisive</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">other</span><span class="o">.</span><span class="n">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Divisive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__rtruediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">other</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Divisive</span><span class="p">(</span><span class="n">_one</span><span class="p">(),</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Divisive</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PartiallyActive"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.PartiallyActive">[docs]</a><span class="k">class</span> <span class="nc">PartiallyActive</span><span class="p">(</span><span class="n">Kernel</span><span class="p">,</span> <span class="n">ParamAttributes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A kernel that only uses some of the dimensions of the input.</span>
+<span class="sd">    </span>
+<span class="sd">    Attributes:</span>
+<span class="sd">        wrapped (Kernel): The wrapped kernel.</span>
+<span class="sd">        active_dims (slice | Iterable[int]): The active dimensions of</span>
+<span class="sd">            the input. Each input to `.K() or `.Kdiag()` will be sliced</span>
+<span class="sd">            along its second axis so that only the active dimensions</span>
+<span class="sd">            remain before being passed to `.wrapped.K()` or </span>
+<span class="sd">            `.wrapped.Kdiag()`.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        First, we define an example kernel that lets us inspect the</span>
+<span class="sd">        arguments passed to `.K()`.</span>
+<span class="sd">        &gt;&gt;&gt; class Example(Kernel, ParamAttributes):</span>
+<span class="sd">        ...     @tf_method()</span>
+<span class="sd">        ...     @overrides</span>
+<span class="sd">        ...     def K(self, X, X2):</span>
+<span class="sd">        ...         return X, X2</span>
+<span class="sd">        ...     @tf_method()</span>
+<span class="sd">        ...     @overrides</span>
+<span class="sd">        ...     def Kdiag(self, X, X2):</span>
+<span class="sd">        ...         NotImplemented</span>
+
+<span class="sd">        Slices are applied to the second axis of the input.</span>
+<span class="sd">        A slice of `:3` turns `X` into `X[:, :3]`.</span>
+<span class="sd">        &gt;&gt;&gt; k = PartiallyActive(Example(), slice(None, 3))  # :3</span>
+<span class="sd">        &gt;&gt;&gt; X = np.arange(5).reshape(1, -1)</span>
+<span class="sd">        &gt;&gt;&gt; X_k, _ = k.compute_K(X, X)</span>
+<span class="sd">        &gt;&gt;&gt; X_k.shape</span>
+<span class="sd">        (1, 3)</span>
+<span class="sd">        &gt;&gt;&gt; X_k[0]</span>
+<span class="sd">        array([ 0., 1., 2.])</span>
+
+<span class="sd">        If active_dims is a sequence of `int`, only dimensions in the</span>
+<span class="sd">        sequence will be passed through.</span>
+<span class="sd">        &gt;&gt;&gt; k.active_dims = [1, 3, 4]</span>
+<span class="sd">        &gt;&gt;&gt; X_k, _ = k.compute_K(X, X)</span>
+<span class="sd">        &gt;&gt;&gt; X_k.shape</span>
+<span class="sd">        (1, 3)</span>
+<span class="sd">        &gt;&gt;&gt; X_k[0]</span>
+<span class="sd">        array([ 1., 3., 4.])</span>
+<span class="sd">            </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wrapped</span><span class="p">,</span> <span class="n">active_dims</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialiser.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            wrapped (Kernel): The kernel to wrap. This will be used to</span>
+<span class="sd">                get the values of K and Kdiag.</span>
+<span class="sd">            active_dims (slice | Iterable[int]): The active dimensions</span>
+<span class="sd">                of the kernel.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wrapped</span> <span class="o">=</span> <span class="n">wrapped</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_active_dims</span> <span class="o">=</span> <span class="n">active_dims</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">active_dims</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_active_dims</span>
+
+    <span class="nd">@active_dims</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">active_dims</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clear_cache</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clear_ancestor_caches</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_active_dims</span> <span class="o">=</span> <span class="n">value</span>
+      
+    <span class="k">def</span> <span class="nf">_slice</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">active_dims</span><span class="p">,</span> <span class="nb">slice</span><span class="p">):</span>
+            <span class="n">X</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_dims</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">X2</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">X2</span> <span class="o">=</span> <span class="n">X2</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_dims</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">X2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">X</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_dims</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">X2</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">X2</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">X2</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_dims</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">X2</span>
+
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+<div class="viewcode-block" id="PartiallyActive.K"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.PartiallyActive.K">[docs]</a>    <span class="k">def</span> <span class="nf">K</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">wrapped</span><span class="o">.</span><span class="n">K</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_slice</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="p">))</span></div>
+
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+<div class="viewcode-block" id="PartiallyActive.Kdiag"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.PartiallyActive.Kdiag">[docs]</a>    <span class="k">def</span> <span class="nf">Kdiag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">wrapped</span><span class="o">.</span><span class="n">Kdiag</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_slice</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="p">))</span></div></div>
+
+<div class="viewcode-block" id="Static"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.Static">[docs]</a><span class="k">class</span> <span class="nc">Static</span><span class="p">(</span><span class="n">Kernel</span><span class="p">,</span> <span class="n">ParamAttributes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class for static kernels.</span>
+<span class="sd">    </span>
+<span class="sd">    Kernels that do not depend on the value of the inputs are static.</span>
+<span class="sd">    The only parameter they require is a variance.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        variance (Param): The variance of the kernel.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variance</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialiser.</span>
+
+<span class="sd">        NB: It is strongly recommended that `Param` arguments have a </span>
+<span class="sd">        transform applied to ensure that they are positive.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            variance (Param | float): The variance of the kernel.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variance</span> <span class="o">=</span> <span class="p">(</span><span class="n">variance</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">variance</span><span class="p">,</span> <span class="n">Param</span><span class="p">)</span>
+                         <span class="k">else</span> <span class="n">Param</span><span class="p">(</span><span class="n">variance</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">Exp</span><span class="p">()))</span>
+
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+<div class="viewcode-block" id="Static.Kdiag"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.Static.Kdiag">[docs]</a>    <span class="k">def</span> <span class="nf">Kdiag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">fill</span><span class="p">([</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">X</span><span class="p">)[</span><span class="mi">0</span><span class="p">]],</span> <span class="bp">self</span><span class="o">.</span><span class="n">variance</span><span class="o">.</span><span class="n">tensor</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="White"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.White">[docs]</a><span class="k">class</span> <span class="nc">White</span><span class="p">(</span><span class="n">Static</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The White kernel.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="White.K"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.White.K">[docs]</a>    <span class="k">def</span> <span class="nf">K</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">X2</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">fill</span><span class="p">([</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">X</span><span class="p">)[</span><span class="mi">0</span><span class="p">]],</span> <span class="bp">self</span><span class="o">.</span><span class="n">variance</span><span class="o">.</span><span class="n">tensor</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">X</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">X2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">X</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="Constant"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.Constant">[docs]</a><span class="k">class</span> <span class="nc">Constant</span><span class="p">(</span><span class="n">Static</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The Constant (a.k.a. Bias) kernel.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Constant.K"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.Constant.K">[docs]</a>    <span class="k">def</span> <span class="nf">K</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">X2</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">X2</span> <span class="o">=</span> <span class="n">X</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">fill</span><span class="p">((</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">X</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">X2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]),</span> <span class="bp">self</span><span class="o">.</span><span class="n">variance</span><span class="o">.</span><span class="n">tensor</span><span class="p">)</span></div></div>
+
+<span class="n">Bias</span> <span class="o">=</span> <span class="n">Constant</span>  <span class="c1"># a rose by another other name</span>
+
+<div class="viewcode-block" id="Stationary"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.Stationary">[docs]</a><span class="k">class</span> <span class="nc">Stationary</span><span class="p">(</span><span class="n">with_metaclass</span><span class="p">(</span><span class="n">ABCMeta</span><span class="p">,</span> <span class="n">Kernel</span><span class="p">,</span> <span class="n">ParamAttributes</span><span class="p">)):</span>
+    <span class="sd">&quot;&quot;&quot;Base class for stationary kernels.</span>
+
+<span class="sd">    Inheriting classes must define `._trueK()` instead of `.K()`.</span>
+
+<span class="sd">    Stationary kernels depend only on</span>
+<span class="sd">        r = || X - X2 ||</span>
+
+<span class="sd">    This class handles ARD (Automatic Relevance Determination)</span>
+<span class="sd">    behaviour. If ARD, then the kernal has one length scale per input</span>
+<span class="sd">    dimension. Otherwise, the kernel is isotropic (one length scale).</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        variance (Param): The variance of the kernel.</span>
+<span class="sd">        lengthscales (Param | None): The length scale parameters of </span>
+<span class="sd">            the kernel. Points are divided by the length scale(s)</span>
+<span class="sd">            before distances are found between them.</span>
+<span class="sd">            Note that if ARD is used, this will be `None` until the</span>
+<span class="sd">            first call to `.K()`.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        You can use ARD to automatically create one length scale for</span>
+<span class="sd">        each dimension of the input.</span>
+<span class="sd">        &gt;&gt;&gt; from gptf import tfhacks</span>
+<span class="sd">        &gt;&gt;&gt; class Example(Stationary):</span>
+<span class="sd">        ...     @tf_method()</span>
+<span class="sd">        ...     @overrides</span>
+<span class="sd">        ...     def _trueK(self, X, X2=None):</span>
+<span class="sd">        ...         n = tf.shape(X)[0]</span>
+<span class="sd">        ...         return tfhacks.eye((n, n))</span>
+<span class="sd">        &gt;&gt;&gt; e = Example(1., 1., True)  # use ARD</span>
+
+<span class="sd">        At first, no length scale parameter is created.</span>
+<span class="sd">        &gt;&gt;&gt; e.lengthscales is None</span>
+<span class="sd">        True</span>
+
+<span class="sd">        When `.K()` is called, the shape of `X` is used to create the</span>
+<span class="sd">        value of `.lengthscales`.</span>
+<span class="sd">        &gt;&gt;&gt; X = np.array([[2., 3., 4.]])</span>
+<span class="sd">        &gt;&gt;&gt; e.get_session().run(e.K(X))</span>
+<span class="sd">        array([[ 1.]])</span>
+<span class="sd">        &gt;&gt;&gt; isinstance(e.lengthscales, Param)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; e.lengthscales.value</span>
+<span class="sd">        array([ 1., 1., 1.])</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variance</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">lengthscales</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">ARD</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialiser.</span>
+
+<span class="sd">        NB: It is strongly recommended that `Param` arguments have a </span>
+<span class="sd">        transform applied to ensure that they are positive.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            variance (Param | float): The variance parameter.</span>
+<span class="sd">            lengthscales (Param | float | np.ndarray): The initial value</span>
+<span class="sd">                of the length scales. If this is a `Param`, then `ARD`</span>
+<span class="sd">                and `input_dims` will be ignored and `Param` will be</span>
+<span class="sd">                used as is.</span>
+<span class="sd">            ARD (bool): If `ARD`, `float` values for `lengthscales` </span>
+<span class="sd">                will be converted to an </span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variance</span> <span class="o">=</span> <span class="p">(</span><span class="n">variance</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">variance</span><span class="p">,</span> <span class="n">Param</span><span class="p">)</span>
+                <span class="k">else</span> <span class="n">Param</span><span class="p">(</span><span class="n">variance</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">Exp</span><span class="p">()))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ARD</span> <span class="o">=</span> <span class="n">ARD</span>
+        <span class="k">if</span> <span class="n">ARD</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lengthscales</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_initial_lengthscales</span> <span class="o">=</span> <span class="n">lengthscales</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lengthscales</span><span class="p">,</span> <span class="n">Param</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lengthscales</span> <span class="o">=</span> <span class="n">lengthscales</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lengthscales</span> <span class="o">=</span> <span class="n">Param</span><span class="p">(</span><span class="n">lengthscales</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">Exp</span><span class="p">())</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_trueK</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;See Kernel.K.__doc__&quot;&quot;&quot;</span>
+        <span class="bp">NotImplemented</span>
+
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+<div class="viewcode-block" id="Stationary.K"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.Stationary.K">[docs]</a>    <span class="k">def</span> <span class="nf">K</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ARD</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">lengthscales</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># accept float or array</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># tensor</span>
+                <span class="n">dim</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="c1"># ndarray or array_like</span>
+                <span class="n">dim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">X</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">base</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">dim</span><span class="p">,))</span>
+            <span class="n">l</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initial_lengthscales</span> <span class="o">*</span> <span class="n">base</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lengthscales</span> <span class="o">=</span> <span class="n">Param</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">Exp</span><span class="p">())</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trueK</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="p">)</span></div>
+
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+<div class="viewcode-block" id="Stationary.Kdiag"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.Stationary.Kdiag">[docs]</a>    <span class="k">def</span> <span class="nf">Kdiag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">fill</span><span class="p">((</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">X</span><span class="p">)[</span><span class="mi">0</span><span class="p">],),</span> <span class="bp">self</span><span class="o">.</span><span class="n">variance</span><span class="o">.</span><span class="n">tensor</span><span class="p">)</span></div>
+
+    <span class="nd">@tf_method</span><span class="p">()</span>
+<div class="viewcode-block" id="Stationary.square_dist"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.Stationary.square_dist">[docs]</a>    <span class="k">def</span> <span class="nf">square_dist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The squared distances between X and X2.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            X (tf.Tensor): A tensor of shape `N`x`D`.</span>
+<span class="sd">            X2 (Tf.Tensor | None): A tensor of shape `M`x`D`. If none,</span>
+<span class="sd">                assumed to be symmetrical.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            (tf.Tensor): A tensor of shape `N`x`M`, where</span>
+<span class="sd">            `self.square_dist(X, X2)[a, b]` is the squared distance</span>
+<span class="sd">            between `X[a]` and `X2[b]`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">l</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lengthscales</span><span class="o">.</span><span class="n">tensor</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">X</span> <span class="o">/</span> <span class="n">l</span>
+        <span class="n">X2</span> <span class="o">=</span> <span class="n">X</span> <span class="k">if</span> <span class="n">X2</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">X2</span> <span class="o">/</span> <span class="n">l</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">X2</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">X2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">X</span> <span class="o">-</span> <span class="n">X2</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ret</span></div>
+
+    <span class="nd">@tf_method</span><span class="p">()</span>
+<div class="viewcode-block" id="Stationary.euclid_dist"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.Stationary.euclid_dist">[docs]</a>    <span class="k">def</span> <span class="nf">euclid_dist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The Euclidean distances between X and X2.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            X (tf.Tensor): A tensor of shape `N`x`D`.</span>
+<span class="sd">            X2 (Tf.Tensor | None): A tensor of shape `M`x`D`. If none,</span>
+<span class="sd">                assumed to be symmetrical.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            (tf.Tensor): A tensor of shape `N`x`M`, where</span>
+<span class="sd">            `self.square_dist(X, X2)[a, b]` is the Euclidean distance</span>
+<span class="sd">            between `X[a]` and `X2[b]`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">square_dist</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="p">))</span></div></div>
+
+<div class="viewcode-block" id="RBF"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.RBF">[docs]</a><span class="k">class</span> <span class="nc">RBF</span><span class="p">(</span><span class="n">Stationary</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The Radial Basis Function (RBF) or squared exponential kernel.&quot;&quot;&quot;</span>
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">_trueK</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">variance</span><span class="o">.</span><span class="n">tensor</span> <span class="o">*</span> <span class="n">tf</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">square_dist</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span></div>
+        
+<div class="viewcode-block" id="Exponential"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.Exponential">[docs]</a><span class="k">class</span> <span class="nc">Exponential</span><span class="p">(</span><span class="n">Stationary</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The Exponential kernel.&quot;&quot;&quot;</span>
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">_trueK</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">variance</span><span class="o">.</span><span class="n">tensor</span> <span class="o">*</span> <span class="n">tf</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">euclid_dist</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Matern12"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.Matern12">[docs]</a><span class="k">class</span> <span class="nc">Matern12</span><span class="p">(</span><span class="n">Stationary</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The Matern 1/2 kernel&quot;&quot;&quot;</span>
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">_trueK</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">euclid_dist</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">variance</span><span class="o">.</span><span class="n">tensor</span> <span class="o">*</span> <span class="n">tf</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">r</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Matern32"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.Matern32">[docs]</a><span class="k">class</span> <span class="nc">Matern32</span><span class="p">(</span><span class="n">Stationary</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The Matern 3/2 kernel&quot;&quot;&quot;</span>
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">_trueK</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variance</span><span class="o">.</span><span class="n">tensor</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">euclid_dist</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="p">)</span>
+        <span class="n">sqrt3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">3.</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">v</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">+</span> <span class="n">sqrt3</span> <span class="o">*</span> <span class="n">r</span><span class="p">)</span> <span class="o">*</span> <span class="n">tf</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">sqrt3</span> <span class="o">*</span> <span class="n">r</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Matern52"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.Matern52">[docs]</a><span class="k">class</span> <span class="nc">Matern52</span><span class="p">(</span><span class="n">Stationary</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The Matern 5/2 kernel&quot;&quot;&quot;</span>
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">_trueK</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variance</span><span class="o">.</span><span class="n">tensor</span>
+        <span class="n">r2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">square_dist</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">r2</span><span class="p">)</span>
+        <span class="n">sqrt5</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">5.</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">v</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">+</span> <span class="n">sqrt5</span> <span class="o">*</span> <span class="n">r</span> <span class="o">+</span> <span class="mi">5</span><span class="o">/</span><span class="mi">3</span> <span class="o">*</span> <span class="n">r2</span><span class="p">)</span> <span class="o">*</span> <span class="n">tf</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">sqrt5</span> <span class="o">*</span> <span class="n">r</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Cosine"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.Cosine">[docs]</a><span class="k">class</span> <span class="nc">Cosine</span><span class="p">(</span><span class="n">Stationary</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The Cosine kernel.&quot;&quot;&quot;</span>
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">_trueK</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">variance</span><span class="o">.</span><span class="n">tensor</span> <span class="o">*</span> <span class="n">tf</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">euclid_distance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="p">))</span></div>
+
+<span class="c1">#TODO: Implement more kernels</span>
+
+<div class="viewcode-block" id="Negative"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.Negative">[docs]</a><span class="k">class</span> <span class="nc">Negative</span><span class="p">(</span><span class="n">Kernel</span><span class="p">,</span> <span class="n">ParamAttributes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The negative of a kernel.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kernel</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">negated</span> <span class="o">=</span> <span class="n">kernel</span>
+
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+<div class="viewcode-block" id="Negative.K"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.Negative.K">[docs]</a>    <span class="k">def</span> <span class="nf">K</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">neg</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">negated</span><span class="o">.</span><span class="n">K</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="p">))</span></div>
+
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+<div class="viewcode-block" id="Negative.Kdiag"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.Negative.Kdiag">[docs]</a>    <span class="k">def</span> <span class="nf">Kdiag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">neg</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">negated</span><span class="o">.</span><span class="n">Kdiag</span><span class="p">(</span><span class="n">X</span><span class="p">))</span></div>
+
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">negated</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Absolute"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.Absolute">[docs]</a><span class="k">class</span> <span class="nc">Absolute</span><span class="p">(</span><span class="n">Kernel</span><span class="p">,</span> <span class="n">ParamAttributes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The absolute value of a kernel.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kernel</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">absolute</span> <span class="o">=</span> <span class="n">kernel</span>
+
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+<div class="viewcode-block" id="Absolute.K"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.Absolute.K">[docs]</a>    <span class="k">def</span> <span class="nf">K</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">absolute</span><span class="o">.</span><span class="n">K</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="p">))</span></div>
+
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+<div class="viewcode-block" id="Absolute.Kdiag"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.Absolute.Kdiag">[docs]</a>    <span class="k">def</span> <span class="nf">Kdiag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">absolute</span><span class="o">.</span><span class="n">Kdiag</span><span class="p">(</span><span class="n">X</span><span class="p">))</span></div>
+
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__abs__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Additive"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.Additive">[docs]</a><span class="k">class</span> <span class="nc">Additive</span><span class="p">(</span><span class="n">Kernel</span><span class="p">,</span> <span class="n">ParamList</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The addition of mean functions.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">kernels</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">kernels</span><span class="p">)</span>
+
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+<div class="viewcode-block" id="Additive.K"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.Additive.K">[docs]</a>    <span class="k">def</span> <span class="nf">K</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">vals</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">pack</span><span class="p">([</span><span class="n">k</span><span class="o">.</span><span class="n">K</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span></div>
+
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+<div class="viewcode-block" id="Additive.Kdiag"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.Additive.Kdiag">[docs]</a>    <span class="k">def</span> <span class="nf">Kdiag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="n">vals</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">pack</span><span class="p">([</span><span class="n">k</span><span class="o">.</span><span class="n">Kdiag</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__iadd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">m</span> <span class="o">+=</span> <span class="n">other</span>
+        <span class="k">return</span> <span class="n">m</span>
+
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__radd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">m</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">m</span></div>
+
+<div class="viewcode-block" id="Multiplicative"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.Multiplicative">[docs]</a><span class="k">class</span> <span class="nc">Multiplicative</span><span class="p">(</span><span class="n">Kernel</span><span class="p">,</span> <span class="n">ParamList</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The multiplication of kernels.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">kernels</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">kernels</span><span class="p">)</span>
+
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+<div class="viewcode-block" id="Multiplicative.K"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.Multiplicative.K">[docs]</a>    <span class="k">def</span> <span class="nf">K</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">vals</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">pack</span><span class="p">([</span><span class="n">k</span><span class="o">.</span><span class="n">K</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_prod</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span></div>
+
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+<div class="viewcode-block" id="Multiplicative.Kdiag"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.Multiplicative.Kdiag">[docs]</a>    <span class="k">def</span> <span class="nf">Kdiag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="n">vals</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">pack</span><span class="p">([</span><span class="n">k</span><span class="o">.</span><span class="n">Kdiag</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">operands</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_prod</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__imul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">m</span> <span class="o">+=</span> <span class="n">other</span>
+        <span class="k">return</span> <span class="n">m</span>
+
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">m</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">m</span></div>
+
+<div class="viewcode-block" id="Divisive"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.Divisive">[docs]</a><span class="k">class</span> <span class="nc">Divisive</span><span class="p">(</span><span class="n">Kernel</span><span class="p">,</span> <span class="n">ParamAttributes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The division of kernels.</span>
+<span class="sd">    </span>
+<span class="sd">    `Divisive(a, b)(X)` returns `a(X) / b(X)`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">numerator</span><span class="p">,</span> <span class="n">denominator</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">numerator</span> <span class="o">=</span> <span class="n">numerator</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">denominator</span> <span class="o">=</span> <span class="n">denominator</span>
+
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+<div class="viewcode-block" id="Divisive.K"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.Divisive.K">[docs]</a>    <span class="k">def</span> <span class="nf">K</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">div</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">numerator</span><span class="o">.</span><span class="n">K</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">denominator</span><span class="o">.</span><span class="n">K</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="p">))</span></div>
+
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+<div class="viewcode-block" id="Divisive.Kdiag"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.kernels.Divisive.Kdiag">[docs]</a>    <span class="k">def</span> <span class="nf">Kdiag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">div</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">numerator</span><span class="o">.</span><span class="n">Kdiag</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">denominator</span><span class="o">.</span><span class="n">Kdiag</span><span class="p">(</span><span class="n">X</span><span class="p">))</span></div>
+    
+    <span class="k">def</span> <span class="nf">__imul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">numerator</span> <span class="o">*=</span> <span class="n">other</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">m</span><span class="o">.</span><span class="n">numerator</span> <span class="o">*=</span> <span class="n">other</span>
+        <span class="k">return</span> <span class="n">m</span>
+
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">m</span><span class="o">.</span><span class="n">numerator</span> <span class="o">=</span> <span class="n">other</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">numerator</span>
+        <span class="k">return</span> <span class="n">m</span>
+
+    <span class="k">def</span> <span class="nf">__idiv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__itruediv__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__itruediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">denominator</span> <span class="o">*=</span> <span class="n">other</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__truediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">m</span><span class="o">.</span><span class="n">denominator</span> <span class="o">*=</span> <span class="n">other</span>
+        <span class="k">return</span> <span class="n">m</span>
+
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__rtruediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">Divisive</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">denominator</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">numerator</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">other</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">m</span><span class="o">.</span><span class="n">numerator</span> <span class="o">=</span> <span class="n">other</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">numerator</span>
+        <span class="k">return</span> <span class="n">m</span></div>
+
+<span class="k">class</span> <span class="nc">_one</span><span class="p">(</span><span class="n">Kernel</span><span class="p">,</span> <span class="n">ParamAttributes</span><span class="p">):</span>
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">K</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">ones</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">X</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+    <span class="nd">@tf_method</span><span class="p">()</span>
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">Kdiag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">ones</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">X</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__imul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">other</span>
+
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">other</span>
+
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">other</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Blaine Rogers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

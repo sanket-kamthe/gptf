@@ -1,0 +1,776 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-gb">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>gptf.core.wrappedtf &#8212; gptf 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="gptf 1.0.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for gptf.core.wrappedtf</h1><div class="highlight"><pre>
+<span></span><span class="c1"># standard library</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">super</span><span class="p">,</span> <span class="nb">object</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">wraps</span>
+<span class="k">try</span><span class="p">:</span>  <span class="c1"># in case of rogue Python 2.7, use collections instead of collections.abc</span>
+    <span class="kn">from</span> <span class="nn">collections.abc</span> <span class="k">import</span> <span class="n">Sequence</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">Sequence</span>
+<span class="k">try</span><span class="p">:</span>  <span class="c1"># in case of rogue Python 2.7, use contextlib2 instead of contextlib</span>
+    <span class="kn">from</span> <span class="nn">contextlib</span> <span class="k">import</span> <span class="n">contextmanager</span><span class="p">,</span> <span class="n">ExitStack</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">contextlib2</span> <span class="k">import</span> <span class="n">contextmanager</span><span class="p">,</span> <span class="n">ExitStack</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+<span class="c1"># nonstandard library</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">from</span> <span class="nn">overrides</span> <span class="k">import</span> <span class="n">overrides</span>
+
+<span class="c1"># local</span>
+<span class="kn">from</span> <span class="nn">.trees</span> <span class="k">import</span> <span class="n">TreeWithCache</span><span class="p">,</span> <span class="n">cache_method</span>
+
+
+<span class="n">INVALID_NAME_SCOPE_CHAR</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">r&quot;[^\w.</span><span class="se">\\</span><span class="s2">\-/]&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="WrappedTFSession"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.wrappedtf.WrappedTFSession">[docs]</a><span class="k">class</span> <span class="nc">WrappedTFSession</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">):</span>
+    <span class="nd">@wraps</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="o">.</span><span class="n">__init__</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wrappedtf</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wrappedtf</span> <span class="o">=</span> <span class="n">wrappedtf</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">wrappedtf</span><span class="p">:</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">on_session_birth</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dead</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="nd">@wraps</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="o">.</span><span class="n">__enter__</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__enter__</span><span class="p">()</span>
+
+    <span class="nd">@wraps</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="o">.</span><span class="n">__exit__</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">type_</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_maybe_death</span><span class="p">()</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__exit__</span><span class="p">(</span><span class="n">type_</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">)</span>
+
+    <span class="nd">@wraps</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="o">.</span><span class="n">close</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>  <span class="c1"># we might be being called from __del__</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_maybe_death</span><span class="p">()</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_maybe_death</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">dead</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">wrappedtf</span><span class="p">:</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">on_session_death</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dead</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="NullContextWrapper"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.wrappedtf.NullContextWrapper">[docs]</a><span class="k">class</span> <span class="nc">NullContextWrapper</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Wraps an object so that its context does nothing.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        _NullContextWrapped__wrapped: the wrapped context manager.</span>
+<span class="sd">    </span>
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; class Example(object):</span>
+<span class="sd">        ...     def __enter__(self):</span>
+<span class="sd">        ...         print(&quot;enter called&quot;)</span>
+<span class="sd">        ...         return self</span>
+<span class="sd">        ...     def __exit__(self, *_):</span>
+<span class="sd">        ...         print(&quot;exit called&quot;)</span>
+
+<span class="sd">        Wrapping a context manager causes it to do nothing.</span>
+<span class="sd">        &gt;&gt;&gt; e = Example()</span>
+<span class="sd">        &gt;&gt;&gt; with e:</span>
+<span class="sd">        ...     print(&quot;with body&quot;)</span>
+<span class="sd">        enter called</span>
+<span class="sd">        with body</span>
+<span class="sd">        exit called</span>
+<span class="sd">        &gt;&gt;&gt; with NullContextWrapper(e) as e_:</span>
+<span class="sd">        ...     assert e is e_</span>
+<span class="sd">        ...     print(&quot;with body&quot;)</span>
+<span class="sd">        with body</span>
+
+<span class="sd">        You can access other attributes of the context manager</span>
+<span class="sd">        through the wrapper.</span>
+<span class="sd">        &gt;&gt;&gt; e.attribute = &quot;horse&quot;</span>
+<span class="sd">        &gt;&gt;&gt; NullContextWrapper(e).attribute</span>
+<span class="sd">        &#39;horse&#39;</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wrapped</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__wrapped</span> <span class="o">=</span> <span class="n">wrapped</span>
+
+    <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__wrapped</span>
+
+    <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">type_</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="c1"># delegate everything but enter/exit to self.__wrapped</span>
+    <span class="k">def</span> <span class="nf">__getattribute__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">&#39;__enter__&#39;</span><span class="p">,</span> <span class="s1">&#39;__exit__&#39;</span><span class="p">,</span> 
+                <span class="s1">&#39;_NullContextWrapper__wrapped&#39;</span><span class="p">}:</span>
+            <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__wrapped</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__getattribute__</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">&#39;__enter__&#39;</span><span class="p">,</span> <span class="s1">&#39;__exit__&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;_NullContextWrapper__wrapped&#39;</span><span class="p">}:</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__wrapped</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__setattr__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__delattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">&#39;__enter__&#39;</span><span class="p">,</span> <span class="s1">&#39;__exit__&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;_NullContextWrapper__wrapped&#39;</span><span class="p">}:</span>
+            <span class="nb">delattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__wrapped</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__delattr__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="WrappedTF"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.wrappedtf.WrappedTF">[docs]</a><span class="k">class</span> <span class="nc">WrappedTF</span><span class="p">(</span><span class="n">TreeWithCache</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Provides facilities for keeping TensorFlow behind the scenes.</span>
+
+<span class="sd">    WARNING: `WrappedTF` assumes that its parent, and indeed all things</span>
+<span class="sd">    higher than it in the tree, are also `WrappedTF`. Make sure that the</span>
+<span class="sd">    root of the tree has implemented `.get_session()`, and that</span>
+<span class="sd">    the direct parent has implemented `.op_placement_context()`.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        NO_DEVICE (object): A class-level constant, used to specify an</span>
+<span class="sd">            empty op placement context.</span>
+<span class="sd">        tf_device (str | Callable[[tf.Operation], str] | tf.DeviceSpec</span>
+<span class="sd">                | WrappedTF.NO_DEVICE | None):</span>
+<span class="sd">            The device context onto which this object&#39;s ops should be pinned.</span>
+<span class="sd">            Device contexts are applied hierarchically, starting from the</span>
+<span class="sd">            highest parent. See `.op_placement_context()`.</span>
+
+<span class="sd">            This will be passed as the sole argument to `tf.device()`. </span>
+<span class="sd">            `WrappedTF.NO_DEVICE` indicates that `None` will be</span>
+<span class="sd">            passed to `tf.device`, whereas `None` indicates that `tf.device()`</span>
+<span class="sd">            will not be called. Otherwise, see the documentation for</span>
+<span class="sd">            `tf.device()`.</span>
+
+<span class="sd">            Defaults to `None`.</span>
+<span class="sd">        tf_graph (tf.Graph | None): The graph to place ops in. If `None`,</span>
+<span class="sd">            the graph an op is placed in is the lowest defined `.tf_graph` </span>
+<span class="sd">            above this one in the tree. If all objects in the `Tree` have</span>
+<span class="sd">            `.tf_graph` set to `None`, the default graph is used.</span>
+<span class="sd">            Defaults to `None`.</span>
+<span class="sd">        tf_session_target (str | dict | None): The target under which </span>
+<span class="sd">            sessions should run. If this is `None`, no arguments will be </span>
+<span class="sd">            passed to `tf.session()`. If this is a dictionary, then its </span>
+<span class="sd">            contents will be used as keyword arguments for `tf.session()`. </span>
+<span class="sd">            Else, this will be the sole argument for</span>
+<span class="sd">            `tf.session()`. See `.get_session()`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_NO_DEVICE</span> <span class="o">=</span> <span class="nb">object</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tf_graph</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tf_device</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tf_session_target</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tf_session</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># This is an attempt to guard against assignment to _NO_DEVICE</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">NO_DEVICE</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_NO_DEVICE</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">tf_device</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tf_device</span>
+
+    <span class="nd">@tf_device</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">tf_device</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_on_op_placement_context_change</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tf_device</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">tf_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tf_graph</span>
+
+    <span class="nd">@tf_graph</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">tf_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_on_op_placement_context_change</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tf_graph</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">tf_session_target</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tf_session_target</span>
+
+    <span class="nd">@tf_session_target</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">tf_session_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tf_session_target</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@contextmanager</span>
+<div class="viewcode-block" id="WrappedTF.op_placement_context"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.wrappedtf.WrappedTF.op_placement_context">[docs]</a>    <span class="k">def</span> <span class="nf">op_placement_context</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name_scope</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Applies op placement rules based on the object hierarchy.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; from gptf.core.trees import AttributeTree</span>
+<span class="sd">            &gt;&gt;&gt; class Example(WrappedTF, AttributeTree):</span>
+<span class="sd">            ...     def __init__(self):</span>
+<span class="sd">            ...         super().__init__()</span>
+<span class="sd">            ...         self.tf_graph = tf.Graph()</span>
+
+<span class="sd">            Choose the op placement context by assigning to `.tf_device`:</span>
+<span class="sd">            &gt;&gt;&gt; a, b, c, d, e = [Example() for _ in range(5)]</span>
+<span class="sd">            &gt;&gt;&gt; a.tf_device = &#39;/job:worker&#39;</span>
+<span class="sd">            &gt;&gt;&gt; b.tf_device = tf.DeviceSpec(device_type=&#39;GPU&#39;, device_index=0)</span>
+<span class="sd">            &gt;&gt;&gt; c.tf_device = None</span>
+<span class="sd">            &gt;&gt;&gt; d.tf_device = d.NO_DEVICE</span>
+<span class="sd">            &gt;&gt;&gt; e.tf_device = &#39;/job:spoon&#39;</span>
+
+<span class="sd">            Device contexts are combined, starting from the context of the</span>
+<span class="sd">            root of the tree. `c.tf_device` is `None`, so it uses the context</span>
+<span class="sd">            of its parent.</span>
+<span class="sd">            &gt;&gt;&gt; a.child = c</span>
+<span class="sd">            &gt;&gt;&gt; with a.op_placement_context():</span>
+<span class="sd">            ...     print(tf.constant(0).device)</span>
+<span class="sd">            /job:worker</span>
+<span class="sd">            &gt;&gt;&gt; with c.op_placement_context():</span>
+<span class="sd">            ...     print(tf.constant(0).device)</span>
+<span class="sd">            /job:worker</span>
+
+<span class="sd">            `d.tf_device` is `WrappedTF.NO_DEVICE`, so it resets the device</span>
+<span class="sd">            context.</span>
+<span class="sd">            &gt;&gt;&gt; a.child = d</span>
+<span class="sd">            &gt;&gt;&gt; with d.op_placement_context():</span>
+<span class="sd">            ...     print(tf.constant(0).device)</span>
+<span class="sd">            &lt;BLANKLINE&gt;</span>
+
+<span class="sd">            Other device contexts combine the way you would expect them to.</span>
+<span class="sd">            &gt;&gt;&gt; a.child = b</span>
+<span class="sd">            &gt;&gt;&gt; b.child = e</span>
+<span class="sd">            &gt;&gt;&gt; with b.op_placement_context():</span>
+<span class="sd">            ...     # get job from a</span>
+<span class="sd">            ...     print(tf.constant(0).device)</span>
+<span class="sd">            /job:worker/device:GPU:0</span>
+<span class="sd">            &gt;&gt;&gt; with e.op_placement_context():</span>
+<span class="sd">            ...     # get device from b, overwrite job from a</span>
+<span class="sd">            ...     print(tf.constant(0).device)</span>
+<span class="sd">            /job:spoon/device:GPU:0</span>
+
+<span class="sd">            The root node of the tree may define a `.tf_graph`. Child ops will</span>
+<span class="sd">            be placed in the `.tf_graph` of their highest parent.</span>
+<span class="sd">            &gt;&gt;&gt; a.tf_graph = tf.Graph()</span>
+<span class="sd">            &gt;&gt;&gt; b.tf_graph = tf.Graph()</span>
+<span class="sd">            &gt;&gt;&gt; with a.op_placement_context():</span>
+<span class="sd">            ...     tf.constant(0).graph is a.tf_graph</span>
+<span class="sd">            True</span>
+<span class="sd">            &gt;&gt;&gt; with b.op_placement_context():</span>
+<span class="sd">            ...     tf.constant(0).graph is a.tf_graph</span>
+<span class="sd">            True</span>
+<span class="sd">            &gt;&gt;&gt; with e.op_placement_context():</span>
+<span class="sd">            ...     tf.constant(0).graph is a.tf_graph</span>
+<span class="sd">            True</span>
+
+<span class="sd">            In addition, a name scope is opened that matches the object</span>
+<span class="sd">            hierachy:</span>
+<span class="sd">            &gt;&gt;&gt; with a.op_placement_context():</span>
+<span class="sd">            ...     print(tf.constant(0).name)</span>
+<span class="sd">            unnamed/Const...</span>
+<span class="sd">            &gt;&gt;&gt; with b.op_placement_context():</span>
+<span class="sd">            ...     print(tf.constant(0).name)</span>
+<span class="sd">            unnamed.child/Const...</span>
+<span class="sd">            &gt;&gt;&gt; with e.op_placement_context():</span>
+<span class="sd">            ...     print(tf.constant(0).name)</span>
+<span class="sd">            unnamed.child.child/Const...</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">ExitStack</span><span class="p">()</span> <span class="k">as</span> <span class="n">stack</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">tf_graph</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">stack</span><span class="o">.</span><span class="n">enter_context</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tf_graph</span><span class="o">.</span><span class="n">as_default</span><span class="p">())</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">parent_context</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">op_placement_context</span><span class="p">(</span><span class="n">name_scope</span><span class="p">)</span>
+                <span class="n">stack</span><span class="o">.</span><span class="n">enter_context</span><span class="p">(</span><span class="n">parent_context</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tf_device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">dev</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tf_device</span>
+                <span class="k">if</span> <span class="n">dev</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">NO_DEVICE</span><span class="p">:</span>
+                    <span class="n">dev</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="n">stack</span><span class="o">.</span><span class="n">enter_context</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">dev</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="n">name_scope</span><span class="p">:</span>
+                <span class="c1"># enter &quot;absolute&quot; name scope by appending &quot;/&quot;</span>
+                <span class="n">scope</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">long_name</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span>
+                <span class="n">scope</span> <span class="o">=</span> <span class="n">INVALID_NAME_SCOPE_CHAR</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">scope</span><span class="p">)</span>
+                <span class="n">stack</span><span class="o">.</span><span class="n">enter_context</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">name_scope</span><span class="p">(</span><span class="n">scope</span><span class="p">))</span>
+
+            <span class="k">yield</span></div>
+
+<div class="viewcode-block" id="WrappedTF.get_session"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.wrappedtf.WrappedTF.get_session">[docs]</a>    <span class="k">def</span> <span class="nf">get_session</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets a TensorFlow session in which ops can be run.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns the default session if there is one. Else, returns a </span>
+<span class="sd">        new session using the session target of the highest parent.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (tf.Session): The default session if there is one, else a </span>
+<span class="sd">            session matching the session target of the highest parent.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; from gptf.core.trees import AttributeTree</span>
+<span class="sd">            &gt;&gt;&gt; class AttributeWrappedTF(WrappedTF, AttributeTree):</span>
+<span class="sd">            ...     pass</span>
+
+<span class="sd">            &gt;&gt;&gt; w = AttributeWrappedTF()</span>
+
+<span class="sd">            If there is already a default session, returns that </span>
+<span class="sd">            session in a NullContextWrapper.</span>
+<span class="sd">            &gt;&gt;&gt; with tf.Session() as sess:</span>
+<span class="sd">            ...     sess0 = w.get_session()</span>
+<span class="sd">            ...     print(type(sess0).__name__)</span>
+<span class="sd">            ...     sess0._NullContextWrapper__wrapped is sess</span>
+<span class="sd">            NullContextWrapper</span>
+<span class="sd">            True</span>
+
+<span class="sd">            It&#39;s safe to use w.get_session() in a with block, even if</span>
+<span class="sd">            there is a default session. Doing so won&#39;t call the</span>
+<span class="sd">            `__enter__` or `__exit__` methods of the default session.</span>
+<span class="sd">            &gt;&gt;&gt; class AnnounceSession(tf.Session):</span>
+<span class="sd">            ...     def __enter__(self):</span>
+<span class="sd">            ...         print(&#39;__enter__ called&#39;)</span>
+<span class="sd">            ...         return super().__enter__()</span>
+<span class="sd">            ...     def __exit__(self, *args):</span>
+<span class="sd">            ...         print(&#39;__exit__ called&#39;)</span>
+<span class="sd">            ...         return super().__exit__(*args)</span>
+<span class="sd">            &gt;&gt;&gt; with AnnounceSession() as sess:</span>
+<span class="sd">            ...     print(&#39;before nested with&#39;)</span>
+<span class="sd">            ...     with w.get_session() as sess0:</span>
+<span class="sd">            ...         assert sess is sess0</span>
+<span class="sd">            ...         print(&#39;nested with&#39;)</span>
+<span class="sd">            ...     print(&#39;after nested with&#39;)</span>
+<span class="sd">            __enter__ called</span>
+<span class="sd">            before nested with</span>
+<span class="sd">            nested with</span>
+<span class="sd">            after nested with</span>
+<span class="sd">            __exit__ called</span>
+<span class="sd">            </span>
+<span class="sd">            Else, returns a new session each time:</span>
+<span class="sd">            &gt;&gt;&gt; sess2 = w.get_session()</span>
+<span class="sd">            &gt;&gt;&gt; sess2 is sess</span>
+<span class="sd">            False</span>
+<span class="sd">            &gt;&gt;&gt; sess3 = w.get_session()</span>
+<span class="sd">            &gt;&gt;&gt; sess2 is sess3</span>
+<span class="sd">            False</span>
+<span class="sd">            &gt;&gt;&gt; sess2.close()</span>
+<span class="sd">            &gt;&gt;&gt; sess3.close()</span>
+<span class="sd">            </span>
+<span class="sd">            &gt;&gt;&gt; class Example(WrappedTF, AttributeTree):</span>
+<span class="sd">            ...     def op(self):</span>
+<span class="sd">            ...         with self.op_placement_context():</span>
+<span class="sd">            ...             return tf.constant(1)</span>
+<span class="sd">            ...</span>
+<span class="sd">            ...     def depth(self):</span>
+<span class="sd">            ...         tot = 0</span>
+<span class="sd">            ...         if self.parent is not None:</span>
+<span class="sd">            ...             tot += self.parent.depth()</span>
+<span class="sd">            ...         with self.get_session() as sess:</span>
+<span class="sd">            ...             tot += sess.run(self.op())</span>
+<span class="sd">            ...         return tot</span>
+<span class="sd">            &gt;&gt;&gt; a = Example()</span>
+<span class="sd">            &gt;&gt;&gt; # we&#39;re about to do weird things with op placement, and we</span>
+<span class="sd">            &gt;&gt;&gt; # don&#39;t want it in the default graph where it can mess with</span>
+<span class="sd">            &gt;&gt;&gt; # other doctests.</span>
+<span class="sd">            &gt;&gt;&gt; a.tf_graph = tf.Graph()</span>
+<span class="sd">            &gt;&gt;&gt; a.child = Example()</span>
+
+<span class="sd">            `Example` is a simple class that provides a method, `.depth()`,</span>
+<span class="sd">            that uses TensorFlow to calculate an object&#39;s depth in the tree.</span>
+<span class="sd">            &gt;&gt;&gt; a.depth()</span>
+<span class="sd">            1</span>
+<span class="sd">            &gt;&gt;&gt; a.child.depth()</span>
+<span class="sd">            2</span>
+
+<span class="sd">            `Example.op()` places its op based on the hierachical device </span>
+<span class="sd">            context. If we change `a`&#39;s device context, we also change</span>
+<span class="sd">            `a.child`&#39;s.</span>
+<span class="sd">            &gt;&gt;&gt; print(a.child.op().device)</span>
+<span class="sd">            </span>
+<span class="sd">            &gt;&gt;&gt; a.tf_device = &#39;/job:worker/task:0&#39;</span>
+<span class="sd">            &gt;&gt;&gt; print(a.child.op().device)</span>
+<span class="sd">            /job:worker/task:0</span>
+
+<span class="sd">            `a.child.depth()` will now result in an error:</span>
+<span class="sd">            &gt;&gt;&gt; a.child.depth()</span>
+<span class="sd">            Traceback (most recent call last):</span>
+<span class="sd">                ...</span>
+<span class="sd">            tensorflow.python.framework.errors.InvalidArgumentError: ...</span>
+
+<span class="sd">            `a.child.op()` is now being placed as if it were in a distributed </span>
+<span class="sd">            context, and the default session knows nothing about jobs or tasks.</span>
+<span class="sd">            However, if we set `a.session_target` appropriately, </span>
+<span class="sd">            `a.child.get_session()` will return a session capable of</span>
+<span class="sd">            running ops created with `a.child.op_placement_context`.</span>
+<span class="sd">            &gt;&gt;&gt; clusterdict = \\</span>
+<span class="sd">            ...     { &#39;worker&#39;: [&#39;localhost:2222&#39;]</span>
+<span class="sd">            ...     , &#39;master&#39;: [&#39;localhost:2223&#39;]</span>
+<span class="sd">            ...     }</span>
+<span class="sd">            &gt;&gt;&gt; spec = tf.train.ClusterSpec(clusterdict)</span>
+<span class="sd">            &gt;&gt;&gt; worker = tf.train.Server(spec, job_name=&#39;worker&#39;, task_index=0)</span>
+<span class="sd">            &gt;&gt;&gt; worker.start()</span>
+<span class="sd">            &gt;&gt;&gt; master = tf.train.Server(spec, job_name=&#39;master&#39;, task_index=0)</span>
+<span class="sd">            &gt;&gt;&gt; a.tf_session_target = master.target</span>
+
+<span class="sd">            `a.child.depth()` should now run smoothly.</span>
+<span class="sd">            &gt;&gt;&gt; a.child.depth()</span>
+<span class="sd">            2</span>
+
+<span class="sd">            In general, this means that as long as the session target of</span>
+<span class="sd">            the root is set correctly, anything lower in the tree that uses</span>
+<span class="sd">            `self.get_session()` should work without fuss.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">new_session</span><span class="p">():</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tf_session_target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;graph&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tf_graph</span><span class="p">}</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tf_session_target</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tf_session_target</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">kwargs</span> <span class="o">=</span>\
+                        <span class="p">{</span> <span class="s1">&#39;target&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tf_session_target</span>
+                        <span class="p">,</span> <span class="s1">&#39;graph&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tf_graph</span>
+                        <span class="p">}</span>
+            <span class="k">return</span> <span class="n">WrappedTFSession</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="n">default</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">get_default_session</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">NullContextWrapper</span><span class="p">(</span><span class="n">default</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">new_session</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">highest_parent</span><span class="o">.</span><span class="n">get_session</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="WrappedTF.on_session_birth"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.wrappedtf.WrappedTF.on_session_birth">[docs]</a>    <span class="k">def</span> <span class="nf">on_session_birth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called just after a session is created.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            session (tf.Session): The created session.</span>
+<span class="sd">          </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="WrappedTF.on_session_death"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.wrappedtf.WrappedTF.on_session_death">[docs]</a>    <span class="k">def</span> <span class="nf">on_session_death</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called just before a session is closed.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            session (tf.Session): The dying session.</span>
+<span class="sd">          </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_on_op_placement_context_change</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called when the op placement context changes.</span>
+<span class="sd">        </span>
+<span class="sd">        When the op placement context changes, its cached TensorFlow ops are </span>
+<span class="sd">        no longer valid. This means that all cached ops created with the </span>
+<span class="sd">        `WrappedTF`&#39;s device context and any ops that use ops created with the </span>
+<span class="sd">        `WrappedTF`&#39;s device context are invalid.</span>
+
+<span class="sd">        To deal with this, we clear the cache of any `WrappedTF` that is a</span>
+<span class="sd">        direct ancestor, and any `WrappedTF` in the subtree.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clear_ancestor_caches</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clear_subtree_caches</span><span class="p">()</span>
+
+    <span class="nd">@overrides</span>
+    <span class="k">def</span> <span class="nf">_set_parent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_parent</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Deals with cache clearing that happens when tree anatomy changes.</span>
+<span class="sd">        </span>
+<span class="sd">        If a `WrappedTF`&#39;s ancestry changes, its op placement context</span>
+<span class="sd">        will change, so we need to clear the appropriate caches. Note that</span>
+<span class="sd">        since this involves clearing the caches of everything lower in the</span>
+<span class="sd">        subtree, it is enough to clear the cache only when a node&#39;s direct</span>
+<span class="sd">        parent changes.</span>
+
+<span class="sd">        If a `WrappedTF` stops being the highest parent, i.e. it becomes the</span>
+<span class="sd">        child of another `WrappedTF`, it should kill its session. If the new</span>
+<span class="sd">        highest parent has a session, we should call `on_session_birth`</span>
+<span class="sd">        across the subtree of the new child once it has been added to the</span>
+<span class="sd">        tree.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; from gptf.core.trees import AttributeTree</span>
+<span class="sd">            &gt;&gt;&gt; class Example(WrappedTF, AttributeTree):</span>
+<span class="sd">            ...     def __init__(self, name):</span>
+<span class="sd">            ...         super().__init__()</span>
+<span class="sd">            ...         self.fallback_name = name</span>
+<span class="sd">            &gt;&gt;&gt; w = Example(&#39;w&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; x = Example(&#39;x&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; y = Example(&#39;y&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; z = Example(&#39;z&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; w.child_0 = x</span>
+<span class="sd">            &gt;&gt;&gt; y.child = z</span>
+<span class="sd">            &gt;&gt;&gt; def setup():</span>
+<span class="sd">            ...     objs = [w, x, y, z]</span>
+<span class="sd">            ...     # fill caches</span>
+<span class="sd">            ...     for o in objs: o.cache[&#39;tf&#39;] = &#39;compiled tf function&#39;</span>
+
+<span class="sd">            When `y` gets a parent, it should close its session and </span>
+<span class="sd">            clear its subtree&#39;s cache. `w`, which knows nothing about `y` so</span>
+<span class="sd">            should not have any ops that depend on `y`&#39;s device context,</span>
+<span class="sd">            should not have its cache cleared; the same goes for `x`.</span>
+<span class="sd">            &gt;&gt;&gt; setup()</span>
+<span class="sd">            &gt;&gt;&gt; w.child_1 = y</span>
+<span class="sd">            &gt;&gt;&gt; &#39;tf&#39; in w.cache and &#39;tf&#39; in w.child_0.cache</span>
+<span class="sd">            True</span>
+<span class="sd">            &gt;&gt;&gt; &#39;tf&#39; in w.child_1.cache or &#39;tf&#39; in w.child_1.child.cache</span>
+<span class="sd">            False</span>
+<span class="sd">            </span>
+<span class="sd">            Deleting `w.child_1` means that `y` loses a parent. `w` knows</span>
+<span class="sd">            about `y` and might have ops that depend on `y`&#39;s device context,</span>
+<span class="sd">            so we should clear its cache. `w.child_0` still knows nothing</span>
+<span class="sd">            about `y`, so its cache should still not be cleared.</span>
+<span class="sd">            &gt;&gt;&gt; setup()</span>
+<span class="sd">            &gt;&gt;&gt; del w.child_1</span>
+<span class="sd">            &gt;&gt;&gt; &#39;tf&#39; in w.child_0.cache</span>
+<span class="sd">            True</span>
+<span class="sd">            &gt;&gt;&gt; &#39;tf&#39; in w.cache </span>
+<span class="sd">            False</span>
+<span class="sd">            &gt;&gt;&gt; &#39;tf&#39; in y.cache or &#39;tf&#39; in y.child.cache</span>
+<span class="sd">            False</span>
+
+<span class="sd">            When a `WrappedTF` is copied between trees, the caches in the</span>
+<span class="sd">            copy are cleared and session births are registered in the</span>
+<span class="sd">            subtree of the copy.</span>
+<span class="sd">            &gt;&gt;&gt; setup()</span>
+<span class="sd">            &gt;&gt;&gt; y.child_1 = w.child_0</span>
+<span class="sd">            &gt;&gt;&gt; &#39;tf&#39; in y.cache and &#39;tf&#39; in y.child.cache</span>
+<span class="sd">            True</span>
+<span class="sd">            &gt;&gt;&gt; &#39;tf&#39; in w.cache and &#39;tf&#39; in w.child_0.cache</span>
+<span class="sd">            True</span>
+<span class="sd">            &gt;&gt;&gt; &#39;tf&#39; in y.child_1.cache</span>
+<span class="sd">            False</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_on_op_placement_context_change</span><span class="p">()</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_set_parent</span><span class="p">(</span><span class="n">new_parent</span><span class="p">)</span>  <span class="c1"># move to new tree</span>
+
+    <span class="nd">@overrides</span>
+<div class="viewcode-block" id="WrappedTF.copy"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.wrappedtf.WrappedTF.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">copy</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">copy</span><span class="o">.</span><span class="n">_tf_session</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1">#if self.parent is not None:</span>
+        <span class="c1">#    if self.__class__.__name__ == &#39;Param&#39;:</span>
+        <span class="c1">#        global horsecount</span>
+        <span class="c1">#        try:</span>
+        <span class="c1">#            horsecount</span>
+        <span class="c1">#        except:</span>
+        <span class="c1">#            horsecount = 0</span>
+        <span class="c1">#        print(&#39;horse&#39;, horsecount)</span>
+        <span class="c1">#        horsecount += 1</span>
+        <span class="c1">#    copy._on_op_placement_context_change()</span>
+        <span class="k">return</span> <span class="n">copy</span></div></div>
+
+<div class="viewcode-block" id="tf_method"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.wrappedtf.tf_method">[docs]</a><span class="k">def</span> <span class="nf">tf_method</span><span class="p">(</span><span class="n">name_scope</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rename_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+        <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cache_limit</span><span class="o">=</span><span class="mi">128</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Decorator version of `WrappedTF.op_placement_context`.</span>
+<span class="sd">    </span>
+<span class="sd">    Applies `instance.op_placement_context(name_scope=False)` </span>
+<span class="sd">    to `instance.method(...)`</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        name_scope (bool): If `True`, wraps the function in an</span>
+<span class="sd">            appropriate `tf.name_scope()`.</span>
+<span class="sd">        cache (bool): If `True`, applies caching to the function.</span>
+<span class="sd">            Multiple calls with the same arguments will return</span>
+<span class="sd">            the same result. See examples.</span>
+<span class="sd">        cache_limit (int): The limit for the cache. </span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        In the following example, `Example.method_a` is equivalent </span>
+<span class="sd">        to `Example.method_b`.</span>
+<span class="sd">        &gt;&gt;&gt; from gptf.core.trees import AttributeTree</span>
+<span class="sd">        &gt;&gt;&gt; class Example(WrappedTF, AttributeTree):</span>
+<span class="sd">        ...     def method_a(self, a, b):</span>
+<span class="sd">        ...         with self.op_placement_context(name_scope=False):</span>
+<span class="sd">        ...             scope = self.long_name + &#39;.method_a/&#39;</span>
+<span class="sd">        ...             with tf.name_scope(scope):</span>
+<span class="sd">        ...                 result = tf.add(a, b)</span>
+<span class="sd">        ...                 return tf.identity(result, name=&#39;0&#39;)  #scope[:-1])</span>
+<span class="sd">        ...     @tf_method()</span>
+<span class="sd">        ...     def method_b(self, a, b):</span>
+<span class="sd">        ...         return tf.add(a, b)</span>
+
+<span class="sd">        Devices are set properly in both methods:</span>
+<span class="sd">        &gt;&gt;&gt; e = Example()</span>
+<span class="sd">        &gt;&gt;&gt; e.tf_graph = tf.Graph()  # don&#39;t break other doctests</span>
+<span class="sd">        &gt;&gt;&gt; e.tf_device = &#39;/job:worker/task:0&#39;</span>
+<span class="sd">        &gt;&gt;&gt; a = e.method_a(2, 3)</span>
+<span class="sd">        &gt;&gt;&gt; print(a.device)</span>
+<span class="sd">        /job:worker/task:0</span>
+<span class="sd">        &gt;&gt;&gt; b = e.method_b(2, 3)</span>
+<span class="sd">        &gt;&gt;&gt; b.device == a.device</span>
+<span class="sd">        True</span>
+
+<span class="sd">        The returned tensor(s) are given the name of the name scope.</span>
+<span class="sd">        &gt;&gt;&gt; print(a.name)</span>
+<span class="sd">        unnamed.method_a/0:0</span>
+<span class="sd">        &gt;&gt;&gt; print(b.name)</span>
+<span class="sd">        unnamed.method_b/0:0</span>
+
+<span class="sd">        Multiple method calls produce unique names.</span>
+<span class="sd">        &gt;&gt;&gt; print(e.method_b(1, 2).name)</span>
+<span class="sd">        unnamed.method_b/0_1:0</span>
+
+<span class="sd">        If a method returns a sequence of tensors, they are named</span>
+<span class="sd">        `&lt;scope&gt;/0`, `&lt;scope&gt;/1`, etc.</span>
+<span class="sd">        &gt;&gt;&gt; class DoubleReturnExample(WrappedTF, AttributeTree):</span>
+<span class="sd">        ...     @tf_method(cache=False)</span>
+<span class="sd">        ...     def method(self):</span>
+<span class="sd">        ...         return tf.constant(1), tf.constant(2)</span>
+<span class="sd">        &gt;&gt;&gt; obj = DoubleReturnExample()</span>
+<span class="sd">        &gt;&gt;&gt; c, d = obj.method()</span>
+<span class="sd">        &gt;&gt;&gt; print(c.name)</span>
+<span class="sd">        unnamed.method/0:0</span>
+<span class="sd">        &gt;&gt;&gt; print(d.name)</span>
+<span class="sd">        unnamed.method/1:0</span>
+<span class="sd">        &gt;&gt;&gt; c, d = obj.method()</span>
+<span class="sd">        &gt;&gt;&gt; print(c.name)</span>
+<span class="sd">        unnamed.method/0_1:0</span>
+<span class="sd">        &gt;&gt;&gt; print(d.name)</span>
+<span class="sd">        unnamed.method/1_1:0</span>
+
+<span class="sd">        Calls to other tensorflow methods do not cause nested name scopes.</span>
+<span class="sd">        &gt;&gt;&gt; class NestedExample(WrappedTF, AttributeTree):</span>
+<span class="sd">        ...     def __init__(self, child):</span>
+<span class="sd">        ...         super().__init__()</span>
+<span class="sd">        ...         self.child = child</span>
+<span class="sd">        ...     @tf_method()</span>
+<span class="sd">        ...     def method(self, a, b):</span>
+<span class="sd">        ...         print(self.child.method_b(a, b).name)</span>
+<span class="sd">        &gt;&gt;&gt; NestedExample(Example()).method(0, 0)</span>
+<span class="sd">        unnamed.child.method_b/0:0</span>
+
+<span class="sd">        Else, no attempt is made to rename the output.</span>
+<span class="sd">        &gt;&gt;&gt; class NumpyReturnExample(WrappedTF, AttributeTree):</span>
+<span class="sd">        ...     @tf_method()</span>
+<span class="sd">        ...     def method(self):</span>
+<span class="sd">        ...         return self.get_session().run(tf.constant(1))</span>
+<span class="sd">        &gt;&gt;&gt; NumpyReturnExample().method()</span>
+<span class="sd">        1</span>
+
+<span class="sd">        If caching is enabled, then multiple calls with the same </span>
+<span class="sd">        arguments will result in the same return value.</span>
+<span class="sd">        &gt;&gt;&gt; tensor = e.method_b(5, 5)</span>
+<span class="sd">        &gt;&gt;&gt; tensor is e.method_b(5, 5)</span>
+<span class="sd">        True</span>
+<span class="sd">        </span>
+<span class="sd">        This means that ops are not added to the graph multiple times</span>
+<span class="sd">        for identical method calls, which is a good thing.</span>
+
+<span class="sd">        If the cache is cleared (perhaps due to a device context</span>
+<span class="sd">        change), the method cache is also cleared, and new tensors</span>
+<span class="sd">        will be returned.</span>
+<span class="sd">        &gt;&gt;&gt; e.clear_cache()</span>
+<span class="sd">        &gt;&gt;&gt; tensor is e.method_b(5, 5)</span>
+<span class="sd">        False</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">decorator</span><span class="p">(</span><span class="n">method</span><span class="p">):</span>
+        <span class="nd">@wraps</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="k">with</span> <span class="n">ExitStack</span><span class="p">()</span> <span class="k">as</span> <span class="n">stack</span><span class="p">:</span>
+                <span class="n">op_cntxt</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">op_placement_context</span><span class="p">(</span><span class="n">name_scope</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="n">stack</span><span class="o">.</span><span class="n">enter_context</span><span class="p">(</span><span class="n">op_cntxt</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">name_scope</span><span class="p">:</span>
+                    <span class="n">scope</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">.</span><span class="si">{}</span><span class="s2">/&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">long_name</span><span class="p">,</span><span class="n">method</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+                    <span class="n">scope</span> <span class="o">=</span> <span class="n">INVALID_NAME_SCOPE_CHAR</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">scope</span><span class="p">)</span>
+                    <span class="n">stack</span><span class="o">.</span><span class="n">enter_context</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">name_scope</span><span class="p">(</span><span class="n">scope</span><span class="p">))</span>
+
+                <span class="n">result</span> <span class="o">=</span> <span class="n">method</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">name_scope</span> <span class="ow">and</span> <span class="n">rename_output</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">)</span> <span class="ow">and</span> 
+                        <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">result</span><span class="p">)):</span>
+                        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">x</span><span class="p">)))</span>
+                                     <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">result</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+                        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;0&#39;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">result</span>
+        <span class="k">if</span> <span class="n">cache</span><span class="p">:</span>
+            <span class="n">wrapper</span> <span class="o">=</span> <span class="n">cache_method</span><span class="p">(</span><span class="n">cache_limit</span><span class="p">)(</span><span class="n">wrapper</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">wrapper</span>
+    <span class="k">return</span> <span class="n">decorator</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Blaine Rogers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
