@@ -102,7 +102,7 @@ class NullContextWrapper(object):
                 '_NullContextWrapper__wrapped'}:
             return getattr(self.__wrapped, name)
         else:
-            return super().__getattribute__(name)
+            return super(NullContextWrapper, self).__getattribute__(name)
 
     def __setattr__(self, name, value):
         if name not in {'__enter__', '__exit__',
@@ -117,7 +117,7 @@ class NullContextWrapper(object):
                 '_NullContextWrapper__wrapped'}:
             delattr(self.__wrapped, name, value)
         else:
-            super().__delattr__(name, value)
+            super(NullContextWrapper, self).__delattr__(name, value)
 
 class WrappedTF(TreeWithCache):
     """Provides facilities for keeping TensorFlow behind the scenes.
