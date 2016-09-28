@@ -13,4 +13,4 @@ from .core.wrappedtf import tf_method
 from . import gpr, distributed
 
 __author__ = "Blaine Rogers <br1314@ic.ac.uk>"
-__version__ = "0"
+__version__ = "1.0.0"
