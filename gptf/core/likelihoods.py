@@ -155,8 +155,11 @@ class Likelihood(with_metaclass(ABCMeta, Parameterized)):
     def variational_expectations(self, mu_F, var_F, Y):
         """Compute the expected log density of the data.
 
-        if `q(f) = N(mu_F, var_F)` and this object represents `p(y|f)`,
+        if :math:`q(f) = N(mu_F, var_F)` and this object represents 
+        :math:`p(y|f)`,
         then this method computes the predictive density
+
+        .. math::
             \int (\log p(y|f)) q(f) df
 
         Here, we implement a Gauss-Hermite quadrature routine, but some
