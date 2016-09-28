@@ -2678,44 +2678,19 @@ latent function.</td>
 <dl class="method">
 <dt>
 <code class="descname">predict_density</code><span class="sig-paren">(</span><em>mu_F</em>, <em>var_F</em>, <em>Y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Gaussian.predict_density"><span class="viewcode-link">[source]</span></a></dt>
-<dd><p>The (log) density of Y given a mean &amp; variance of the latent func.</p>
-<p>if <span class="math">\(q(f) = N(mu_F, var_F)\)</span> and this object represents
-<span class="math">\(p(y|f)\)</span>,
-then this method computes the predictive density</p>
-<div class="math">
-\[\int p(y=Y|f) q(f) df\]</div>
-<p>Here, we implement a Gauss-Hermite quadrature routine, but some
-likelihoods (e.g. Gaussian, Poisson) will implement specific cases.</p>
+<dd><p>The (log) density of Y given a mean &amp; variance of the f.</p>
 </dd></dl>
 
 <dl class="method">
 <dt>
 <code class="descname">predict_mean_and_var</code><span class="sig-paren">(</span><em>mu_F</em>, <em>var_F</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Gaussian.predict_mean_and_var"><span class="viewcode-link">[source]</span></a></dt>
-<dd><p>The mean &amp; variance of Y given a mean &amp; variance of the latent func.</p>
-<p>if <span class="math">\(q(f) = N(mu_F, var_F)\)</span> and this object represents
-<span class="math">\(p(y|f)\)</span>,
-then this method computes the predictive mean</p>
-<div class="math">
-\[\int\int y p(y|f) q(f) df dy\]</div>
-<p>and the predictive variance</p>
-<div class="math">
-\[\int\int y^2 p(y|f) q(f) df dy
-- (\int\int y p(y|f) q(f) df dy)^2\]</div>
-<p>Here, we implement a Gauss-Hermite quadrature routine, but some
-likelihoods (e.g. Gaussian) will implement specific cases.</p>
+<dd><p>The mean &amp; variance of Y given a mean &amp; variance of the f.</p>
 </dd></dl>
 
 <dl class="method">
 <dt>
 <code class="descname">variational_expectations</code><span class="sig-paren">(</span><em>mu_F</em>, <em>var_F</em>, <em>Y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Gaussian.variational_expectations"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Compute the expected log density of the data.</p>
-<p>if <span class="math">\(q(f) = N(mu_F, var_F)\)</span> and this object represents
-<span class="math">\(p(y|f)\)</span>,
-then this method computes the predictive density</p>
-<div class="math">
-\[\int (\log p(y|f)) q(f) df\]</div>
-<p>Here, we implement a Gauss-Hermite quadrature routine, but some
-likelihoods (e.g. Gaussian, Poisson) will implement specific cases.</p>
 </dd></dl>
 
 </dd></dl>
@@ -2955,7 +2930,7 @@ likelihoods (e.g. Gaussian, Poisson) will implement specific cases.</p>
 <p>GP regression with Gaussian noise.</p>
 <dl class="class">
 <dt>
-<em class="property">class </em><code class="descclassname">gptf.gpr.</code><code class="descname">GPR</code><span class="sig-paren">(</span><em>kernel</em>, <em>meanfunction=&lt;gptf.core.meanfunctions.Zero object</em>, <em>fallback_name unnamed</em>, <em>id 0x7fa38d42b588&gt;</em>, <em>noise_variance=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/gpr.html#GPR"><span class="viewcode-link">[source]</span></a></dt>
+<em class="property">class </em><code class="descclassname">gptf.gpr.</code><code class="descname">GPR</code><span class="sig-paren">(</span><em>kernel</em>, <em>meanfunction=&lt;gptf.core.meanfunctions.Zero object</em>, <em>fallback_name unnamed</em>, <em>id 0x7f0485151f60&gt;</em>, <em>noise_variance=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/gpr.html#GPR"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Gaussian process regression with Gaussian noise.</p>
 <dl class="attribute">
 <dt id="gptf.gpr.GPR.kernel">
