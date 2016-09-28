@@ -907,18 +907,18 @@ class DataHolder(ProxyWrappedValue, Leaf):
 class Parameterized(WrappedTF):
     """An object that contains parameters and data.
 
-    This object is designed to be part of a tree, with `Param`s and 
-    `DataHolder`s at the leaves.
+    This object is designed to be part of a tree, with `Param`\ s and 
+    `DataHolder`\ s at the leaves.
 
     Attributes:
-        fixed (bool): A flag indicating whether or not any child `Param`s 
+        fixed (bool): A flag indicating whether or not any child `Param`\ s 
             should be fixed. Setting this attribute also sets the `.fixed` 
             attribute of anything lower in the tree.
         feed_dict (Dict[tf.placeholder, np.array_like]): A feed dictionary
             that feeds the values of DataHolders into their placeholder ops.
-        params (List[Param]): A list of all the `Param`s lower in the tree,
+        params (List[Param]): A list of all the `Param`\ s lower in the tree,
             sorted by their long name.
-        data_holders (List[Param]): A list of all the `DataHolder`s lower in 
+        data_holders (List[Param]): A list of all the `DataHolder`\ s lower in 
             the tree, sorted by their long name.
 
     Examples:
@@ -962,7 +962,7 @@ class Parameterized(WrappedTF):
 
     @property
     def feed_dict(self):
-        """The union of the `.feed_dict`s of objects lower in the tree."""
+        """The union of the `.feed_dict`\ s of objects lower in the tree."""
         result = {}
         iterator = iter(self)
         next(iterator)  # skip self to prevent recursion bugs
@@ -972,14 +972,14 @@ class Parameterized(WrappedTF):
 
     @property
     def params(self):
-        """A sorted list of the `Param`s lower in the tree."""
+        """A sorted list of the `Param`\ s lower in the tree."""
         l = list(filter(isclassof(Param), self))
         l.sort(key=lambda x: x.long_name)
         return l
 
     @property
     def data_holders(self):
-        """A sorted list of the `DataHolder`s lower in the tree."""
+        """A sorted list of the `DataHolder`\ s lower in the tree."""
         l = list(filter(isclassof(DataHolder), self))
         l.sort(key=lambda x: x.long_name)
         return l
@@ -1323,7 +1323,7 @@ class ParamList(Parameterized, ListTree):
 def autoflow(*placeholder_specs):
     """Wraps up a TensorFlow method so that it takes NumPy and gives NumPy.
 
-    When an autoflowed method is called, we construct placeholder to 
+    When an autoflowed method is called, we construct placeholders to 
     represent the passed arguments, apply `tf_method` 
     to the wrapped method and evaluate it on the placeholders to produce 
     a TensorFlow op. We then evaluate the op in a session, passing in the 
@@ -1331,7 +1331,7 @@ def autoflow(*placeholder_specs):
 
     We also cache the op, so that multiple calls to the function construct
     the op only once. This cache is cleared when device contexts change,
-    when transforms on `Param`s change, and any number of other similar
+    when transforms on `Param`\ s change, and any number of other similar
     circumstances.
 
     Args:

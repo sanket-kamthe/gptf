@@ -129,8 +129,7 @@ class WrappedTF(TreeWithCache):
     Attributes:
         NO_DEVICE (object): A class-level constant, used to specify an
             empty op placement context.
-        tf_device (str | Callable[[tf.Operation], str] | tf.DeviceSpec
-                | WrappedTF.NO_DEVICE | None):
+        tf_device (str | Callable[[tf.Operation], str] | tf.DeviceSpec | WrappedTF.NO_DEVICE | None):
             The device context onto which this object's ops should be pinned.
             Device contexts are applied hierarchically, starting from the
             highest parent. See `.op_placement_context()`.

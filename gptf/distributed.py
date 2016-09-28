@@ -28,14 +28,13 @@ def cao_fleet_weights(experts, X, Y, points):
     The predictive power is calculated as
 
     .. math::
-        β_k(x_\star)=\\frac{1}{2} (\ln (σ^\star_k)^2 
-                                   - \ln σ^{-2}_k(x_\star))
+        β_k(x_\star)=\\frac{1}{2} (\ln (σ^\star_k)^2 - \ln σ^{-2}_k(x_\star))
 
     where :math:`β_k(x_\star)` is the predictive power of the
     :math:`k`th expert at the point :math:`x_\star`, 
-    :math:`(σ^\star_k)^2` is the prior variance of the :math:`k`th
+    :math:`(σ^\star_k)^2` is the prior variance of the :math:`k`\ th
     expert and :math:`σ^{-2}_k(x_\star)` is the posterior variance
-    of the :math:`k`th expert at the point :math:`x_\star`.
+    of the :math:`k`\ th expert at the point :math:`x_\star`.
 
     Args:
         experts (Sequence[GPModel]): the experts to calculate
@@ -67,7 +66,7 @@ def equal_weights(experts, X, Y, points):
     .. math::
         \\forall k \in 0..M,\ β_k = 1 / M
 
-    where :math:`β_k` is the weight of the :math:`k`th expert at
+    where :math:`β_k` is the weight of the :math:`k`\ th expert at
     every point and :math:`M` is the number of experts.
 
     The dtype returned matches the dtype of `points`.
@@ -151,15 +150,15 @@ class PoEReduction(Reduction):
         
     .. math::
 
-        σ^{-2}_PoE &= \sum_{k=1}^{M} σ^{-2}_k \\\\
-        μ_PoE &= σ^2_PoE \sum_{k=1}^{M} μ_k σ^{-2}_k
+        σ^{-2}_{PoE} &= \sum_{k=1}^{M} σ^{-2}_k \\\\
+        μ_{PoE} &= σ^2_{PoE} \sum_{k=1}^{M} μ_k σ^{-2}_k
 
-    where :math:`μ_PoE` and :math:`σ^2_PoE` are the final posterior
+    where :math:`μ_{PoE}` and :math:`σ^2_{PoE}` are the final posterior
     mean and variance, :math:`M` is the number of child experts and
     :math:`μ_k` and :math:`σ^2_k` are the posterior mean and variance
-    for the :math:`k`th child.
+    for the :math:`k`\ th child.
 
-    Attributes: See `GPModel` and `ParamList`.
+    Attributes: See :obj:`GPModel` and :obj:`ParamList`.
 
     """
     def __init__(self, children):
@@ -200,21 +199,20 @@ class gPoEReduction(Reduction):
 
     .. math::
 
-        σ^{-2}_gPoE &= \sum_{k=1}^{M} β_k σ^{-2}_c \\\\
-        μ_gPoE &= σ^2_gPoE \sum_{k=1}^{M} β_k μ_k σ^{-2}_k
+        σ^{-2}_{gPoE} &= \sum_{k=1}^{M} β_k σ^{-2}_c \\\\
+        μ_{gPoE} &= σ^2_{gPoE} \sum_{k=1}^{M} β_k μ_k σ^{-2}_k
 
-    where :math:`μ_gPoE` and :math:`σ^2_PoE` are the final posterior
+    where :math:`μ_{gPoE}` and :math:`σ^2_{gPoE}` are the final posterior
     mean and variance, :math:`M` is the number of child experts and
     :math:`μ_k` and :math:`σ^2_k` are the posterior mean and variance
-    for the :math:`k`th child and :math:`β_k` is the weight of the
-    :math:`k`th child.
+    for the :math:`k`\ th child and :math:`β_k` is the weight of the
+    :math:`k`\ th child.
 
     Note that when :math:`\sum_{k} β_k = 1`, the model falls back to
     the prior outside the range of the data.
 
     Attributes:
-        weightfunction (Callable[[Sequence[GPModel], tf.Tensor,
-            tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): 
+        weightfunction (Callable[[Sequence[GPModel], tf.Tensor, tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): 
             A function used to calculate the weight of the experts.
 
     For other attributes, see `GPModel` and `ParamList`.
@@ -226,8 +224,7 @@ class gPoEReduction(Reduction):
         Args:
             children (Sequence[GPModel]): The experts to combine the
                 opinions of.
-            weightfunction (Callable[[Sequence[GPModel], tf.Tensor,
-                tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): 
+            weightfunction (Callable[[Sequence[GPModel], tf.Tensor, tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): 
                 A function used to calculate the weight of the experts.
 
         """
@@ -281,15 +278,15 @@ class BCMReduction(Reduction):
         
     .. math::
 
-        σ^{-2}_BCM &= (\sum_{k=1}^{M} σ^{-2}_k)
+        σ^{-2}_{BCM} &= (\sum_{k=1}^{M} σ^{-2}_k)
                       + (1 - M) σ^{-2}_{\star\star} \\\\
-        μ_BCM &= σ^2_BCM \sum_{k=1}^{M} μ_k σ^{-2}_k
+        μ_{BCM} &= σ^2_{BCM} \sum_{k=1}^{M} μ_k σ^{-2}_k
 
-    where :math:`μ_BCM` and :math:`σ^2_BCM` are the final posterior
+    where :math:`μ_{BCM}` and :math:`σ^2_{BCM}` are the final posterior
     mean and variance, :math:`M` is the number of child experts,
     :math:`σ^{-2}_{\star\star}` is the prior precision and
     :math:`μ_k` and :math:`σ^2_k` are the posterior mean and variance
-    for the :math:`k`th child.
+    for the :math:`k`\ th child.
 
     Attributes: See `GPModel` and `ParamList`.
 
@@ -335,23 +332,22 @@ class rBCMReduction(Reduction):
         
     .. math::
 
-        σ^{-2}_rBCM &= (\sum_{k=1}^{M} β_k σ^{-2}_k)
+        σ^{-2}_{rBCM} &= (\sum_{k=1}^{M} β_k σ^{-2}_k)
                       + (1 - \sum_{k=1}^{M} β_k) σ^{-2}_{\star\star}\\\\
-        μ_rBCM &= σ^2_rBCM \sum_{k=1}^{M} β_k μ_k σ^{-2}_k
+        μ_{rBCM} &= σ^2_{rBCM} \sum_{k=1}^{M} β_k μ_k σ^{-2}_k
 
-    where :math:`μ_rBCM` and :math:`σ^2_rBCM` are the final posterior
+    where :math:`μ_{rBCM}` and :math:`σ^2_{rBCM}` are the final posterior
     mean and variance, :math:`M` is the number of child experts,
     :math:`σ^{-2}_{\star\star}` is the prior precision and
     :math:`μ_k` and :math:`σ^2_k` are the posterior mean and variance
-    for the :math:`k`th child and :math:`β_k` is the weight of the
-    :math:`k`th child.
+    for the :math:`k`\ th child and :math:`β_k` is the weight of the
+    :math:`k`\ th child.
 
     The model always falls back to the prior outside of the range of
     the data.
 
     Attributes:
-        weightfunction (Callable[[Sequence[GPModel], tf.Tensor,
-            tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): 
+        weightfunction (Callable[[Sequence[GPModel], tf.Tensor, tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): 
             A function used to calculate the weight of the experts.
 
     For other attributes, see `GPModel` and `ParamList`.
@@ -363,8 +359,7 @@ class rBCMReduction(Reduction):
         Args:
             children (Sequence[GPModel]): The experts to combine the
                 opinions of.
-            weightfunction (Callable[[Sequence[GPModel], tf.Tensor,
-                tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): 
+            weightfunction (Callable[[Sequence[GPModel], tf.Tensor, tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): 
                 A function used to calculate the weight of the experts.
 
         """
@@ -421,8 +416,7 @@ class PriorDivisorReduction(GPModel, ParamAttributes):
     
     Attributes:
         child (GPModel): The expert to correct the opinion of.
-        weightfunction (Callable[[Sequence[GPModel], tf.Tensor,
-            tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): 
+        weightfunction (Callable[[Sequence[GPModel], tf.Tensor, tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): 
             A function used to calculate the weight of the expert.
 
     """
@@ -431,8 +425,7 @@ class PriorDivisorReduction(GPModel, ParamAttributes):
 
         Args:
             child (GPModel): The expert to correct the opinion of.
-            weightfunction (Callable[[Sequence[GPModel], tf.Tensor,
-                tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): 
+            weightfunction (Callable[[Sequence[GPModel], tf.Tensor, tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): 
                 A function used to calculate the weight of the expert.
 
         """
@@ -494,14 +487,13 @@ def tree_rBCM(experts, weightfunction, architecture):
         experts (GPModel | Sequence[GPModel]): The experts to 
             combine the opinions of. If this is a `GPModel`, then it
             will be shallow-copied to fill out the architecture.
-            If it is a sequence of `GPModel`s, then the architecture
+            If it is a sequence of `GPModel`\ s, then the architecture
             will have to have as many nodes in its final layer as
             there are in the sequence, i.e.
 
                 len(experts) == reduce(operator.mul,architecture,1)
 
-        weightfunction (Callable[[Sequence[GPModel], tf.Tensor,
-            tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): 
+        weightfunction (Callable[[Sequence[GPModel], tf.Tensor, tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): 
             A function used to calculate the weight of the experts.
         architecture (Sequence[int]): The branching factors at each
             layer of the rBCM.
@@ -563,8 +555,7 @@ def distributed_tree_rBCM(experts, weightfunction,
             If it is a sequence of `GPModel`s, then the architecture
             will have as many nodes in its final layer as
             there are in the sequence.
-        weightfunction (Callable[[Sequence[GPModel], tf.Tensor,
-            tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): 
+        weightfunction (Callable[[Sequence[GPModel], tf.Tensor, tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): 
             A function used to calculate the weight of the experts.
         clusterspec (tf.train.ClusterSpec): The cluster to
             distribute tasks over.

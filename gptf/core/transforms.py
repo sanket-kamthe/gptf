@@ -14,7 +14,7 @@ class Transform(with_metaclass(ABCMeta, object)):
 
     NB: Unless otherwise stated, attributes of transforms are read-only
     and should be treated as such. If you wish to change the transform
-    of a `Param`, assign a _new_ `Transform` to its `.transform` attribute.
+    of a `Param`, assign a *new* `Transform` to its `.transform` attribute.
 
     """
     @abstractmethod
