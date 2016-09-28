@@ -40,6 +40,7 @@ class Kernel(with_metaclass(ABCMeta, Parameterized)):
         array([[ 1., 1.]])
 
         You can do maths with kernels! Addition and subtraction:
+
         >>> threes = Ones() + Ones() + Ones()
         >>> threes.K(X, X2).eval()
         array([[ 3., 3.]])
@@ -51,6 +52,7 @@ class Kernel(with_metaclass(ABCMeta, Parameterized)):
         array([[ 3.,  3.]])
 
         Multiplication and division:
+
         >>> (threes * threes).K(X, X2).eval()
         array([[ 9., 9.]])
         >>> (Ones() / threes).K(X, X2).eval().round(3)
@@ -170,6 +172,7 @@ class PartiallyActive(Kernel, ParamAttributes):
     Examples:
         First, we define an example kernel that lets us inspect the
         arguments passed to `.K()`.
+
         >>> class Example(Kernel, ParamAttributes):
         ...     @tf_method()
         ...     @overrides
@@ -182,6 +185,7 @@ class PartiallyActive(Kernel, ParamAttributes):
 
         Slices are applied to the second axis of the input.
         A slice of `:3` turns `X` into `X[:, :3]`.
+
         >>> k = PartiallyActive(Example(), slice(None, 3))  # :3
         >>> X = np.arange(5).reshape(1, -1)
         >>> X_k, _ = k.compute_K(X, X)
@@ -192,6 +196,7 @@ class PartiallyActive(Kernel, ParamAttributes):
 
         If active_dims is a sequence of `int`, only dimensions in the
         sequence will be passed through.
+
         >>> k.active_dims = [1, 3, 4]
         >>> X_k, _ = k.compute_K(X, X)
         >>> X_k.shape
@@ -316,6 +321,7 @@ class Stationary(with_metaclass(ABCMeta, Kernel, ParamAttributes)):
     Examples:
         You can use ARD to automatically create one length scale for
         each dimension of the input.
+
         >>> from gptf import tfhacks
         >>> class Example(Stationary):
         ...     @tf_method()
@@ -326,11 +332,13 @@ class Stationary(with_metaclass(ABCMeta, Kernel, ParamAttributes)):
         >>> e = Example(1., 1., True)  # use ARD
 
         At first, no length scale parameter is created.
+
         >>> e.lengthscales is None
         True
 
         When `.K()` is called, the shape of `X` is used to create the
         value of `.lengthscales`.
+
         >>> X = np.array([[2., 3., 4.]])
         >>> e.get_session().run(e.K(X))
         array([[ 1.]])

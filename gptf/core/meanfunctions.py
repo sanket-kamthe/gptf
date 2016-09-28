@@ -29,6 +29,7 @@ class MeanFunction(with_metaclass(ABCMeta, Parameterized)):
         array([ 1.,  1.,  1.,  1.])
 
         You can do maths with mean functions! Addition and subtraction:
+
         >>> threes = Ones() + Ones() + Ones()
         >>> threes(X).eval()
         array([ 3.,  3.,  3.,  3.])
@@ -40,6 +41,7 @@ class MeanFunction(with_metaclass(ABCMeta, Parameterized)):
         array([ 3.,  3.,  3.,  3.])
 
         Multiplication and division:
+
         >>> (threes * threes)(X).eval()
         array([ 9., 9., 9., 9.])
         >>> (Ones() / threes)(X).eval().round(3)

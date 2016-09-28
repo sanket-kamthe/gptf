@@ -20,6 +20,7 @@ class Model(with_metaclass(ABCMeta, Parameterized)):
     `Param` and `Parameterized` objects that are children of the model
     can be used in the tensorflow expression. Children on the model are
     defined like so:
+
     >>> from overrides import overrides
     >>> from gptf import Param, ParamAttributes
     >>> class Example(Model, ParamAttributes):
@@ -107,6 +108,7 @@ class Model(with_metaclass(ABCMeta, Parameterized)):
             purposes. It has two (scalar) parameters, `.a` and `.b`, 
             which are constrained to be positive, and its likelihood is
             `10 - a - b`, regardless of X and Y.
+
             >>> import numbers
             >>> import numpy as np
             >>> from overrides import overrides
@@ -124,6 +126,7 @@ class Model(with_metaclass(ABCMeta, Parameterized)):
             ...         return 10. - self.a.tensor - self.b.tensor
 
             We won't care about the values of X and Y.
+
             >>> X = np.array(0.)
             >>> Y = np.array(0.)
 
@@ -131,6 +134,7 @@ class Model(with_metaclass(ABCMeta, Parameterized)):
 
             We can optimise the parameters of the model using a TensorFlow
             optimizer like so:
+
             >>> m = Example(3., 4.)
             >>> opt = tf.train.GradientDescentOptimizer(learning_rate=1)
             >>> m.optimize(X, Y, opt)  # use None for X, Y
@@ -141,12 +145,14 @@ class Model(with_metaclass(ABCMeta, Parameterized)):
             After the optimisation, both parameters are optimised
             towards 0, but are still positive. The constraints on the 
             parameters have been respected.
+
             >>> print("m.a: {:.3f}".format(np.asscalar(m.a.value)))
             m.a: 0.001
             >>> print("m.b: {:.3f}".format(np.asscalar(m.b.value)))
             m.b: 0.001
 
             If we fix a parameter, it is not optimized:
+            
             >>> m.a = 5.
             >>> m.b = 1.
             >>> m.b.fixed = True
@@ -163,6 +169,7 @@ class Model(with_metaclass(ABCMeta, Parameterized)):
 
             We can optimise the parameters of the model using a SciPy
             optimizer by provided a string value for `method`:
+
             >>> m = Example(3., 4.)
             >>> m.optimize(X, Y, 'L-BFGS-B', disp=False, ftol=.0001)
             message: 'SciPy optimizer completed successfully.'
@@ -172,12 +179,14 @@ class Model(with_metaclass(ABCMeta, Parameterized)):
             As for TensorFlow optimizers, after the optimisation both 
             parameters are optimised towards 0, but are still positive. 
             The constraints on the parameters have been respected.
+
             >>> print("m.a: {:.3f}".format(np.asscalar(m.a.value)))
             m.a: 0.000
             >>> print("m.b: {:.3f}".format(np.asscalar(m.b.value)))
             m.b: 0.000
 
             If we fix a parameter, it is not optimized:
+
             >>> m.a = 5.
             >>> m.b = 1.
             >>> m.b.fixed = True
@@ -194,6 +203,7 @@ class Model(with_metaclass(ABCMeta, Parameterized)):
 
             Optimisation still works, even with weird device contexts and
             session targets.
+
             >>> # set up a distributed execution environment
             >>> clusterdict = \\
             ...     { 'worker': ['localhost:2226']
@@ -212,6 +222,7 @@ class Model(with_metaclass(ABCMeta, Parameterized)):
             >>> m.tf_session_target = master.target
 
             TensorFlow:
+
             >>> m.a = 4.5
             >>> m.optimize(X, Y, opt)
             message: 'Finished iterations.'
@@ -223,6 +234,7 @@ class Model(with_metaclass(ABCMeta, Parameterized)):
             m.b: 1.000
             
             SciPy:
+
             >>> m.a = 4.5
             >>> m.optimize(X, Y, 'L-BFGS-B', disp=False, ftol=.0001)
             message: 'SciPy optimizer completed successfully.'
@@ -438,6 +450,7 @@ class GPModel(Model):
             likelihood is always `0` and whose `.build_predict()`
             returns mean `0` and variance `1` for every test point,
             or an independent covariance matrix.
+
             >>> from overrides import overrides
             >>> from gptf import ParamAttributes, tfhacks
             >>> class Example(GPModel, ParamAttributes):
@@ -480,12 +493,14 @@ class GPModel(Model):
             The shape of the returned array is `(a, b, c)`, where `a`
             is the number of samples, `b` is the number of test points
             and `c` is the number of latent functions.
+
             >>> samples = m.compute_prior_samples(test_points, 1, 2)
             >>> samples.shape
             (2, 4, 1)
 
             `.compute_prior_samples()` respects the dtype of the tensors
             returned by `.build_predict()`.
+
             >>> samples.dtype
             dtype('float64')
             >>> m.dtype = tf.float32
@@ -574,6 +589,7 @@ class GPModel(Model):
             likelihood is always `0` and whose `.build_predict()`
             returns mean `0` and variance `1` for every test point,
             or an independent covariance matrix.
+
             >>> from overrides import overrides
             >>> from gptf import ParamAttributes, tfhacks
             >>> class Example(GPModel, ParamAttributes):
@@ -619,12 +635,14 @@ class GPModel(Model):
             The shape of the returned array is `(a, b, c)`, where `a`
             is the number of samples, `b` is the number of test points
             and `c` is the number of latent functions.
+
             >>> samples = m.compute_posterior_samples(X, Y, test_points, 2)
             >>> samples.shape
             (2, 4, 1)
 
             `.compute_posterior_samples()` respects the dtype of the tensors
             returned by `.build_predict()`.
+
             >>> samples.dtype
             dtype('float64')
             >>> m.dtype = tf.float32

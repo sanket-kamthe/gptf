@@ -97,6 +97,7 @@ class WrappedValue(with_metaclass(ABCMeta, WrappedTF)):
             .. rubric:: Shape changes
 
             On 'raise', we raise an error on shape change:
+
             >>> a = np.array([1,2,3])
             >>> b = np.array([1,2])
             >>> e = Example(a, on_shape_change='raise')
@@ -107,6 +108,7 @@ class WrappedValue(with_metaclass(ABCMeta, WrappedTF)):
 
             On 'recompile', we clear the compiled function cache of everything
             higher in the tree:
+
             >>> w = Example()
             >>> w.e = e
             >>> w.cache[0] = 123
@@ -116,6 +118,7 @@ class WrappedValue(with_metaclass(ABCMeta, WrappedTF)):
             False
 
             On 'pass', we do nothing and assign the new value anyway.
+
             >>> w.cache[0] = 123
             >>> w.e.value = a
             >>> 0 in w.cache
@@ -218,6 +221,7 @@ def share_properties(*properties):
     Examples:
         Here we set up an example class with a property and an
         inheriting class that overrides that property.
+
         >>> @share_properties('a')
         ... class Example(Proxy, Leaf):
         ...     @property
@@ -235,6 +239,7 @@ def share_properties(*properties):
 
         The inheriting class shares the property between the copies
         using the property's getter/setter/deleter methods.
+
         >>> e = Example()
         >>> copies = [e.copy() for _ in range(3)]
         >>> e.a = 1
@@ -330,6 +335,7 @@ class Param(ProxyWrappedValue, Leaf):
 
         You can get and set the (numpy) value of a `Param` using its 
         `value` attribute:
+
         >>> p = Param(1.0)
         >>> p.value
         array(1.0)
@@ -339,6 +345,7 @@ class Param(ProxyWrappedValue, Leaf):
 
         A tensor representing the paremeter can be acquired using the 
         `tensor` attribute.
+
         >>> isinstance(p.tensor, tf.Tensor)
         True
         >>> with p.get_session() as sess:
@@ -347,6 +354,7 @@ class Param(ProxyWrappedValue, Leaf):
 
         Behind the scenes, this creates a `tf.Variable`, accessible using the
         `free_state` attribute. We can use this variable in a session like so:
+
         >>> with p.get_session() as sess:
         ...     print(".free_state: {}".format(sess.run(p.free_state)))
         ...     print(".value: {}".format(p.value))
@@ -367,6 +375,7 @@ class Param(ProxyWrappedValue, Leaf):
 
         The session returned by `p.get_session()` maintains the value of 
         `p.free_state` across uses:
+
         >>> with p.get_session() as sess:
         ...     print(sess.run(p.free_state))
         4.0
@@ -375,6 +384,7 @@ class Param(ProxyWrappedValue, Leaf):
         tree of `WrappedTF`, each `Param`'s `.get_session()` will return
         the same session, and every `Param` in the tree will have its free
         state maintained in that session.
+
         >>> class AttributeWrappedTF(WrappedTF, AttributeTree):
         ...     pass
         >>> w = AttributeWrappedTF()
@@ -395,6 +405,7 @@ class Param(ProxyWrappedValue, Leaf):
         In that case, we must run `p.on_session_birth()` after the session
         has been installed as the default session and `p.on_session_death()`
         just before the session closes.
+
         >>> p = Param(4.0)
         >>> with tf.Session() as sess:
         ...     p.on_session_birth(sess)
@@ -420,6 +431,7 @@ class Param(ProxyWrappedValue, Leaf):
 
         Attempting to set the tensor or free_state paremeters results in an
         error:
+
         >>> p.tensor = tf.constant(1)
         Traceback (most recent call last):
             ...
@@ -435,6 +447,7 @@ class Param(ProxyWrappedValue, Leaf):
         A fixed parameter should not be optimised. Attempting to
         access the `.free_state` attribute of a fixed parameter will result
         in a `FixedParameterError`:
+
         >>> p = Param(2.0)
         >>> p.fixed = True
         >>> p.free_state
@@ -467,6 +480,7 @@ class Param(ProxyWrappedValue, Leaf):
 
         The associated free state can be obtained using the `.free_state`
         parameter.
+
         >>> p = Param(1.0, transform=transforms.Exp())
         >>> with p.get_session() as sess:
         ...     print(p.value)
@@ -476,6 +490,7 @@ class Param(ProxyWrappedValue, Leaf):
 
         The free state can then be freely optimised, and `p.value` and 
         `p.tensor` will remain constrained by the transform.
+
         >>> p = Param(1.0, transform=transforms.Exp())  # p.value > 0
         >>> with p.get_session() as sess:
         ...     _ = sess.run(p.free_state.assign(-100))
@@ -486,6 +501,7 @@ class Param(ProxyWrappedValue, Leaf):
 
         Tensorflow will take the transform into account when calculating
         the derivative of `p.tensor` w.r.t. its free state:
+
         >>> from math import e
         >>> p = Param(e)
         >>> grad_identity = tf.gradients([p.tensor], [p.free_state])[0]
@@ -503,11 +519,13 @@ class Param(ProxyWrappedValue, Leaf):
         You can create a copy of a `Param` using `Param.copy()`. The
         new copy represents the same parameter, so the value and
         various items of state (see below) are the same.
+
         >>> p = Param(1.0, transform=transforms.Exp())
         >>> copy = p.copy()
 
         Copies have the same value as the original, and updating the
         value of the copy updates the value of the original.
+
         >>> np.array_equal(p.value, copy.value)
         True
         >>> p.value = 5.0
@@ -516,6 +534,7 @@ class Param(ProxyWrappedValue, Leaf):
 
         Copies have the same transform, and setting the transform
         of a copy sets the transform of the original.
+
         >>> copy.transform is p.transform
         True
         >>> copy.transform = transforms.Identity()
@@ -524,6 +543,7 @@ class Param(ProxyWrappedValue, Leaf):
 
         Copies have the same "fixed" flag. Fixing a copy fixes the
         original and vice-versa.
+
         >>> p.fixed = True
         >>> copy.fixed
         True
@@ -532,12 +552,14 @@ class Param(ProxyWrappedValue, Leaf):
         False
 
         Copies have the same free state.
+
         >>> p.free_state is copy.free_state
         True
 
         This means that it is *very important* that every copy of of a
         `Param` has the same device context and graph, or odd things
         happen.
+
         >>> class AttributeWrappedTF(AttributeTree, WrappedTF):
         ...     pass
         >>> treeparam = Param(1.0)
@@ -555,10 +577,12 @@ class Param(ProxyWrappedValue, Leaf):
         `w.child.param` is? Currently, there is no system in place
         to resolve this. In this situation, one should define the 
         device context of `treeparam` explicitly:
+
         >>> treeparam.tf_device = '/job:spoon'
 
         To create a new param with the same value, pass the value to
         `Param.__init__()`.
+
         >>> notacopy = Param(p.value, transform=p.transform)
 
     """
@@ -760,6 +784,7 @@ class DataHolder(ProxyWrappedValue, Leaf):
         .. rubric:: Getting and setting values
 
         To get and set the value of the data, use the `.value` property:
+
         >>> a = np.array([1,2,3])
         >>> b = np.array([4,5,6])
         >>> d = DataHolder(a)
@@ -773,11 +798,13 @@ class DataHolder(ProxyWrappedValue, Leaf):
         
         To access the value from TensorFlow, first build an op that relies
         on the `.tensor` attribute:
+
         >>> d = DataHolder(a)
         >>> op = tf.add(d.tensor, 1)
 
         Then evaluate the op in a session, passing in the feed dictionary
         to `tf.Session.run()`:
+
         >>> with d.get_session() as sess:
         ...     sess.run(op, feed_dict=d.feed_dict)
         array([2, 3, 4])
@@ -787,11 +814,13 @@ class DataHolder(ProxyWrappedValue, Leaf):
         You can create a copy of a `DataHolder` using `.copy()`. The
         new copy represents the same data, so the value and
         various items of state (see below) are the same.
+
         >>> d = DataHolder([1., 1., 1.])
         >>> copy = d.copy()
 
         Copies have the same value as the original, and updating the
         value of the copy updates the value of the original.
+
         >>> np.array_equal(d.value, copy.value)
         True
         >>> d.value = [5., 4., 3.]
@@ -799,12 +828,14 @@ class DataHolder(ProxyWrappedValue, Leaf):
         array([ 5., 4., 3.])
 
         Copies have the same placeholder.
+
         >>> d.tensor is copy.tensor
         True
 
         This means that it, just in the case of `Param`s, it is 
         *very important* that every copy of a `DataHolder` has the
         same device context and graph, or odd things happen.
+
         >>> class AttributeWrappedTF(AttributeTree, WrappedTF):
         ...     pass
         >>> treedata = DataHolder(1.0)
@@ -819,10 +850,12 @@ class DataHolder(ProxyWrappedValue, Leaf):
         In circumstances like the above, where copies have
         conflicting parental device contexts, set the device
         context explicitly.
+
         >>> treedata.tf_device = '/job:spoon'
         
         To create a new dataholder with the same value, pass the value
         to `DataHolder.__init__()`.
+
         >>> notacopy = DataHolder(d.value)
         
     """
@@ -903,6 +936,7 @@ class Parameterized(WrappedTF):
 
         The `.params` and `.data` attributes return all instances of their
         associated types lower in the tree.
+
         >>> set(m.params) == {m.param, m.child.a, m.child.b}
         True
         >>> set(m.data_holders) == {m.X, m.Y, m.child.data}
@@ -1144,16 +1178,19 @@ class Parameterized(WrappedTF):
             >>> d = np.array([[1.]])
 
             A zero-dimensional array produces a scalar representation:
+
             >>> Parameterized._value_str(a, 5, '')
             '1.000'
 
             One dimensional arrays are repreduced up to `max_len`:
+
             >>> Parameterized._value_str(b, 5, '')
             '[0, 1, 2, 3, 4]'
             >>> Parameterized._value_str(c, 5, '')
             '[0, 1, 2, 3, ...]'
 
             Multidemensional arrays appears as a placeholder value.
+
             >>> Parameterized._value_str(d, 5, '')
             '<np.ndarray>'
           
@@ -1191,6 +1228,7 @@ class ParamAttributes(Parameterized, AttributeTree):
         Examples:
             Assigning a numerical, numpy or string value to a `Param` or 
             `DataHolder` child assigns to that child's value instead.
+
             >>> p = ParamAttributes()
             >>> p.param = Param(1.0)
             >>> p.param = 2.0
@@ -1206,6 +1244,7 @@ class ParamAttributes(Parameterized, AttributeTree):
             array(2.0)
 
             Assigning anything else overwrites the attribute:
+
             >>> class Example():
             ...     pass
             >>> p.param = Example()
@@ -1216,6 +1255,7 @@ class ParamAttributes(Parameterized, AttributeTree):
             True
 
             Children still know who their parents are.
+
             >>> p.param = Param(1.0)
             >>> p.param.parent is p
             True
@@ -1235,6 +1275,7 @@ class ParamList(Parameterized, ListTree):
 
     Examples:
         You can set the value of children by assigning to their index:
+
         >>> p = ParamList()
         >>> p.append(Param(1.))
         >>> p.append(DataHolder(1.))
@@ -1250,6 +1291,7 @@ class ParamList(Parameterized, ListTree):
         array(5.0)
 
         You can still overwrite parameters etc with new ones:
+
         >>> p[0] = ParamAttributes()
         >>> isinstance(p[0], Param)
         False
@@ -1305,6 +1347,7 @@ def autoflow(*placeholder_specs):
 
     Examples:
         The decorator syntax looks like this:
+
         >>> class MyClass(Parameterized, AttributeTree):
         ...     @autoflow((tf.float64,), (tf.float64,))
         ...     def tf_add(self, a, b):
@@ -1316,6 +1359,7 @@ def autoflow(*placeholder_specs):
 
         Now we can leverage the mighty power of tensorflow without ever
         having to get our hands dirty:
+
         >>> m = MyClass()
         >>> m.tf_add(5, 9)
         14.0
@@ -1327,6 +1371,7 @@ def autoflow(*placeholder_specs):
         `MyClass.tf_reduce_sum` will only allow arguments that match the
         shape `[1, None]`; that is, rank 2 tensors whose first dimension
         is `5`.
+
         >>> # shape is (3, 2), compatible with [3, None]
         >>> m.tf_reduce_sum([[1., 2.], [2., 3.], [3., 4.]])
         array([ 3., 5., 7.])
@@ -1337,6 +1382,7 @@ def autoflow(*placeholder_specs):
         ValueError: Cannot feed value of shape (2, 1)...
 
         Autoflowed methods still work if the device context changes:
+
         >>> # set up a distributed execution environment
         >>> clusterdict = \\
         ...     { 'worker': ['localhost:2224']
