@@ -7,12 +7,21 @@ Public API
 Parameterized classes
 ---------------------
 
+Jump to:
+
+- :py:class:`gptf.Parameterized`
+- :py:class:`gptf.ParamAttributes`
+- :py:class:`gptf.ParamList`
+- :py:class:`gptf.Param`
+- :py:class:`gptf.DataHolder`
+- :py:func:`gptf.tf_method`
+
 To create a new parameterized class, subclass :py:class:`gptf.Parameterized`
 and one of :py:class:`gptf.ParamAttributes` or :py:class:`gptf.ParamList`,
 depending on how you want parameters to be accessed.
 
 Methods of parameterized objects that create tensorflow objects should
-be decorated with :py:function:`gptf.tf_method()`.
+be decorated with :py:func:`gptf.tf_method()`.
 
 .. autoclass:: gptf.Parameterized
    :members:
@@ -20,8 +29,7 @@ be decorated with :py:function:`gptf.tf_method()`.
    :inherited-members:
 
 .. autoclass:: gptf.ParamAttributes
-   :members:
-   :undoc-members:
+   :members: __setattr__
 
 .. autoclass:: gptf.ParamList
    :members:
@@ -30,12 +38,10 @@ be decorated with :py:function:`gptf.tf_method()`.
 .. autoclass:: gptf.Param
    :members:
    :undoc-members:
-   :inherited-members:
 
 .. autoclass:: gptf.DataHolder
    :members:
    :undoc-members:
-   :inherited-members:
 
 .. autofunction:: gptf.tf_method
 
@@ -44,15 +50,23 @@ Autoflow
 
 The autoflow decorator allows you to define a method of a parameterized class
 using Tensorflow, but interact with it using NumPy. It applies 
-`gptf.tf_method()` for you.
+:py:func:`gptf.tf_method()` for you.
 
 .. autofunction:: gptf.autoflow
+   :noindex:
 
 Models
 ------
 
+Jump to:
+
+- :py:class:`gptf.Model`
+- :py:class:`gptf.GPModel`
+
 These abstract base classes implement models that can be optimised. Subclass
-these and implement the abstract methods to implement new models.
+these and implement the abstract methods to implement new models. Both
+:py:class:`gptf.Model` and :py:class:`gptf.GPModel` inherit from
+:py:class:`gptf.Parameterized`.
 See GPR_ for more information.
 
 .. autoclass:: gptf.Model

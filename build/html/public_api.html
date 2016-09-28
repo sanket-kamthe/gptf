@@ -47,11 +47,20 @@
 </div>
 <div class="section" id="parameterized-classes">
 <h2>Parameterized classes<a class="headerlink" href="#parameterized-classes" title="Permalink to this headline">¶</a></h2>
+<p>Jump to:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#gptf.Parameterized" title="gptf.Parameterized"><code class="xref py py-class docutils literal"><span class="pre">gptf.Parameterized</span></code></a></li>
+<li><a class="reference internal" href="#gptf.ParamAttributes" title="gptf.ParamAttributes"><code class="xref py py-class docutils literal"><span class="pre">gptf.ParamAttributes</span></code></a></li>
+<li><a class="reference internal" href="#gptf.ParamList" title="gptf.ParamList"><code class="xref py py-class docutils literal"><span class="pre">gptf.ParamList</span></code></a></li>
+<li><a class="reference internal" href="#gptf.Param" title="gptf.Param"><code class="xref py py-class docutils literal"><span class="pre">gptf.Param</span></code></a></li>
+<li><a class="reference internal" href="#gptf.DataHolder" title="gptf.DataHolder"><code class="xref py py-class docutils literal"><span class="pre">gptf.DataHolder</span></code></a></li>
+<li><a class="reference internal" href="#gptf.tf_method" title="gptf.tf_method"><code class="xref py py-func docutils literal"><span class="pre">gptf.tf_method()</span></code></a></li>
+</ul>
 <p>To create a new parameterized class, subclass <a class="reference internal" href="#gptf.Parameterized" title="gptf.Parameterized"><code class="xref py py-class docutils literal"><span class="pre">gptf.Parameterized</span></code></a>
 and one of <a class="reference internal" href="#gptf.ParamAttributes" title="gptf.ParamAttributes"><code class="xref py py-class docutils literal"><span class="pre">gptf.ParamAttributes</span></code></a> or <a class="reference internal" href="#gptf.ParamList" title="gptf.ParamList"><code class="xref py py-class docutils literal"><span class="pre">gptf.ParamList</span></code></a>,
 depending on how you want parameters to be accessed.</p>
 <p>Methods of parameterized objects that create tensorflow objects should
-be decorated with <a href="#id1"><span class="problematic" id="id2">:py:function:`gptf.tf_method()`</span></a>.</p>
+be decorated with <a class="reference internal" href="#gptf.tf_method" title="gptf.tf_method"><code class="xref py py-func docutils literal"><span class="pre">gptf.tf_method()</span></code></a>.</p>
 <dl class="class">
 <dt id="gptf.Parameterized">
 <em class="property">class </em><code class="descclassname">gptf.</code><code class="descname">Parameterized</code><a class="reference internal" href="_modules/gptf/core/params.html#Parameterized"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.Parameterized" title="Permalink to this definition">¶</a></dt>
@@ -910,6 +919,59 @@ drawing characters and ANSI terminal escape codes.
 <dt id="gptf.ParamAttributes">
 <em class="property">class </em><code class="descclassname">gptf.</code><code class="descname">ParamAttributes</code><a class="reference internal" href="_modules/gptf/core/params.html#ParamAttributes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.ParamAttributes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parameters are accessed using attributes.</p>
+<dl class="method">
+<dt id="gptf.ParamAttributes.__setattr__">
+<code class="descname">__setattr__</code><span class="sig-paren">(</span><em>name</em>, <em>value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/params.html#ParamAttributes.__setattr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.ParamAttributes.__setattr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the value of <a href="#id1"><span class="problematic" id="id2">`</span></a>Param`s and <a href="#id3"><span class="problematic" id="id4">`</span></a>DataHolder`s on assignment.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>name</strong> (<em>str</em>) &#8211; The name of the attribute.</li>
+<li><strong>value</strong> &#8211; The value to set.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Assigning a numerical, numpy or string value to a <code class="code docutils literal"><span class="pre">Param</span></code> or
+<code class="code docutils literal"><span class="pre">DataHolder</span></code> child assigns to that child&#8217;s value instead.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">ParamAttributes</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">param</span> <span class="o">=</span> <span class="n">Param</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">param</span> <span class="o">=</span> <span class="mf">2.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">param</span><span class="p">,</span> <span class="n">Param</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">value</span>
+<span class="go">array(2.0)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">DataHolder</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="mf">2.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">DataHolder</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">value</span>
+<span class="go">array(2.0)</span>
+</pre></div>
+</div>
+<p>Assigning anything else overwrites the attribute:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Example</span><span class="p">():</span>
+<span class="gp">... </span>    <span class="k">pass</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">param</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">param</span><span class="p">,</span> <span class="n">Example</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">Example</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>Children still know who their parents are.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">param</span> <span class="o">=</span> <span class="n">Param</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">parent</span> <span class="ow">is</span> <span class="n">p</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -1235,554 +1297,39 @@ device context of <code class="code docutils literal"><span class="pre">treepara
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">notacopy</span> <span class="o">=</span> <span class="n">Param</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">p</span><span class="o">.</span><span class="n">transform</span><span class="p">)</span>
 </pre></div>
 </div>
-<dl class="attribute">
-<dt id="gptf.Param.NO_DEVICE">
-<code class="descname">NO_DEVICE</code><a class="headerlink" href="#gptf.Param.NO_DEVICE" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="class">
-<dt id="gptf.Param.Shared">
-<em class="property">class </em><code class="descname">Shared</code><a class="headerlink" href="#gptf.Param.Shared" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="gptf.Param.cache">
-<code class="descclassname">Param.</code><code class="descname">cache</code><a class="headerlink" href="#gptf.Param.cache" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="gptf.Param.children">
-<code class="descclassname">Param.</code><code class="descname">children</code><a class="headerlink" href="#gptf.Param.children" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the children of this object at the time of calling.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(tuple) The current children of the object.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="gptf.Param.clear_all_ancestor_caches">
-<code class="descclassname">Param.</code><code class="descname">clear_all_ancestor_caches</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gptf.Param.clear_all_ancestor_caches" title="Permalink to this definition">¶</a></dt>
-<dd><p>Clears the caches of the ancestors of all copies.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="gptf.Param.clear_ancestor_caches">
-<code class="descclassname">Param.</code><code class="descname">clear_ancestor_caches</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gptf.Param.clear_ancestor_caches" title="Permalink to this definition">¶</a></dt>
-<dd><p>Clears the caches of direct ancestors.</p>
-<p class="rubric">Examples</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Example</span><span class="p">(</span><span class="n">AttributeTree</span><span class="p">,</span> <span class="n">TreeWithCache</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="k">pass</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">child_0</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">child_1</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">child_0</span><span class="o">.</span><span class="n">child</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">fill_cache</span><span class="p">():</span>
-<span class="gp">... </span>    <span class="n">t</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;123&#39;</span>
-<span class="gp">... </span>    <span class="n">t</span><span class="o">.</span><span class="n">child_0</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;456&#39;</span>
-<span class="gp">... </span>    <span class="n">t</span><span class="o">.</span><span class="n">child_1</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;789&#39;</span>
-<span class="gp">... </span>    <span class="n">t</span><span class="o">.</span><span class="n">child_0</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;ABC&#39;</span>
-</pre></div>
-</div>
-<p>Clearing <code class="code docutils literal"><span class="pre">t.child_0.child</span></code>&#8216;s ancestor&#8217;s cache clears
-<code class="code docutils literal"><span class="pre">t</span></code>&#8216;s cache and <code class="code docutils literal"><span class="pre">t.child_0</span></code>&#8216;s cache, but not <code class="code docutils literal"><span class="pre">t.child_1</span></code>&#8216;s or
-<code class="code docutils literal"><span class="pre">t.child_0.child</span></code>&#8216;s.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fill_cache</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">child_0</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">clear_ancestor_caches</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="gt">Traceback (most recent call last):</span>
-    <span class="o">...</span>
-<span class="gr">KeyError</span>: <span class="n">message</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">child_0</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="gt">Traceback (most recent call last):</span>
-    <span class="o">...</span>
-<span class="gr">KeyError</span>: <span class="n">message</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">child_1</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="go">&#39;789&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">child_0</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="go">&#39;ABC&#39;</span>
-</pre></div>
-</div>
-</dd></dl>
-
 <dl class="method">
 <dt id="gptf.Param.clear_cache">
-<code class="descclassname">Param.</code><code class="descname">clear_cache</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/params.html#Param.clear_cache"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.Param.clear_cache" title="Permalink to this definition">¶</a></dt>
+<code class="descname">clear_cache</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/params.html#Param.clear_cache"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.Param.clear_cache" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save the variable value before it is cleared from the cache.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="gptf.Param.clear_subtree_caches">
-<code class="descclassname">Param.</code><code class="descname">clear_subtree_caches</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gptf.Param.clear_subtree_caches" title="Permalink to this definition">¶</a></dt>
-<dd><p>Clears the cache of this node and every node lower than it.</p>
-<p class="rubric">Examples</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Example</span><span class="p">(</span><span class="n">AttributeTree</span><span class="p">,</span> <span class="n">TreeWithCache</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="k">pass</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">child</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">fill_cache</span><span class="p">():</span>
-<span class="gp">... </span>    <span class="n">t</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">123</span>
-<span class="gp">... </span>    <span class="n">t</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">456</span>
-</pre></div>
-</div>
-<p>Clearing a parent&#8217;s cache clears its child&#8217;s cache:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fill_cache</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">clear_subtree_caches</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="gt">Traceback (most recent call last):</span>
-    <span class="o">...</span>
-<span class="gr">KeyError</span>: <span class="n">message</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="gt">Traceback (most recent call last):</span>
-    <span class="o">...</span>
-<span class="gr">KeyError</span>: <span class="n">message</span>
-</pre></div>
-</div>
-<p>Clearing a child&#8217;s cache does not clear its parent&#8217;s cache:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fill_cache</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">clear_subtree_caches</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="go">123</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="gt">Traceback (most recent call last):</span>
-    <span class="o">...</span>
-<span class="gr">KeyError</span>: <span class="n">message</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="method">
-<dt id="gptf.Param.clear_tree_caches">
-<code class="descclassname">Param.</code><code class="descname">clear_tree_caches</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gptf.Param.clear_tree_caches" title="Permalink to this definition">¶</a></dt>
-<dd><p>Clears every cache in the tree.</p>
-<p class="rubric">Examples</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Example</span><span class="p">(</span><span class="n">AttributeTree</span><span class="p">,</span> <span class="n">TreeWithCache</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="k">pass</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">child</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">fill_cache</span><span class="p">():</span>
-<span class="gp">... </span>    <span class="n">t</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">123</span>
-<span class="gp">... </span>    <span class="n">t</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">456</span>
-</pre></div>
-</div>
-<p>Clearing a parent&#8217;s cache clears its child&#8217;s cache:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fill_cache</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">clear_tree_caches</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="gt">Traceback (most recent call last):</span>
-    <span class="o">...</span>
-<span class="gr">KeyError</span>: <span class="n">message</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="gt">Traceback (most recent call last):</span>
-    <span class="o">...</span>
-<span class="gr">KeyError</span>: <span class="n">message</span>
-</pre></div>
-</div>
-<p>Clearing a child&#8217;s cache clears its parent&#8217;s cache:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fill_cache</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">clear_tree_caches</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="gt">Traceback (most recent call last):</span>
-    <span class="o">...</span>
-<span class="gr">KeyError</span>: <span class="n">message</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="gt">Traceback (most recent call last):</span>
-    <span class="o">...</span>
-<span class="gr">KeyError</span>: <span class="n">message</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="method">
-<dt id="gptf.Param.copy">
-<code class="descclassname">Param.</code><code class="descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gptf.Param.copy" title="Permalink to this definition">¶</a></dt>
-<dd><p>Copies have empty caches.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="gptf.Param.feed_dict">
-<code class="descclassname">Param.</code><code class="descname">feed_dict</code><a class="headerlink" href="#gptf.Param.feed_dict" title="Permalink to this definition">¶</a></dt>
+<code class="descname">feed_dict</code><a class="headerlink" href="#gptf.Param.feed_dict" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="gptf.Param.fixed">
-<code class="descclassname">Param.</code><code class="descname">fixed</code><a class="headerlink" href="#gptf.Param.fixed" title="Permalink to this definition">¶</a></dt>
+<code class="descname">fixed</code><a class="headerlink" href="#gptf.Param.fixed" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="gptf.Param.free_state">
-<code class="descclassname">Param.</code><code class="descname">free_state</code><a class="headerlink" href="#gptf.Param.free_state" title="Permalink to this definition">¶</a></dt>
+<code class="descname">free_state</code><a class="headerlink" href="#gptf.Param.free_state" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a variable that maps to the free state of the parameter.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="gptf.Param.get_session">
-<code class="descclassname">Param.</code><code class="descname">get_session</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gptf.Param.get_session" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets a TensorFlow session in which ops can be run.</p>
-<p>Returns the default session if there is one. Else, returns a
-new session using the session target of the highest parent.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The default session if there is one, else a
-session matching the session target of the highest parent.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">(tf.Session)</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Examples</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gptf.core.trees</span> <span class="k">import</span> <span class="n">AttributeTree</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">AttributeWrappedTF</span><span class="p">(</span><span class="n">WrappedTF</span><span class="p">,</span> <span class="n">AttributeTree</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="k">pass</span>
-</pre></div>
-</div>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">w</span> <span class="o">=</span> <span class="n">AttributeWrappedTF</span><span class="p">()</span>
-</pre></div>
-</div>
-<p>If there is already a default session, returns that
-session in a NullContextWrapper.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
-<span class="gp">... </span>    <span class="n">sess0</span> <span class="o">=</span> <span class="n">w</span><span class="o">.</span><span class="n">get_session</span><span class="p">()</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sess0</span><span class="p">)</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
-<span class="gp">... </span>    <span class="n">sess0</span><span class="o">.</span><span class="n">_NullContextWrapper__wrapped</span> <span class="ow">is</span> <span class="n">sess</span>
-<span class="go">NullContextWrapper</span>
-<span class="go">True</span>
-</pre></div>
-</div>
-<p>It&#8217;s safe to use w.get_session() in a with block, even if
-there is a default session. Doing so won&#8217;t call the
-<code class="code docutils literal"><span class="pre">__enter__</span></code> or <code class="code docutils literal"><span class="pre">__exit__</span></code> methods of the default session.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">AnnounceSession</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;__enter__ called&#39;</span><span class="p">)</span>
-<span class="gp">... </span>        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__enter__</span><span class="p">()</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;__exit__ called&#39;</span><span class="p">)</span>
-<span class="gp">... </span>        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__exit__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">AnnounceSession</span><span class="p">()</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;before nested with&#39;</span><span class="p">)</span>
-<span class="gp">... </span>    <span class="k">with</span> <span class="n">w</span><span class="o">.</span><span class="n">get_session</span><span class="p">()</span> <span class="k">as</span> <span class="n">sess0</span><span class="p">:</span>
-<span class="gp">... </span>        <span class="k">assert</span> <span class="n">sess</span> <span class="ow">is</span> <span class="n">sess0</span>
-<span class="gp">... </span>        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;nested with&#39;</span><span class="p">)</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;after nested with&#39;</span><span class="p">)</span>
-<span class="go">__enter__ called</span>
-<span class="go">before nested with</span>
-<span class="go">nested with</span>
-<span class="go">after nested with</span>
-<span class="go">__exit__ called</span>
-</pre></div>
-</div>
-<p>Else, returns a new session each time:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sess2</span> <span class="o">=</span> <span class="n">w</span><span class="o">.</span><span class="n">get_session</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sess2</span> <span class="ow">is</span> <span class="n">sess</span>
-<span class="go">False</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sess3</span> <span class="o">=</span> <span class="n">w</span><span class="o">.</span><span class="n">get_session</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sess2</span> <span class="ow">is</span> <span class="n">sess3</span>
-<span class="go">False</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sess2</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sess3</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</pre></div>
-</div>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Example</span><span class="p">(</span><span class="n">WrappedTF</span><span class="p">,</span> <span class="n">AttributeTree</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">op</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">op_placement_context</span><span class="p">():</span>
-<span class="gp">... </span>            <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-<span class="gp">...</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">depth</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="n">tot</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="gp">... </span>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-<span class="gp">... </span>            <span class="n">tot</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">depth</span><span class="p">()</span>
-<span class="gp">... </span>        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_session</span><span class="p">()</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
-<span class="gp">... </span>            <span class="n">tot</span> <span class="o">+=</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">op</span><span class="p">())</span>
-<span class="gp">... </span>        <span class="k">return</span> <span class="n">tot</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># we&#39;re about to do weird things with op placement, and we</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># don&#39;t want it in the default graph where it can mess with</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># other doctests.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">tf_graph</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">child</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
-</pre></div>
-</div>
-<p><code class="code docutils literal"><span class="pre">Example</span></code> is a simple class that provides a method, <code class="code docutils literal"><span class="pre">.depth()</span></code>,
-that uses TensorFlow to calculate an object&#8217;s depth in the tree.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">depth</span><span class="p">()</span>
-<span class="go">1</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">depth</span><span class="p">()</span>
-<span class="go">2</span>
-</pre></div>
-</div>
-<p><code class="code docutils literal"><span class="pre">Example.op()</span></code> places its op based on the hierachical device
-context. If we change <code class="code docutils literal"><span class="pre">a</span></code>&#8216;s device context, we also change
-<code class="code docutils literal"><span class="pre">a.child</span></code>&#8216;s.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">op</span><span class="p">()</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
-</pre></div>
-</div>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">tf_device</span> <span class="o">=</span> <span class="s1">&#39;/job:worker/task:0&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">op</span><span class="p">()</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
-<span class="go">/job:worker/task:0</span>
-</pre></div>
-</div>
-<p><code class="code docutils literal"><span class="pre">a.child.depth()</span></code> will now result in an error:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">depth</span><span class="p">()</span>
-<span class="gt">Traceback (most recent call last):</span>
-    <span class="o">...</span>
-<span class="gr">tensorflow.python.framework.errors.InvalidArgumentError</span>: <span class="n">...</span>
-</pre></div>
-</div>
-<p><code class="code docutils literal"><span class="pre">a.child.op()</span></code> is now being placed as if it were in a distributed
-context, and the default session knows nothing about jobs or tasks.
-However, if we set <code class="code docutils literal"><span class="pre">a.session_target</span></code> appropriately,
-<code class="code docutils literal"><span class="pre">a.child.get_session()</span></code> will return a session capable of
-running ops created with <code class="code docutils literal"><span class="pre">a.child.op_placement_context</span></code>.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">clusterdict</span> <span class="o">=</span> \
-<span class="gp">... </span>    <span class="p">{</span> <span class="s1">&#39;worker&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;localhost:2222&#39;</span><span class="p">]</span>
-<span class="gp">... </span>    <span class="p">,</span> <span class="s1">&#39;master&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;localhost:2223&#39;</span><span class="p">]</span>
-<span class="gp">... </span>    <span class="p">}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">ClusterSpec</span><span class="p">(</span><span class="n">clusterdict</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">worker</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">Server</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">job_name</span><span class="o">=</span><span class="s1">&#39;worker&#39;</span><span class="p">,</span> <span class="n">task_index</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">worker</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">master</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">Server</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">job_name</span><span class="o">=</span><span class="s1">&#39;master&#39;</span><span class="p">,</span> <span class="n">task_index</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">tf_session_target</span> <span class="o">=</span> <span class="n">master</span><span class="o">.</span><span class="n">target</span>
-</pre></div>
-</div>
-<p><code class="code docutils literal"><span class="pre">a.child.depth()</span></code> should now run smoothly.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">depth</span><span class="p">()</span>
-<span class="go">2</span>
-</pre></div>
-</div>
-<p>In general, this means that as long as the session target of
-the root is set correctly, anything lower in the tree that uses
-<code class="code docutils literal"><span class="pre">self.get_session()</span></code> should work without fuss.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="gptf.Param.highest_parent">
-<code class="descclassname">Param.</code><code class="descname">highest_parent</code><a class="headerlink" href="#gptf.Param.highest_parent" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the highest parent in the tree.</p>
-<p class="rubric">Examples</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Example</span><span class="p">(</span><span class="n">Tree</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
-<span class="gp">... </span>        <span class="bp">self</span><span class="o">.</span><span class="n">_children</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">add_child</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">child</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
-<span class="gp">... </span>        <span class="n">child</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="bp">self</span>
-<span class="gp">... </span>    <span class="nd">@property</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">)</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="n">copy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
-<span class="gp">... </span>        <span class="n">copy</span><span class="o">.</span><span class="n">__dict__</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-<span class="gp">... </span>        <span class="n">copy</span><span class="o">.</span><span class="n">_children</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">]</span>
-<span class="gp">... </span>        <span class="n">copy</span><span class="o">.</span><span class="n">_set_parent</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
-<span class="gp">... </span>        <span class="k">return</span> <span class="n">copy</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">_unregister_child</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">child</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="k">if</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">:</span>
-<span class="gp">... </span>            <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
-<span class="gp">... </span>            <span class="n">child</span><span class="o">.</span><span class="n">_set_parent</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
-<span class="gp">... </span>        <span class="k">else</span><span class="p">:</span>
-<span class="gp">... </span>            <span class="k">raise</span> <span class="n">BadParentError</span>
-</pre></div>
-</div>
-<p>An object at the top of the tree is its own highest parent.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">highest_parent</span> <span class="ow">is</span> <span class="n">p</span>
-<span class="go">True</span>
-</pre></div>
-</div>
-<p>Objects lower down in the tree recurse up the tree to find their
-highest parent.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">Example</span><span class="p">())</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">Example</span><span class="p">())</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">highest_parent</span> <span class="ow">is</span> <span class="n">p</span>
-<span class="go">True</span>
-</pre></div>
-</div>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="gptf.Param.initializer">
-<code class="descclassname">Param.</code><code class="descname">initializer</code><a class="headerlink" href="#gptf.Param.initializer" title="Permalink to this definition">¶</a></dt>
+<code class="descname">initializer</code><a class="headerlink" href="#gptf.Param.initializer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialises the internal <code class="code docutils literal"><span class="pre">tf.Variable</span></code> to the correct value.</p>
 <p>This op is automatically run for sessions obtained using
 <code class="code docutils literal"><span class="pre">.get_session()</span></code>.</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="gptf.Param.long_name">
-<code class="descclassname">Param.</code><code class="descname">long_name</code><a class="headerlink" href="#gptf.Param.long_name" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets the long name of <code class="code docutils literal"><span class="pre">self</span></code>.</p>
-<p>The long name of an object is the concatenation of the names of its
-parents, starting from the highest parent.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The full path to the object in the tree.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">(str)</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Examples</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Example</span><span class="p">(</span><span class="n">Tree</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
-<span class="gp">... </span>        <span class="bp">self</span><span class="o">.</span><span class="n">_children</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">add_child</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">child</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
-<span class="gp">... </span>        <span class="n">child</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="bp">self</span>
-<span class="gp">... </span>    <span class="nd">@property</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">)</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="n">copy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
-<span class="gp">... </span>        <span class="n">copy</span><span class="o">.</span><span class="n">__dict__</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-<span class="gp">... </span>        <span class="n">copy</span><span class="o">.</span><span class="n">_children</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">]</span>
-<span class="gp">... </span>        <span class="n">copy</span><span class="o">.</span><span class="n">_set_parent</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
-<span class="gp">... </span>        <span class="k">return</span> <span class="n">copy</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">_unregister_child</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">child</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="k">if</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">:</span>
-<span class="gp">... </span>            <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
-<span class="gp">... </span>            <span class="n">child</span><span class="o">.</span><span class="n">_set_parent</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
-<span class="gp">... </span>        <span class="k">else</span><span class="p">:</span>
-<span class="gp">... </span>            <span class="k">raise</span> <span class="n">BadParentError</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">Example</span><span class="p">())</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">q</span><span class="o">.</span><span class="n">long_name</span><span class="p">)</span>  <span class="c1"># we are not in __main__</span>
-<span class="go">unnamed.children[0].children[0]</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="gptf.Param.name">
-<code class="descclassname">Param.</code><code class="descname">name</code><a class="headerlink" href="#gptf.Param.name" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets the name by which this object&#8217;s parent refers to it.</p>
-<p>If there is no parent, searches <code class="code docutils literal"><span class="pre">globals()</span></code> for a unique alias. If
-a unique global alias cannot be found, returns <code class="code docutils literal"><span class="pre">self.fallback_name</span></code>.</p>
-<p class="rubric">Examples</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Example</span><span class="p">(</span><span class="n">Tree</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
-<span class="gp">... </span>        <span class="bp">self</span><span class="o">.</span><span class="n">_children</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">add_child</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">child</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
-<span class="gp">... </span>        <span class="n">child</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="bp">self</span>
-<span class="gp">... </span>    <span class="nd">@property</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">)</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="n">copy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
-<span class="gp">... </span>        <span class="n">copy</span><span class="o">.</span><span class="n">__dict__</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-<span class="gp">... </span>        <span class="n">copy</span><span class="o">.</span><span class="n">_children</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">]</span>
-<span class="gp">... </span>        <span class="n">copy</span><span class="o">.</span><span class="n">_set_parent</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
-<span class="gp">... </span>        <span class="k">return</span> <span class="n">copy</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">_unregister_child</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">child</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="k">if</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">:</span>
-<span class="gp">... </span>            <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
-<span class="gp">... </span>            <span class="n">child</span><span class="o">.</span><span class="n">_set_parent</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
-<span class="gp">... </span>        <span class="k">else</span><span class="p">:</span>
-<span class="gp">... </span>            <span class="k">raise</span> <span class="n">BadParentError</span>
-</pre></div>
-</div>
-<p>Objects at the top of the tree return their name in the global
-namespace, if only one such name exists.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># doctest does not run these tests in __main__, but if it</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># did, this would return true.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="ow">not</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span> <span class="ow">or</span> <span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;p&#39;</span>
-<span class="go">True</span>
-</pre></div>
-</div>
-<p>If no unique global aliases to the root exists, <code class="code docutils literal"><span class="pre">.fallback_name</span></code>
-is returned.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">p</span>  <span class="c1"># now p has two global aliases, &#39;p&#39; and &#39;q&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">p</span><span class="o">.</span><span class="n">fallback_name</span>
-<span class="go">True</span>
-</pre></div>
-</div>
-<p>Otherwise, an object&#8217;s name is the name its parent gives it,
-as return by <code class="code docutils literal"><span class="pre">child.parent.name_of(child)</span></code>.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">q</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-<span class="go">.children[0]</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="method">
-<dt id="gptf.Param.name_of">
-<code class="descclassname">Param.</code><code class="descname">name_of</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#gptf.Param.name_of" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets the name of <code class="code docutils literal"><span class="pre">value</span></code>.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A name by which <code class="code docutils literal"><span class="pre">value</span></code> can be accessed from <code class="code docutils literal"><span class="pre">self</span></code>. If
-<code class="code docutils literal"><span class="pre">self</span></code> is accessible by some variable <code class="code docutils literal"><span class="pre">p</span></code>, then
-<code class="code docutils literal"><span class="pre">eval(&quot;p&quot;</span> <span class="pre">+</span> <span class="pre">p.name_of(value))</span></code> must return <code class="code docutils literal"><span class="pre">value</span></code>, assuming
-<code class="code docutils literal"><span class="pre">p.name_of()</span></code> doesn&#8217;t raise.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">(str)</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal"><span class="pre">BadParentError</span></code> &#8211; If <code class="code docutils literal"><span class="pre">value</span></code> is not a child of <code class="code docutils literal"><span class="pre">self</span></code>.</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Examples</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Example</span><span class="p">(</span><span class="n">Tree</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
-<span class="gp">... </span>        <span class="bp">self</span><span class="o">.</span><span class="n">_children</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">add_child</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">child</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
-<span class="gp">... </span>        <span class="n">child</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="bp">self</span>
-<span class="gp">... </span>    <span class="nd">@property</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">)</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="n">copy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
-<span class="gp">... </span>        <span class="n">copy</span><span class="o">.</span><span class="n">__dict__</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-<span class="gp">... </span>        <span class="n">copy</span><span class="o">.</span><span class="n">_children</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">]</span>
-<span class="gp">... </span>        <span class="n">copy</span><span class="o">.</span><span class="n">_set_parent</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
-<span class="gp">... </span>        <span class="k">return</span> <span class="n">copy</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">_unregister_child</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">child</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="k">if</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">:</span>
-<span class="gp">... </span>            <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
-<span class="gp">... </span>            <span class="n">child</span><span class="o">.</span><span class="n">_set_parent</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
-<span class="gp">... </span>        <span class="k">else</span><span class="p">:</span>
-<span class="gp">... </span>            <span class="k">raise</span> <span class="n">BadParentError</span>
-</pre></div>
-</div>
-<p>In the default implementation, this returns <code class="code docutils literal"><span class="pre">'.children[x]'</span></code>
-where <code class="code docutils literal"><span class="pre">x</span></code> is <code class="code docutils literal"><span class="pre">self.children.index(value)</span></code>.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">name_of</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
-<span class="go">&#39;.children[0]&#39;</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="gptf.Param.on_dtype_change">
-<code class="descclassname">Param.</code><code class="descname">on_dtype_change</code><a class="headerlink" href="#gptf.Param.on_dtype_change" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
 <dl class="method">
 <dt id="gptf.Param.on_session_birth">
-<code class="descclassname">Param.</code><code class="descname">on_session_birth</code><span class="sig-paren">(</span><em>session</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/params.html#Param.on_session_birth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.Param.on_session_birth" title="Permalink to this definition">¶</a></dt>
+<code class="descname">on_session_birth</code><span class="sig-paren">(</span><em>session</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/params.html#Param.on_session_birth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.Param.on_session_birth" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called just after a session is created.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1796,7 +1343,7 @@ where <code class="code docutils literal"><span class="pre">x</span></code> is <
 
 <dl class="method">
 <dt id="gptf.Param.on_session_death">
-<code class="descclassname">Param.</code><code class="descname">on_session_death</code><span class="sig-paren">(</span><em>session</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/params.html#Param.on_session_death"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.Param.on_session_death" title="Permalink to this definition">¶</a></dt>
+<code class="descname">on_session_death</code><span class="sig-paren">(</span><em>session</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/params.html#Param.on_session_death"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.Param.on_session_death" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called just before a session is closed.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1809,102 +1356,8 @@ where <code class="code docutils literal"><span class="pre">x</span></code> is <
 </dd></dl>
 
 <dl class="attribute">
-<dt id="gptf.Param.on_shape_change">
-<code class="descclassname">Param.</code><code class="descname">on_shape_change</code><a class="headerlink" href="#gptf.Param.on_shape_change" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="gptf.Param.op_placement_context">
-<code class="descclassname">Param.</code><code class="descname">op_placement_context</code><span class="sig-paren">(</span><em>name_scope=True</em><span class="sig-paren">)</span><a class="headerlink" href="#gptf.Param.op_placement_context" title="Permalink to this definition">¶</a></dt>
-<dd><p>Applies op placement rules based on the object hierarchy.</p>
-<p class="rubric">Examples</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gptf.core.trees</span> <span class="k">import</span> <span class="n">AttributeTree</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Example</span><span class="p">(</span><span class="n">WrappedTF</span><span class="p">,</span> <span class="n">AttributeTree</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
-<span class="gp">... </span>        <span class="bp">self</span><span class="o">.</span><span class="n">tf_graph</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
-</pre></div>
-</div>
-<p>Choose the op placement context by assigning to <code class="code docutils literal"><span class="pre">.tf_device</span></code>:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">e</span> <span class="o">=</span> <span class="p">[</span><span class="n">Example</span><span class="p">()</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">)]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">tf_device</span> <span class="o">=</span> <span class="s1">&#39;/job:worker&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">tf_device</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">DeviceSpec</span><span class="p">(</span><span class="n">device_type</span><span class="o">=</span><span class="s1">&#39;GPU&#39;</span><span class="p">,</span> <span class="n">device_index</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">tf_device</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">tf_device</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">NO_DEVICE</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">e</span><span class="o">.</span><span class="n">tf_device</span> <span class="o">=</span> <span class="s1">&#39;/job:spoon&#39;</span>
-</pre></div>
-</div>
-<p>Device contexts are combined, starting from the context of the
-root of the tree. <code class="code docutils literal"><span class="pre">c.tf_device</span></code> is <code class="code docutils literal"><span class="pre">None</span></code>, so it uses the context
-of its parent.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">child</span> <span class="o">=</span> <span class="n">c</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">a</span><span class="o">.</span><span class="n">op_placement_context</span><span class="p">():</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
-<span class="go">/job:worker</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">c</span><span class="o">.</span><span class="n">op_placement_context</span><span class="p">():</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
-<span class="go">/job:worker</span>
-</pre></div>
-</div>
-<p><code class="code docutils literal"><span class="pre">d.tf_device</span></code> is <code class="code docutils literal"><span class="pre">WrappedTF.NO_DEVICE</span></code>, so it resets the device
-context.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">child</span> <span class="o">=</span> <span class="n">d</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">d</span><span class="o">.</span><span class="n">op_placement_context</span><span class="p">():</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Other device contexts combine the way you would expect them to.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">child</span> <span class="o">=</span> <span class="n">b</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">child</span> <span class="o">=</span> <span class="n">e</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">b</span><span class="o">.</span><span class="n">op_placement_context</span><span class="p">():</span>
-<span class="gp">... </span>    <span class="c1"># get job from a</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
-<span class="go">/job:worker/device:GPU:0</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">e</span><span class="o">.</span><span class="n">op_placement_context</span><span class="p">():</span>
-<span class="gp">... </span>    <span class="c1"># get device from b, overwrite job from a</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
-<span class="go">/job:spoon/device:GPU:0</span>
-</pre></div>
-</div>
-<p>The root node of the tree may define a <code class="code docutils literal"><span class="pre">.tf_graph</span></code>. Child ops will
-be placed in the <code class="code docutils literal"><span class="pre">.tf_graph</span></code> of their highest parent.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">tf_graph</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">tf_graph</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">a</span><span class="o">.</span><span class="n">op_placement_context</span><span class="p">():</span>
-<span class="gp">... </span>    <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">graph</span> <span class="ow">is</span> <span class="n">a</span><span class="o">.</span><span class="n">tf_graph</span>
-<span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">b</span><span class="o">.</span><span class="n">op_placement_context</span><span class="p">():</span>
-<span class="gp">... </span>    <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">graph</span> <span class="ow">is</span> <span class="n">a</span><span class="o">.</span><span class="n">tf_graph</span>
-<span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">e</span><span class="o">.</span><span class="n">op_placement_context</span><span class="p">():</span>
-<span class="gp">... </span>    <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">graph</span> <span class="ow">is</span> <span class="n">a</span><span class="o">.</span><span class="n">tf_graph</span>
-<span class="go">True</span>
-</pre></div>
-</div>
-<p>In addition, a name scope is opened that matches the object
-hierachy:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">a</span><span class="o">.</span><span class="n">op_placement_context</span><span class="p">():</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-<span class="go">unnamed/Const...</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">b</span><span class="o">.</span><span class="n">op_placement_context</span><span class="p">():</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-<span class="go">unnamed.child/Const...</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">e</span><span class="o">.</span><span class="n">op_placement_context</span><span class="p">():</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-<span class="go">unnamed.child.child/Const...</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="gptf.Param.parent">
-<code class="descclassname">Param.</code><code class="descname">parent</code><a class="headerlink" href="#gptf.Param.parent" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the direct parent.</p>
-</dd></dl>
-
-<dl class="attribute">
 <dt id="gptf.Param.tensor">
-<code class="descclassname">Param.</code><code class="descname">tensor</code><a class="headerlink" href="#gptf.Param.tensor" title="Permalink to this definition">¶</a></dt>
+<code class="descname">tensor</code><a class="headerlink" href="#gptf.Param.tensor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a tensor representing the value of the parameter.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1918,30 +1371,10 @@ free state.</td>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="gptf.Param.tf_device">
-<code class="descclassname">Param.</code><code class="descname">tf_device</code><a class="headerlink" href="#gptf.Param.tf_device" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="gptf.Param.tf_graph">
-<code class="descclassname">Param.</code><code class="descname">tf_graph</code><a class="headerlink" href="#gptf.Param.tf_graph" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="gptf.Param.tf_session_target">
-<code class="descclassname">Param.</code><code class="descname">tf_session_target</code><a class="headerlink" href="#gptf.Param.tf_session_target" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
 <dt id="gptf.Param.transform">
-<code class="descclassname">Param.</code><code class="descname">transform</code><a class="headerlink" href="#gptf.Param.transform" title="Permalink to this definition">¶</a></dt>
+<code class="descname">transform</code><a class="headerlink" href="#gptf.Param.transform" title="Permalink to this definition">¶</a></dt>
 <dd><p>The transform between the free space and value space.</p>
 </dd></dl>
-
-<dl class="attribute">
-<dt id="gptf.Param.value">
-<code class="descclassname">Param.</code><code class="descname">value</code><a class="headerlink" href="#gptf.Param.value" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 </dd></dl>
 
@@ -2052,694 +1485,13 @@ to <code class="code docutils literal"><span class="pre">DataHolder.__init__()</
 </pre></div>
 </div>
 <dl class="attribute">
-<dt id="gptf.DataHolder.NO_DEVICE">
-<code class="descname">NO_DEVICE</code><a class="headerlink" href="#gptf.DataHolder.NO_DEVICE" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="class">
-<dt id="gptf.DataHolder.Shared">
-<em class="property">class </em><code class="descname">Shared</code><a class="headerlink" href="#gptf.DataHolder.Shared" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="gptf.DataHolder.cache">
-<code class="descclassname">DataHolder.</code><code class="descname">cache</code><a class="headerlink" href="#gptf.DataHolder.cache" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="gptf.DataHolder.children">
-<code class="descclassname">DataHolder.</code><code class="descname">children</code><a class="headerlink" href="#gptf.DataHolder.children" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the children of this object at the time of calling.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(tuple) The current children of the object.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="gptf.DataHolder.clear_all_ancestor_caches">
-<code class="descclassname">DataHolder.</code><code class="descname">clear_all_ancestor_caches</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gptf.DataHolder.clear_all_ancestor_caches" title="Permalink to this definition">¶</a></dt>
-<dd><p>Clears the caches of the ancestors of all copies.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="gptf.DataHolder.clear_ancestor_caches">
-<code class="descclassname">DataHolder.</code><code class="descname">clear_ancestor_caches</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gptf.DataHolder.clear_ancestor_caches" title="Permalink to this definition">¶</a></dt>
-<dd><p>Clears the caches of direct ancestors.</p>
-<p class="rubric">Examples</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Example</span><span class="p">(</span><span class="n">AttributeTree</span><span class="p">,</span> <span class="n">TreeWithCache</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="k">pass</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">child_0</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">child_1</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">child_0</span><span class="o">.</span><span class="n">child</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">fill_cache</span><span class="p">():</span>
-<span class="gp">... </span>    <span class="n">t</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;123&#39;</span>
-<span class="gp">... </span>    <span class="n">t</span><span class="o">.</span><span class="n">child_0</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;456&#39;</span>
-<span class="gp">... </span>    <span class="n">t</span><span class="o">.</span><span class="n">child_1</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;789&#39;</span>
-<span class="gp">... </span>    <span class="n">t</span><span class="o">.</span><span class="n">child_0</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;ABC&#39;</span>
-</pre></div>
-</div>
-<p>Clearing <code class="code docutils literal"><span class="pre">t.child_0.child</span></code>&#8216;s ancestor&#8217;s cache clears
-<code class="code docutils literal"><span class="pre">t</span></code>&#8216;s cache and <code class="code docutils literal"><span class="pre">t.child_0</span></code>&#8216;s cache, but not <code class="code docutils literal"><span class="pre">t.child_1</span></code>&#8216;s or
-<code class="code docutils literal"><span class="pre">t.child_0.child</span></code>&#8216;s.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fill_cache</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">child_0</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">clear_ancestor_caches</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="gt">Traceback (most recent call last):</span>
-    <span class="o">...</span>
-<span class="gr">KeyError</span>: <span class="n">message</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">child_0</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="gt">Traceback (most recent call last):</span>
-    <span class="o">...</span>
-<span class="gr">KeyError</span>: <span class="n">message</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">child_1</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="go">&#39;789&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">child_0</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="go">&#39;ABC&#39;</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="method">
-<dt id="gptf.DataHolder.clear_cache">
-<code class="descclassname">DataHolder.</code><code class="descname">clear_cache</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gptf.DataHolder.clear_cache" title="Permalink to this definition">¶</a></dt>
-<dd><p>Clears this node&#8217;s cache.</p>
-<p class="rubric">Examples</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Example</span><span class="p">(</span><span class="n">AttributeTree</span><span class="p">,</span> <span class="n">TreeWithCache</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="k">pass</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="gt">Traceback (most recent call last):</span>
-    <span class="o">...</span>
-<span class="gr">KeyError</span>: <span class="n">message</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">123</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="go">123</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">clear_cache</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="gt">Traceback (most recent call last):</span>
-    <span class="o">..</span>
-<span class="gr">KeyError</span>: <span class="n">message</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="method">
-<dt id="gptf.DataHolder.clear_subtree_caches">
-<code class="descclassname">DataHolder.</code><code class="descname">clear_subtree_caches</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gptf.DataHolder.clear_subtree_caches" title="Permalink to this definition">¶</a></dt>
-<dd><p>Clears the cache of this node and every node lower than it.</p>
-<p class="rubric">Examples</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Example</span><span class="p">(</span><span class="n">AttributeTree</span><span class="p">,</span> <span class="n">TreeWithCache</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="k">pass</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">child</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">fill_cache</span><span class="p">():</span>
-<span class="gp">... </span>    <span class="n">t</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">123</span>
-<span class="gp">... </span>    <span class="n">t</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">456</span>
-</pre></div>
-</div>
-<p>Clearing a parent&#8217;s cache clears its child&#8217;s cache:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fill_cache</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">clear_subtree_caches</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="gt">Traceback (most recent call last):</span>
-    <span class="o">...</span>
-<span class="gr">KeyError</span>: <span class="n">message</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="gt">Traceback (most recent call last):</span>
-    <span class="o">...</span>
-<span class="gr">KeyError</span>: <span class="n">message</span>
-</pre></div>
-</div>
-<p>Clearing a child&#8217;s cache does not clear its parent&#8217;s cache:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fill_cache</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">clear_subtree_caches</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="go">123</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="gt">Traceback (most recent call last):</span>
-    <span class="o">...</span>
-<span class="gr">KeyError</span>: <span class="n">message</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="method">
-<dt id="gptf.DataHolder.clear_tree_caches">
-<code class="descclassname">DataHolder.</code><code class="descname">clear_tree_caches</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gptf.DataHolder.clear_tree_caches" title="Permalink to this definition">¶</a></dt>
-<dd><p>Clears every cache in the tree.</p>
-<p class="rubric">Examples</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Example</span><span class="p">(</span><span class="n">AttributeTree</span><span class="p">,</span> <span class="n">TreeWithCache</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="k">pass</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">child</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">fill_cache</span><span class="p">():</span>
-<span class="gp">... </span>    <span class="n">t</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">123</span>
-<span class="gp">... </span>    <span class="n">t</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">456</span>
-</pre></div>
-</div>
-<p>Clearing a parent&#8217;s cache clears its child&#8217;s cache:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fill_cache</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">clear_tree_caches</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="gt">Traceback (most recent call last):</span>
-    <span class="o">...</span>
-<span class="gr">KeyError</span>: <span class="n">message</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="gt">Traceback (most recent call last):</span>
-    <span class="o">...</span>
-<span class="gr">KeyError</span>: <span class="n">message</span>
-</pre></div>
-</div>
-<p>Clearing a child&#8217;s cache clears its parent&#8217;s cache:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fill_cache</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">clear_tree_caches</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="gt">Traceback (most recent call last):</span>
-    <span class="o">...</span>
-<span class="gr">KeyError</span>: <span class="n">message</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="gt">Traceback (most recent call last):</span>
-    <span class="o">...</span>
-<span class="gr">KeyError</span>: <span class="n">message</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="method">
-<dt id="gptf.DataHolder.copy">
-<code class="descclassname">DataHolder.</code><code class="descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gptf.DataHolder.copy" title="Permalink to this definition">¶</a></dt>
-<dd><p>Copies have empty caches.</p>
-</dd></dl>
-
-<dl class="attribute">
 <dt id="gptf.DataHolder.feed_dict">
-<code class="descclassname">DataHolder.</code><code class="descname">feed_dict</code><a class="headerlink" href="#gptf.DataHolder.feed_dict" title="Permalink to this definition">¶</a></dt>
+<code class="descname">feed_dict</code><a class="headerlink" href="#gptf.DataHolder.feed_dict" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
-
-<dl class="method">
-<dt id="gptf.DataHolder.get_session">
-<code class="descclassname">DataHolder.</code><code class="descname">get_session</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gptf.DataHolder.get_session" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets a TensorFlow session in which ops can be run.</p>
-<p>Returns the default session if there is one. Else, returns a
-new session using the session target of the highest parent.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The default session if there is one, else a
-session matching the session target of the highest parent.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">(tf.Session)</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Examples</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gptf.core.trees</span> <span class="k">import</span> <span class="n">AttributeTree</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">AttributeWrappedTF</span><span class="p">(</span><span class="n">WrappedTF</span><span class="p">,</span> <span class="n">AttributeTree</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="k">pass</span>
-</pre></div>
-</div>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">w</span> <span class="o">=</span> <span class="n">AttributeWrappedTF</span><span class="p">()</span>
-</pre></div>
-</div>
-<p>If there is already a default session, returns that
-session in a NullContextWrapper.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
-<span class="gp">... </span>    <span class="n">sess0</span> <span class="o">=</span> <span class="n">w</span><span class="o">.</span><span class="n">get_session</span><span class="p">()</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sess0</span><span class="p">)</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
-<span class="gp">... </span>    <span class="n">sess0</span><span class="o">.</span><span class="n">_NullContextWrapper__wrapped</span> <span class="ow">is</span> <span class="n">sess</span>
-<span class="go">NullContextWrapper</span>
-<span class="go">True</span>
-</pre></div>
-</div>
-<p>It&#8217;s safe to use w.get_session() in a with block, even if
-there is a default session. Doing so won&#8217;t call the
-<code class="code docutils literal"><span class="pre">__enter__</span></code> or <code class="code docutils literal"><span class="pre">__exit__</span></code> methods of the default session.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">AnnounceSession</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;__enter__ called&#39;</span><span class="p">)</span>
-<span class="gp">... </span>        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__enter__</span><span class="p">()</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;__exit__ called&#39;</span><span class="p">)</span>
-<span class="gp">... </span>        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__exit__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">AnnounceSession</span><span class="p">()</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;before nested with&#39;</span><span class="p">)</span>
-<span class="gp">... </span>    <span class="k">with</span> <span class="n">w</span><span class="o">.</span><span class="n">get_session</span><span class="p">()</span> <span class="k">as</span> <span class="n">sess0</span><span class="p">:</span>
-<span class="gp">... </span>        <span class="k">assert</span> <span class="n">sess</span> <span class="ow">is</span> <span class="n">sess0</span>
-<span class="gp">... </span>        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;nested with&#39;</span><span class="p">)</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;after nested with&#39;</span><span class="p">)</span>
-<span class="go">__enter__ called</span>
-<span class="go">before nested with</span>
-<span class="go">nested with</span>
-<span class="go">after nested with</span>
-<span class="go">__exit__ called</span>
-</pre></div>
-</div>
-<p>Else, returns a new session each time:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sess2</span> <span class="o">=</span> <span class="n">w</span><span class="o">.</span><span class="n">get_session</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sess2</span> <span class="ow">is</span> <span class="n">sess</span>
-<span class="go">False</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sess3</span> <span class="o">=</span> <span class="n">w</span><span class="o">.</span><span class="n">get_session</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sess2</span> <span class="ow">is</span> <span class="n">sess3</span>
-<span class="go">False</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sess2</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sess3</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</pre></div>
-</div>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Example</span><span class="p">(</span><span class="n">WrappedTF</span><span class="p">,</span> <span class="n">AttributeTree</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">op</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">op_placement_context</span><span class="p">():</span>
-<span class="gp">... </span>            <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-<span class="gp">...</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">depth</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="n">tot</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="gp">... </span>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-<span class="gp">... </span>            <span class="n">tot</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">depth</span><span class="p">()</span>
-<span class="gp">... </span>        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_session</span><span class="p">()</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
-<span class="gp">... </span>            <span class="n">tot</span> <span class="o">+=</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">op</span><span class="p">())</span>
-<span class="gp">... </span>        <span class="k">return</span> <span class="n">tot</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># we&#39;re about to do weird things with op placement, and we</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># don&#39;t want it in the default graph where it can mess with</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># other doctests.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">tf_graph</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">child</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
-</pre></div>
-</div>
-<p><code class="code docutils literal"><span class="pre">Example</span></code> is a simple class that provides a method, <code class="code docutils literal"><span class="pre">.depth()</span></code>,
-that uses TensorFlow to calculate an object&#8217;s depth in the tree.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">depth</span><span class="p">()</span>
-<span class="go">1</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">depth</span><span class="p">()</span>
-<span class="go">2</span>
-</pre></div>
-</div>
-<p><code class="code docutils literal"><span class="pre">Example.op()</span></code> places its op based on the hierachical device
-context. If we change <code class="code docutils literal"><span class="pre">a</span></code>&#8216;s device context, we also change
-<code class="code docutils literal"><span class="pre">a.child</span></code>&#8216;s.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">op</span><span class="p">()</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
-</pre></div>
-</div>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">tf_device</span> <span class="o">=</span> <span class="s1">&#39;/job:worker/task:0&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">op</span><span class="p">()</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
-<span class="go">/job:worker/task:0</span>
-</pre></div>
-</div>
-<p><code class="code docutils literal"><span class="pre">a.child.depth()</span></code> will now result in an error:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">depth</span><span class="p">()</span>
-<span class="gt">Traceback (most recent call last):</span>
-    <span class="o">...</span>
-<span class="gr">tensorflow.python.framework.errors.InvalidArgumentError</span>: <span class="n">...</span>
-</pre></div>
-</div>
-<p><code class="code docutils literal"><span class="pre">a.child.op()</span></code> is now being placed as if it were in a distributed
-context, and the default session knows nothing about jobs or tasks.
-However, if we set <code class="code docutils literal"><span class="pre">a.session_target</span></code> appropriately,
-<code class="code docutils literal"><span class="pre">a.child.get_session()</span></code> will return a session capable of
-running ops created with <code class="code docutils literal"><span class="pre">a.child.op_placement_context</span></code>.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">clusterdict</span> <span class="o">=</span> \
-<span class="gp">... </span>    <span class="p">{</span> <span class="s1">&#39;worker&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;localhost:2222&#39;</span><span class="p">]</span>
-<span class="gp">... </span>    <span class="p">,</span> <span class="s1">&#39;master&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;localhost:2223&#39;</span><span class="p">]</span>
-<span class="gp">... </span>    <span class="p">}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">ClusterSpec</span><span class="p">(</span><span class="n">clusterdict</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">worker</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">Server</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">job_name</span><span class="o">=</span><span class="s1">&#39;worker&#39;</span><span class="p">,</span> <span class="n">task_index</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">worker</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">master</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">Server</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">job_name</span><span class="o">=</span><span class="s1">&#39;master&#39;</span><span class="p">,</span> <span class="n">task_index</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">tf_session_target</span> <span class="o">=</span> <span class="n">master</span><span class="o">.</span><span class="n">target</span>
-</pre></div>
-</div>
-<p><code class="code docutils literal"><span class="pre">a.child.depth()</span></code> should now run smoothly.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">depth</span><span class="p">()</span>
-<span class="go">2</span>
-</pre></div>
-</div>
-<p>In general, this means that as long as the session target of
-the root is set correctly, anything lower in the tree that uses
-<code class="code docutils literal"><span class="pre">self.get_session()</span></code> should work without fuss.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="gptf.DataHolder.highest_parent">
-<code class="descclassname">DataHolder.</code><code class="descname">highest_parent</code><a class="headerlink" href="#gptf.DataHolder.highest_parent" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the highest parent in the tree.</p>
-<p class="rubric">Examples</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Example</span><span class="p">(</span><span class="n">Tree</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
-<span class="gp">... </span>        <span class="bp">self</span><span class="o">.</span><span class="n">_children</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">add_child</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">child</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
-<span class="gp">... </span>        <span class="n">child</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="bp">self</span>
-<span class="gp">... </span>    <span class="nd">@property</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">)</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="n">copy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
-<span class="gp">... </span>        <span class="n">copy</span><span class="o">.</span><span class="n">__dict__</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-<span class="gp">... </span>        <span class="n">copy</span><span class="o">.</span><span class="n">_children</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">]</span>
-<span class="gp">... </span>        <span class="n">copy</span><span class="o">.</span><span class="n">_set_parent</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
-<span class="gp">... </span>        <span class="k">return</span> <span class="n">copy</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">_unregister_child</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">child</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="k">if</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">:</span>
-<span class="gp">... </span>            <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
-<span class="gp">... </span>            <span class="n">child</span><span class="o">.</span><span class="n">_set_parent</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
-<span class="gp">... </span>        <span class="k">else</span><span class="p">:</span>
-<span class="gp">... </span>            <span class="k">raise</span> <span class="n">BadParentError</span>
-</pre></div>
-</div>
-<p>An object at the top of the tree is its own highest parent.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">highest_parent</span> <span class="ow">is</span> <span class="n">p</span>
-<span class="go">True</span>
-</pre></div>
-</div>
-<p>Objects lower down in the tree recurse up the tree to find their
-highest parent.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">Example</span><span class="p">())</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">Example</span><span class="p">())</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">highest_parent</span> <span class="ow">is</span> <span class="n">p</span>
-<span class="go">True</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="gptf.DataHolder.long_name">
-<code class="descclassname">DataHolder.</code><code class="descname">long_name</code><a class="headerlink" href="#gptf.DataHolder.long_name" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets the long name of <code class="code docutils literal"><span class="pre">self</span></code>.</p>
-<p>The long name of an object is the concatenation of the names of its
-parents, starting from the highest parent.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The full path to the object in the tree.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">(str)</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Examples</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Example</span><span class="p">(</span><span class="n">Tree</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
-<span class="gp">... </span>        <span class="bp">self</span><span class="o">.</span><span class="n">_children</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">add_child</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">child</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
-<span class="gp">... </span>        <span class="n">child</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="bp">self</span>
-<span class="gp">... </span>    <span class="nd">@property</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">)</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="n">copy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
-<span class="gp">... </span>        <span class="n">copy</span><span class="o">.</span><span class="n">__dict__</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-<span class="gp">... </span>        <span class="n">copy</span><span class="o">.</span><span class="n">_children</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">]</span>
-<span class="gp">... </span>        <span class="n">copy</span><span class="o">.</span><span class="n">_set_parent</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
-<span class="gp">... </span>        <span class="k">return</span> <span class="n">copy</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">_unregister_child</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">child</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="k">if</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">:</span>
-<span class="gp">... </span>            <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
-<span class="gp">... </span>            <span class="n">child</span><span class="o">.</span><span class="n">_set_parent</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
-<span class="gp">... </span>        <span class="k">else</span><span class="p">:</span>
-<span class="gp">... </span>            <span class="k">raise</span> <span class="n">BadParentError</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">Example</span><span class="p">())</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">q</span><span class="o">.</span><span class="n">long_name</span><span class="p">)</span>  <span class="c1"># we are not in __main__</span>
-<span class="go">unnamed.children[0].children[0]</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="gptf.DataHolder.name">
-<code class="descclassname">DataHolder.</code><code class="descname">name</code><a class="headerlink" href="#gptf.DataHolder.name" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets the name by which this object&#8217;s parent refers to it.</p>
-<p>If there is no parent, searches <code class="code docutils literal"><span class="pre">globals()</span></code> for a unique alias. If
-a unique global alias cannot be found, returns <code class="code docutils literal"><span class="pre">self.fallback_name</span></code>.</p>
-<p class="rubric">Examples</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Example</span><span class="p">(</span><span class="n">Tree</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
-<span class="gp">... </span>        <span class="bp">self</span><span class="o">.</span><span class="n">_children</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">add_child</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">child</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
-<span class="gp">... </span>        <span class="n">child</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="bp">self</span>
-<span class="gp">... </span>    <span class="nd">@property</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">)</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="n">copy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
-<span class="gp">... </span>        <span class="n">copy</span><span class="o">.</span><span class="n">__dict__</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-<span class="gp">... </span>        <span class="n">copy</span><span class="o">.</span><span class="n">_children</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">]</span>
-<span class="gp">... </span>        <span class="n">copy</span><span class="o">.</span><span class="n">_set_parent</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
-<span class="gp">... </span>        <span class="k">return</span> <span class="n">copy</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">_unregister_child</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">child</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="k">if</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">:</span>
-<span class="gp">... </span>            <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
-<span class="gp">... </span>            <span class="n">child</span><span class="o">.</span><span class="n">_set_parent</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
-<span class="gp">... </span>        <span class="k">else</span><span class="p">:</span>
-<span class="gp">... </span>            <span class="k">raise</span> <span class="n">BadParentError</span>
-</pre></div>
-</div>
-<p>Objects at the top of the tree return their name in the global
-namespace, if only one such name exists.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># doctest does not run these tests in __main__, but if it</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># did, this would return true.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="ow">not</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span> <span class="ow">or</span> <span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;p&#39;</span>
-<span class="go">True</span>
-</pre></div>
-</div>
-<p>If no unique global aliases to the root exists, <code class="code docutils literal"><span class="pre">.fallback_name</span></code>
-is returned.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">p</span>  <span class="c1"># now p has two global aliases, &#39;p&#39; and &#39;q&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">p</span><span class="o">.</span><span class="n">fallback_name</span>
-<span class="go">True</span>
-</pre></div>
-</div>
-<p>Otherwise, an object&#8217;s name is the name its parent gives it,
-as return by <code class="code docutils literal"><span class="pre">child.parent.name_of(child)</span></code>.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">q</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-<span class="go">.children[0]</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="method">
-<dt id="gptf.DataHolder.name_of">
-<code class="descclassname">DataHolder.</code><code class="descname">name_of</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#gptf.DataHolder.name_of" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets the name of <code class="code docutils literal"><span class="pre">value</span></code>.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A name by which <code class="code docutils literal"><span class="pre">value</span></code> can be accessed from <code class="code docutils literal"><span class="pre">self</span></code>. If
-<code class="code docutils literal"><span class="pre">self</span></code> is accessible by some variable <code class="code docutils literal"><span class="pre">p</span></code>, then
-<code class="code docutils literal"><span class="pre">eval(&quot;p&quot;</span> <span class="pre">+</span> <span class="pre">p.name_of(value))</span></code> must return <code class="code docutils literal"><span class="pre">value</span></code>, assuming
-<code class="code docutils literal"><span class="pre">p.name_of()</span></code> doesn&#8217;t raise.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">(str)</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal"><span class="pre">BadParentError</span></code> &#8211; If <code class="code docutils literal"><span class="pre">value</span></code> is not a child of <code class="code docutils literal"><span class="pre">self</span></code>.</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Examples</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Example</span><span class="p">(</span><span class="n">Tree</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
-<span class="gp">... </span>        <span class="bp">self</span><span class="o">.</span><span class="n">_children</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">add_child</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">child</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
-<span class="gp">... </span>        <span class="n">child</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="bp">self</span>
-<span class="gp">... </span>    <span class="nd">@property</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">)</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="n">copy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
-<span class="gp">... </span>        <span class="n">copy</span><span class="o">.</span><span class="n">__dict__</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-<span class="gp">... </span>        <span class="n">copy</span><span class="o">.</span><span class="n">_children</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">]</span>
-<span class="gp">... </span>        <span class="n">copy</span><span class="o">.</span><span class="n">_set_parent</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
-<span class="gp">... </span>        <span class="k">return</span> <span class="n">copy</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">_unregister_child</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">child</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="k">if</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">:</span>
-<span class="gp">... </span>            <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
-<span class="gp">... </span>            <span class="n">child</span><span class="o">.</span><span class="n">_set_parent</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
-<span class="gp">... </span>        <span class="k">else</span><span class="p">:</span>
-<span class="gp">... </span>            <span class="k">raise</span> <span class="n">BadParentError</span>
-</pre></div>
-</div>
-<p>In the default implementation, this returns <code class="code docutils literal"><span class="pre">'.children[x]'</span></code>
-where <code class="code docutils literal"><span class="pre">x</span></code> is <code class="code docutils literal"><span class="pre">self.children.index(value)</span></code>.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">Example</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">name_of</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
-<span class="go">&#39;.children[0]&#39;</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="gptf.DataHolder.on_dtype_change">
-<code class="descclassname">DataHolder.</code><code class="descname">on_dtype_change</code><a class="headerlink" href="#gptf.DataHolder.on_dtype_change" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="gptf.DataHolder.on_session_birth">
-<code class="descclassname">DataHolder.</code><code class="descname">on_session_birth</code><span class="sig-paren">(</span><em>session</em><span class="sig-paren">)</span><a class="headerlink" href="#gptf.DataHolder.on_session_birth" title="Permalink to this definition">¶</a></dt>
-<dd><p>Called just after a session is created.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>session</strong> (<em>tf.Session</em>) &#8211; The created session.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="gptf.DataHolder.on_session_death">
-<code class="descclassname">DataHolder.</code><code class="descname">on_session_death</code><span class="sig-paren">(</span><em>session</em><span class="sig-paren">)</span><a class="headerlink" href="#gptf.DataHolder.on_session_death" title="Permalink to this definition">¶</a></dt>
-<dd><p>Called just before a session is closed.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>session</strong> (<em>tf.Session</em>) &#8211; The dying session.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="gptf.DataHolder.on_shape_change">
-<code class="descclassname">DataHolder.</code><code class="descname">on_shape_change</code><a class="headerlink" href="#gptf.DataHolder.on_shape_change" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="gptf.DataHolder.op_placement_context">
-<code class="descclassname">DataHolder.</code><code class="descname">op_placement_context</code><span class="sig-paren">(</span><em>name_scope=True</em><span class="sig-paren">)</span><a class="headerlink" href="#gptf.DataHolder.op_placement_context" title="Permalink to this definition">¶</a></dt>
-<dd><p>Applies op placement rules based on the object hierarchy.</p>
-<p class="rubric">Examples</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gptf.core.trees</span> <span class="k">import</span> <span class="n">AttributeTree</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Example</span><span class="p">(</span><span class="n">WrappedTF</span><span class="p">,</span> <span class="n">AttributeTree</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
-<span class="gp">... </span>        <span class="bp">self</span><span class="o">.</span><span class="n">tf_graph</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
-</pre></div>
-</div>
-<p>Choose the op placement context by assigning to <code class="code docutils literal"><span class="pre">.tf_device</span></code>:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">e</span> <span class="o">=</span> <span class="p">[</span><span class="n">Example</span><span class="p">()</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">)]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">tf_device</span> <span class="o">=</span> <span class="s1">&#39;/job:worker&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">tf_device</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">DeviceSpec</span><span class="p">(</span><span class="n">device_type</span><span class="o">=</span><span class="s1">&#39;GPU&#39;</span><span class="p">,</span> <span class="n">device_index</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">tf_device</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">tf_device</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">NO_DEVICE</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">e</span><span class="o">.</span><span class="n">tf_device</span> <span class="o">=</span> <span class="s1">&#39;/job:spoon&#39;</span>
-</pre></div>
-</div>
-<p>Device contexts are combined, starting from the context of the
-root of the tree. <code class="code docutils literal"><span class="pre">c.tf_device</span></code> is <code class="code docutils literal"><span class="pre">None</span></code>, so it uses the context
-of its parent.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">child</span> <span class="o">=</span> <span class="n">c</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">a</span><span class="o">.</span><span class="n">op_placement_context</span><span class="p">():</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
-<span class="go">/job:worker</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">c</span><span class="o">.</span><span class="n">op_placement_context</span><span class="p">():</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
-<span class="go">/job:worker</span>
-</pre></div>
-</div>
-<p><code class="code docutils literal"><span class="pre">d.tf_device</span></code> is <code class="code docutils literal"><span class="pre">WrappedTF.NO_DEVICE</span></code>, so it resets the device
-context.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">child</span> <span class="o">=</span> <span class="n">d</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">d</span><span class="o">.</span><span class="n">op_placement_context</span><span class="p">():</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Other device contexts combine the way you would expect them to.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">child</span> <span class="o">=</span> <span class="n">b</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">child</span> <span class="o">=</span> <span class="n">e</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">b</span><span class="o">.</span><span class="n">op_placement_context</span><span class="p">():</span>
-<span class="gp">... </span>    <span class="c1"># get job from a</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
-<span class="go">/job:worker/device:GPU:0</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">e</span><span class="o">.</span><span class="n">op_placement_context</span><span class="p">():</span>
-<span class="gp">... </span>    <span class="c1"># get device from b, overwrite job from a</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
-<span class="go">/job:spoon/device:GPU:0</span>
-</pre></div>
-</div>
-<p>The root node of the tree may define a <code class="code docutils literal"><span class="pre">.tf_graph</span></code>. Child ops will
-be placed in the <code class="code docutils literal"><span class="pre">.tf_graph</span></code> of their highest parent.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">tf_graph</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">tf_graph</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">a</span><span class="o">.</span><span class="n">op_placement_context</span><span class="p">():</span>
-<span class="gp">... </span>    <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">graph</span> <span class="ow">is</span> <span class="n">a</span><span class="o">.</span><span class="n">tf_graph</span>
-<span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">b</span><span class="o">.</span><span class="n">op_placement_context</span><span class="p">():</span>
-<span class="gp">... </span>    <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">graph</span> <span class="ow">is</span> <span class="n">a</span><span class="o">.</span><span class="n">tf_graph</span>
-<span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">e</span><span class="o">.</span><span class="n">op_placement_context</span><span class="p">():</span>
-<span class="gp">... </span>    <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">graph</span> <span class="ow">is</span> <span class="n">a</span><span class="o">.</span><span class="n">tf_graph</span>
-<span class="go">True</span>
-</pre></div>
-</div>
-<p>In addition, a name scope is opened that matches the object
-hierachy:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">a</span><span class="o">.</span><span class="n">op_placement_context</span><span class="p">():</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-<span class="go">unnamed/Const...</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">b</span><span class="o">.</span><span class="n">op_placement_context</span><span class="p">():</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-<span class="go">unnamed.child/Const...</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">e</span><span class="o">.</span><span class="n">op_placement_context</span><span class="p">():</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-<span class="go">unnamed.child.child/Const...</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="gptf.DataHolder.parent">
-<code class="descclassname">DataHolder.</code><code class="descname">parent</code><a class="headerlink" href="#gptf.DataHolder.parent" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the direct parent.</p>
-</dd></dl>
 
 <dl class="attribute">
 <dt id="gptf.DataHolder.tensor">
-<code class="descclassname">DataHolder.</code><code class="descname">tensor</code><a class="headerlink" href="#gptf.DataHolder.tensor" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="gptf.DataHolder.tf_device">
-<code class="descclassname">DataHolder.</code><code class="descname">tf_device</code><a class="headerlink" href="#gptf.DataHolder.tf_device" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="gptf.DataHolder.tf_graph">
-<code class="descclassname">DataHolder.</code><code class="descname">tf_graph</code><a class="headerlink" href="#gptf.DataHolder.tf_graph" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="gptf.DataHolder.tf_session_target">
-<code class="descclassname">DataHolder.</code><code class="descname">tf_session_target</code><a class="headerlink" href="#gptf.DataHolder.tf_session_target" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="gptf.DataHolder.value">
-<code class="descclassname">DataHolder.</code><code class="descname">value</code><a class="headerlink" href="#gptf.DataHolder.value" title="Permalink to this definition">¶</a></dt>
+<code class="descname">tensor</code><a class="headerlink" href="#gptf.DataHolder.tensor" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -2870,10 +1622,10 @@ will be returned.</p>
 <h2>Autoflow<a class="headerlink" href="#autoflow" title="Permalink to this headline">¶</a></h2>
 <p>The autoflow decorator allows you to define a method of a parameterized class
 using Tensorflow, but interact with it using NumPy. It applies
-<code class="code docutils literal"><span class="pre">gptf.tf_method()</span></code> for you.</p>
+<a class="reference internal" href="#gptf.tf_method" title="gptf.tf_method"><code class="xref py py-func docutils literal"><span class="pre">gptf.tf_method()</span></code></a> for you.</p>
 <dl class="function">
-<dt id="gptf.autoflow">
-<code class="descclassname">gptf.</code><code class="descname">autoflow</code><span class="sig-paren">(</span><em>*placeholder_specs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/params.html#autoflow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.autoflow" title="Permalink to this definition">¶</a></dt>
+<dt>
+<code class="descclassname">gptf.</code><code class="descname">autoflow</code><span class="sig-paren">(</span><em>*placeholder_specs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/params.html#autoflow"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Wraps up a TensorFlow method so that it takes NumPy and gives NumPy.</p>
 <p>When an autoflowed method is called, we construct placeholders to
 represent the passed arguments, apply <code class="code docutils literal"><span class="pre">tf_method</span></code>
@@ -2964,8 +1716,15 @@ is <code class="code docutils literal"><span class="pre">5</span></code>.</p>
 </div>
 <div class="section" id="models">
 <h2>Models<a class="headerlink" href="#models" title="Permalink to this headline">¶</a></h2>
+<p>Jump to:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#gptf.Model" title="gptf.Model"><code class="xref py py-class docutils literal"><span class="pre">gptf.Model</span></code></a></li>
+<li><a class="reference internal" href="#gptf.GPModel" title="gptf.GPModel"><code class="xref py py-class docutils literal"><span class="pre">gptf.GPModel</span></code></a></li>
+</ul>
 <p>These abstract base classes implement models that can be optimised. Subclass
-these and implement the abstract methods to implement new models.
+these and implement the abstract methods to implement new models. Both
+<a class="reference internal" href="#gptf.Model" title="gptf.Model"><code class="xref py py-class docutils literal"><span class="pre">gptf.Model</span></code></a> and <a class="reference internal" href="#gptf.GPModel" title="gptf.GPModel"><code class="xref py py-class docutils literal"><span class="pre">gptf.GPModel</span></code></a> inherit from
+<a class="reference internal" href="#gptf.Parameterized" title="gptf.Parameterized"><code class="xref py py-class docutils literal"><span class="pre">gptf.Parameterized</span></code></a>.
 See <a class="reference internal" href="#gpr">GPR</a> for more information.</p>
 <dl class="class">
 <dt id="gptf.Model">
@@ -3711,7 +2470,7 @@ size of L.</p>
 </div>
 <div class="section" id="transforms">
 <h3>transforms<a class="headerlink" href="#transforms" title="Permalink to this headline">¶</a></h3>
-<p>Provides a number of transforms that can be used to constrain <a href="#id3"><span class="problematic" id="id4">`</span></a>Param`s.</p>
+<p>Provides a number of transforms that can be used to constrain <a href="#id5"><span class="problematic" id="id6">`</span></a>Param`s.</p>
 <dl class="class">
 <dt>
 <em class="property">class </em><code class="descclassname">gptf.core.transforms.</code><code class="descname">Exp</code><span class="sig-paren">(</span><em>lower=1e-06</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/transforms.html#Exp"><span class="viewcode-link">[source]</span></a></dt>
@@ -4185,7 +2944,7 @@ likelihoods (e.g. Gaussian, Poisson) will implement specific cases.</p>
 <p>GP regression with Gaussian noise.</p>
 <dl class="class">
 <dt>
-<em class="property">class </em><code class="descclassname">gptf.gpr.</code><code class="descname">GPR</code><span class="sig-paren">(</span><em>kernel</em>, <em>meanfunction=&lt;gptf.core.meanfunctions.Zero object</em>, <em>fallback_name unnamed</em>, <em>id 0x7f29675ce470&gt;</em>, <em>noise_variance=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/gpr.html#GPR"><span class="viewcode-link">[source]</span></a></dt>
+<em class="property">class </em><code class="descclassname">gptf.gpr.</code><code class="descname">GPR</code><span class="sig-paren">(</span><em>kernel</em>, <em>meanfunction=&lt;gptf.core.meanfunctions.Zero object</em>, <em>fallback_name unnamed</em>, <em>id 0x7f0289636978&gt;</em>, <em>noise_variance=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/gpr.html#GPR"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Gaussian process regression with Gaussian noise.</p>
 <dl class="attribute">
 <dt id="gptf.gpr.GPR.inputs">
@@ -4732,7 +3491,7 @@ server job.</p>
 <li><strong>experts</strong> (<em>GPModel | Sequence[GPModel]</em>) &#8211; The experts to
 combine the opinions of. If this is a <code class="code docutils literal"><span class="pre">GPModel</span></code>, then it
 will be shallow-copied to fill out the architecture.
-If it is a sequence of <a href="#id5"><span class="problematic" id="id6">`</span></a>GPModel`s, then the architecture
+If it is a sequence of <a href="#id7"><span class="problematic" id="id8">`</span></a>GPModel`s, then the architecture
 will have as many nodes in its final layer as
 there are in the sequence.</li>
 <li><strong>weightfunction</strong> (<em>Callable[[Sequence[GPModel], tf.Tensor, tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]</em>) &#8211; A function used to calculate the weight of the experts.</li>
