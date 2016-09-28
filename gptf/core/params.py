@@ -72,6 +72,7 @@ class WrappedValue(with_metaclass(ABCMeta, WrappedTF)):
 
     @property
     def value(self):
+        """The (NumPy) value of the object."""
         return self._get_value()
 
     @value.setter
@@ -164,6 +165,7 @@ class WrappedValue(with_metaclass(ABCMeta, WrappedTF)):
 
     @property
     def on_shape_change(self):
+        """The action to take when the value changes."""
         return self._on_shape_change
 
     @on_shape_change.setter
@@ -177,6 +179,7 @@ class WrappedValue(with_metaclass(ABCMeta, WrappedTF)):
 
     @property
     def on_dtype_change(self):
+        """The action to take when the dtype changes."""
         return self._on_dtype_change
 
     @on_dtype_change.setter
@@ -297,6 +300,7 @@ class ProxyWrappedValue(WrappedValue, Proxy):
 
     @property
     def cache(self):
+        """Contains cached tensorflow functions etc."""
         return self._shared.cache
 
     @cache.setter
@@ -640,6 +644,7 @@ class Param(ProxyWrappedValue, Leaf):
 
     @property
     def feed_dict(self):
+        """An empty dictionary."""
         return {}
 
     @property
@@ -654,6 +659,7 @@ class Param(ProxyWrappedValue, Leaf):
 
     @property
     def fixed(self):
+        """Whether or not the parameter is fixed."""
         return self._shared.fixed
 
     @fixed.setter
@@ -882,11 +888,13 @@ class DataHolder(ProxyWrappedValue, Leaf):
 
     @property
     def tensor(self):
+        """The placeholder that the data will be fed into."""
         self._assert_placeholder()
         return self._placeholder
 
     @property
     def feed_dict(self):
+        """A dict that feeds the value of the data into its placeholder."""
         self._assert_placeholder()
         return { self._placeholder: self._shared.numpy_value }
 
@@ -943,7 +951,7 @@ class Parameterized(WrappedTF):
         True
 
     """
-    ARRAY_DISPLAY_LENGTH = 5
+    ARRAY_DISPLAY_LENGTH = 5  #: The default array display length.
 
     def __init__(self):
         super().__init__()
@@ -951,6 +959,7 @@ class Parameterized(WrappedTF):
 
     @property
     def fixed(self):
+        """Whether or not params lower in the heirarchy should be fixed."""
         return self._fixed
 
     @fixed.setter
