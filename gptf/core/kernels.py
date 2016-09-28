@@ -70,12 +70,13 @@ class Kernel(with_metaclass(ABCMeta, Parameterized)):
         """Builds a tensor that computes the covariance function.
 
         Args:
-            X (tf.Tensor): A tensor of shape `N`x`D`.
-            X2 (tf.Tensor | None): A tensor of shape `M`x`D`. If `None`,
-                the second argument will be assumed symmetrical.
+            X (tf.Tensor): A tensor of shape :math:`N \\times D`.
+            X2 (tf.Tensor | None): A tensor of shape :math:`M \\times D`. 
+                If `None`, the second argument will be assumed symmetrical.
 
         Returns:
-            (tf.Tensor): The covariance function K(X, X2). Shape `N`x`M`
+            (tf.Tensor): The covariance function K(X, X2). Shape
+            :math:`N \\times M`
 
         """
         NotImplemented
@@ -85,7 +86,7 @@ class Kernel(with_metaclass(ABCMeta, Parameterized)):
         """Builds a tensor that computes the diagonal of `self.K(X)`
 
         Args:
-            X (tf.Tensor): A tensor of shape `N`x`D`.
+            X (tf.Tensor): A tensor of shape :math:`N \\times D`.
 
         Returns:
             (tf.Tensor): The diagonal of `self.K(X)`. Shape `N`.
@@ -407,12 +408,12 @@ class Stationary(with_metaclass(ABCMeta, Kernel, ParamAttributes)):
         """The squared distances between X and X2.
 
         Args:
-            X (tf.Tensor): A tensor of shape `N`x`D`.
-            X2 (Tf.Tensor | None): A tensor of shape `M`x`D`. If none,
-                assumed to be symmetrical.
+            X (tf.Tensor): A tensor of shape :math:`N \\times D`.
+            X2 (Tf.Tensor | None): A tensor of shape :math:`M \\times D`.
+                If none, assumed to be symmetrical.
         
         Returns:
-            (tf.Tensor): A tensor of shape `N`x`M`, where
+            (tf.Tensor): A tensor of shape :math:`N \\times M`, where
             `self.square_dist(X, X2)[a, b]` is the squared distance
             between `X[a]` and `X2[b]`.
 
@@ -430,12 +431,12 @@ class Stationary(with_metaclass(ABCMeta, Kernel, ParamAttributes)):
         """The Euclidean distances between X and X2.
 
         Args:
-            X (tf.Tensor): A tensor of shape `N`x`D`.
-            X2 (Tf.Tensor | None): A tensor of shape `M`x`D`. If none,
-                assumed to be symmetrical.
+            X (tf.Tensor): A tensor of shape :math:`N \\times D`.
+            X2 (Tf.Tensor | None): A tensor of shape :math:`M \\times D`. 
+                If none, assumed to be symmetrical.
         
         Returns:
-            (tf.Tensor): A tensor of shape `N`x`M`, where
+            (tf.Tensor): A tensor of shape :math:`N \\times M`, where
             `self.square_dist(X, X2)[a, b]` is the Euclidean distance
             between `X[a]` and `X2[b]`.
 

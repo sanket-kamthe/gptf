@@ -161,15 +161,17 @@ class WrappedTF(TreeWithCache):
         self._tf_graph = None
         self._tf_device = None
         self._tf_session_target = None
-        self._tf_session = None
 
     # This is an attempt to guard against assignment to _NO_DEVICE
     @property
     def NO_DEVICE(self):
+        """When `.tf_device` is set to `.NO_DEVICE`, `None` will be passed
+        to `tf.device()`"""
         return self._NO_DEVICE
 
     @property
     def tf_device(self):
+        """The device context onto which this object's ops should be pinned."""
         return self._tf_device
 
     @tf_device.setter
@@ -179,6 +181,7 @@ class WrappedTF(TreeWithCache):
 
     @property
     def tf_graph(self):
+        """The graph to place ops in."""
         return self._tf_graph
 
     @tf_graph.setter
@@ -188,6 +191,7 @@ class WrappedTF(TreeWithCache):
 
     @property
     def tf_session_target(self):
+        """The target under which sessions should be run."""
         return self._tf_session_target
 
     @tf_session_target.setter
@@ -558,22 +562,6 @@ class WrappedTF(TreeWithCache):
         """
         self._on_op_placement_context_change()
         super()._set_parent(new_parent)  # move to new tree
-
-    @overrides
-    def copy(self):
-        copy = super().copy()
-        copy._tf_session = None
-        #if self.parent is not None:
-        #    if self.__class__.__name__ == 'Param':
-        #        global horsecount
-        #        try:
-        #            horsecount
-        #        except:
-        #            horsecount = 0
-        #        print('horse', horsecount)
-        #        horsecount += 1
-        #    copy._on_op_placement_context_change()
-        return copy
 
 def tf_method(name_scope=True, rename_output=True, 
         cache=True, cache_limit=128):
