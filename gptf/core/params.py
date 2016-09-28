@@ -94,8 +94,7 @@ class WrappedValue(with_metaclass(ABCMeta, WrappedTF)):
             ...     def _set_value(self, value):
             ...         self._numpy_value[...] = value
 
-            Shape changes
-            -------------
+            .. rubric:: Shape changes
 
             On 'raise', we raise an error on shape change:
             >>> a = np.array([1,2,3])
@@ -327,8 +326,7 @@ class Param(ProxyWrappedValue, Leaf):
             variable into a free state where it can be optimised.
 
     Examples:
-        Getting and setting values
-        --------------------------
+        .. rubric:: Getting and setting values
 
         You can get and set the (numpy) value of a `Param` using its 
         `value` attribute:
@@ -431,8 +429,7 @@ class Param(ProxyWrappedValue, Leaf):
             ...
         AttributeError: can't set attribute
 
-        Fixing parameters
-        -----------------
+        .. rubric:: Fixing parameters
 
         A parameter can be fixed by setting the `.fixed` attribute to `True`.
         A fixed parameter should not be optimised. Attempting to
@@ -449,8 +446,7 @@ class Param(ProxyWrappedValue, Leaf):
         respect this flag. See the `Parameterised` and `Model` classes for
         more details.
 
-        Transforms
-        ----------
+        .. rubric:: Transforms
 
         Constraints can be applied to a parameter in the form of `Transform`s.
         A `Transform` is used to transform the parameter into a free state,
@@ -502,8 +498,7 @@ class Param(ProxyWrappedValue, Leaf):
         ...     print("{:.3f}".format(sess.run(grad_exp)))
         2.718
 
-        Copies
-        ------
+        .. rubric:: Copies
 
         You can create a copy of a `Param` using `Param.copy()`. The
         new copy represents the same parameter, so the value and
@@ -762,8 +757,7 @@ class DataHolder(ProxyWrappedValue, Leaf):
             when the shape of the data changes; see the setter for `.value`.
 
     Examples:
-        Getting and setting values
-        --------------------------
+        .. rubric:: Getting and setting values
 
         To get and set the value of the data, use the `.value` property:
         >>> a = np.array([1,2,3])
@@ -788,8 +782,7 @@ class DataHolder(ProxyWrappedValue, Leaf):
         ...     sess.run(op, feed_dict=d.feed_dict)
         array([2, 3, 4])
 
-        Copies
-        ------
+        .. rubric:: Copies
 
         You can create a copy of a `DataHolder` using `.copy()`. The
         new copy represents the same data, so the value and

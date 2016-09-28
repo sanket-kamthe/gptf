@@ -127,8 +127,7 @@ class Model(with_metaclass(ABCMeta, Parameterized)):
             >>> X = np.array(0.)
             >>> Y = np.array(0.)
 
-            TensorFlow optimizers
-            ---------------------
+            .. rubric:: TensorFlow optimizers
 
             We can optimise the parameters of the model using a TensorFlow
             optimizer like so:
@@ -160,8 +159,7 @@ class Model(with_metaclass(ABCMeta, Parameterized)):
             >>> print("m.b: {:.3f}".format(np.asscalar(m.b.value)))
             m.b: 1.000
 
-            SciPy optimizers
-            ----------------
+            .. rubric:: SciPy optimizers
 
             We can optimise the parameters of the model using a SciPy
             optimizer by provided a string value for `method`:
@@ -192,8 +190,7 @@ class Model(with_metaclass(ABCMeta, Parameterized)):
             >>> print("m.b: {:.3f}".format(np.asscalar(m.b.value)))
             m.b: 1.000
 
-            Miscellaneous
-            -------------
+            .. rubric:: Miscellaneous
 
             Optimisation still works, even with weird device contexts and
             session targets.
