@@ -175,12 +175,14 @@
 <span class="sd">            ...             raise BadParentError</span>
 
 <span class="sd">            An object at the top of the tree is its own highest parent.</span>
+
 <span class="sd">            &gt;&gt;&gt; p = Example()</span>
 <span class="sd">            &gt;&gt;&gt; p.highest_parent is p</span>
 <span class="sd">            True</span>
 
 <span class="sd">            Objects lower down in the tree recurse up the tree to find their</span>
 <span class="sd">            highest parent.</span>
+
 <span class="sd">            &gt;&gt;&gt; p.add_child(Example())</span>
 <span class="sd">            &gt;&gt;&gt; p.children[0].add_child(Example())</span>
 <span class="sd">            &gt;&gt;&gt; p.children[0].children[0].highest_parent is p</span>
@@ -271,6 +273,7 @@
 
 <span class="sd">            Objects at the top of the tree return their name in the global</span>
 <span class="sd">            namespace, if only one such name exists.</span>
+
 <span class="sd">            &gt;&gt;&gt; p = Example()</span>
 <span class="sd">            &gt;&gt;&gt; # doctest does not run these tests in __main__, but if it</span>
 <span class="sd">            &gt;&gt;&gt; # did, this would return true.</span>
@@ -279,12 +282,14 @@
 
 <span class="sd">            If no unique global aliases to the root exists, `.fallback_name`</span>
 <span class="sd">            is returned.</span>
+
 <span class="sd">            &gt;&gt;&gt; q = p  # now p has two global aliases, &#39;p&#39; and &#39;q&#39;</span>
 <span class="sd">            &gt;&gt;&gt; p.name == p.fallback_name</span>
 <span class="sd">            True</span>
 
 <span class="sd">            Otherwise, an object&#39;s name is the name its parent gives it,</span>
 <span class="sd">            as return by `child.parent.name_of(child)`.</span>
+
 <span class="sd">            &gt;&gt;&gt; q = Example()</span>
 <span class="sd">            &gt;&gt;&gt; p.add_child(q)</span>
 <span class="sd">            &gt;&gt;&gt; print(q.name)</span>
@@ -342,6 +347,7 @@
 
 <span class="sd">            In the default implementation, this returns `&#39;.children[x]&#39;`</span>
 <span class="sd">            where `x` is `self.children.index(value)`.</span>
+
 <span class="sd">            &gt;&gt;&gt; p = Example()</span>
 <span class="sd">            &gt;&gt;&gt; q = Example()</span>
 <span class="sd">            &gt;&gt;&gt; p.add_child(q)</span>
@@ -370,6 +376,7 @@
 <span class="sd">    </span>
 <span class="sd">    Examples:</span>
 <span class="sd">        A `Leaf` will not automatically add children on attribute assignment:</span>
+
 <span class="sd">        &gt;&gt;&gt; l = Leaf()</span>
 <span class="sd">        &gt;&gt;&gt; l.child = AttributeTree()</span>
 <span class="sd">        &gt;&gt;&gt; l.children</span>
@@ -378,6 +385,7 @@
 <span class="sd">        True</span>
 
 <span class="sd">        Leaves still know who their parent is and what their name is:</span>
+
 <span class="sd">        &gt;&gt;&gt; t = AttributeTree()</span>
 <span class="sd">        &gt;&gt;&gt; t.fallback_name = &#39;t&#39;</span>
 <span class="sd">        &gt;&gt;&gt; t.leaf = Leaf()</span>
@@ -420,7 +428,7 @@
 <div class="viewcode-block" id="AttributeTree"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.trees.AttributeTree">[docs]</a><span class="k">class</span> <span class="nc">AttributeTree</span><span class="p">(</span><span class="n">Tree</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A tree that uses attributes to assign/track children.</span>
 <span class="sd">    </span>
-<span class="sd">    A tree can be constructed by simply assigning `Tree`s to the</span>
+<span class="sd">    A tree can be constructed by simply assigning `Tree`\ s to the</span>
 <span class="sd">    attributes of an `AttributeTree`:</span>
 <span class="sd">        </span>
 <span class="sd">        &gt;&gt;&gt; p = AttributeTree()</span>
@@ -519,6 +527,7 @@
 
 <span class="sd">            Shallow copy returns an entirely new tree, but non-tree</span>
 <span class="sd">            attributes are shallowly copied (as references).</span>
+
 <span class="sd">            &gt;&gt;&gt; copy = t.copy()</span>
 <span class="sd">            &gt;&gt;&gt; copy is t</span>
 <span class="sd">            False</span>
@@ -530,10 +539,12 @@
 <span class="sd">            True</span>
 
 <span class="sd">            The parent of the new copy is `None`.</span>
+
 <span class="sd">            &gt;&gt;&gt; t.child.copy().parent is None</span>
 <span class="sd">            True</span>
 <span class="sd">          </span>
 <span class="sd">            This behaviour is inherited correctly:</span>
+
 <span class="sd">            &gt;&gt;&gt; class Example(AttributeTree):</span>
 <span class="sd">            ...     pass</span>
 <span class="sd">            &gt;&gt;&gt; e = Example()</span>
@@ -586,11 +597,13 @@
 
 <span class="sd">            If `q` is a child of `p`, we return the name of `q` in the</span>
 <span class="sd">            `p`&#39;s `.__dict__`.</span>
+
 <span class="sd">            &gt;&gt;&gt; print(p.name_of(q))</span>
 <span class="sd">            .child</span>
 
 <span class="sd">            We are contractually obliged to return a string that when appended</span>
 <span class="sd">            to `&#39;p&#39;` evaluates to `q`.</span>
+
 <span class="sd">            &gt;&gt;&gt; eval(&#39;p&#39; + p.name_of(q)) is q</span>
 <span class="sd">            True</span>
 <span class="sd">            </span>
@@ -607,6 +620,7 @@
 
 <span class="sd">        Examples:</span>
 <span class="sd">            Sets the parent of new children appropriately on assignment.</span>
+
 <span class="sd">            &gt;&gt;&gt; p = AttributeTree()</span>
 <span class="sd">            &gt;&gt;&gt; q = AttributeTree()</span>
 <span class="sd">            &gt;&gt;&gt; p.child = q</span>
@@ -614,6 +628,7 @@
 <span class="sd">            True</span>
 
 <span class="sd">            Overwriting a name unsets the parent of the previous occupant.</span>
+
 <span class="sd">            &gt;&gt;&gt; r = AttributeTree()</span>
 <span class="sd">            &gt;&gt;&gt; p.child = r</span>
 <span class="sd">            &gt;&gt;&gt; q.parent is None</span>
@@ -621,6 +636,7 @@
 
 <span class="sd">            Attempting to add a `Tree` to the graph twice causes it to be</span>
 <span class="sd">            surreptitiously shallow-copied:</span>
+
 <span class="sd">            &gt;&gt;&gt; r.some_attribute = object()</span>
 <span class="sd">            &gt;&gt;&gt; p.other_child = r</span>
 <span class="sd">            &gt;&gt;&gt; p.other_child is r</span>
@@ -629,6 +645,7 @@
 <span class="sd">            True</span>
 
 <span class="sd">            However, repeated assignment does not shallow-copy:</span>
+
 <span class="sd">            &gt;&gt;&gt; s = AttributeTree()</span>
 <span class="sd">            &gt;&gt;&gt; p.s = s</span>
 <span class="sd">            &gt;&gt;&gt; p.s = s</span>
@@ -637,6 +654,7 @@
 
 <span class="sd">            Attempting to add a `Tree` to two different graphs causes it</span>
 <span class="sd">            to be shallow-copied to the new graph.</span>
+
 <span class="sd">            &gt;&gt;&gt; s = AttributeTree()</span>
 <span class="sd">            &gt;&gt;&gt; s.child = r</span>
 <span class="sd">            &gt;&gt;&gt; p.child is r</span>
@@ -689,7 +707,8 @@
     <span class="sd">&quot;&quot;&quot;A `Tree` that uses numeric indexes to track its children.</span>
 <span class="sd">    </span>
 <span class="sd">    Examples:</span>
-<span class="sd">        `ListTree`s know their parent and their name:</span>
+<span class="sd">        `ListTree`\ s know their parent and their name:</span>
+
 <span class="sd">        &gt;&gt;&gt; root = AttributeTree()</span>
 <span class="sd">        &gt;&gt;&gt; root.fallback_name = &quot;root&quot;</span>
 <span class="sd">        &gt;&gt;&gt; root.list = ListTree()</span>
@@ -700,6 +719,7 @@
 
 <span class="sd">        Children can be assigned to the list through normal sequence</span>
 <span class="sd">        assignment:</span>
+
 <span class="sd">        &gt;&gt;&gt; child = AttributeTree()</span>
 <span class="sd">        &gt;&gt;&gt; root.list.append(child)</span>
 <span class="sd">        &gt;&gt;&gt; child in root.list.children</span>
@@ -709,6 +729,7 @@
 
 <span class="sd">        Attempting to add a `Tree` to the graph twice causes it to be</span>
 <span class="sd">        surreptitiously shallow-copied:</span>
+
 <span class="sd">        &gt;&gt;&gt; child.some_attribute = object()</span>
 <span class="sd">        &gt;&gt;&gt; root.list.append(child)</span>
 <span class="sd">        &gt;&gt;&gt; len(root.list)</span>
@@ -719,17 +740,20 @@
 <span class="sd">        True</span>
 
 <span class="sd">        Overwriting a child with itself does nothing:</span>
+
 <span class="sd">        &gt;&gt;&gt; root.list[0] = child</span>
 <span class="sd">        &gt;&gt;&gt; root.list[0] is child</span>
 <span class="sd">        True</span>
 
 <span class="sd">        The name of the child of a `ListTree` is its index:</span>
+
 <span class="sd">        &gt;&gt;&gt; print(child.name)</span>
 <span class="sd">        [0]</span>
 <span class="sd">        &gt;&gt;&gt; print(child.long_name)</span>
 <span class="sd">        root.list[0]</span>
 
 <span class="sd">        Assigning a child to another tree shallow-copies it to the other tree.</span>
+
 <span class="sd">        &gt;&gt;&gt; t = AttributeTree()</span>
 <span class="sd">        &gt;&gt;&gt; t.child = child</span>
 <span class="sd">        &gt;&gt;&gt; t.child is child</span>
@@ -740,6 +764,7 @@
 <span class="sd">        True</span>
 
 <span class="sd">        Overwriting a child doesn&#39;t cause a dangling parent:</span>
+
 <span class="sd">        &gt;&gt;&gt; root.list = ListTree()</span>
 <span class="sd">        &gt;&gt;&gt; child_a = AttributeTree()</span>
 <span class="sd">        &gt;&gt;&gt; child_b = AttributeTree()</span>
@@ -831,6 +856,7 @@
 
 <span class="sd">            Shallow copy returns an entirely new tree, but non-tree</span>
 <span class="sd">            attributes are shallowly copied (as references).</span>
+
 <span class="sd">            &gt;&gt;&gt; copy = t.copy()</span>
 <span class="sd">            &gt;&gt;&gt; copy is t</span>
 <span class="sd">            False</span>
@@ -844,6 +870,7 @@
 <span class="sd">            True</span>
 <span class="sd">            </span>
 <span class="sd">            This behaviour is inherited correctly:</span>
+
 <span class="sd">            &gt;&gt;&gt; class Example(ListTree):</span>
 <span class="sd">            ...     pass</span>
 <span class="sd">            &gt;&gt;&gt; e = Example()</span>
@@ -924,6 +951,7 @@
 <span class="sd">            ...     t.child.cache[0] = 456</span>
 
 <span class="sd">            Clearing a parent&#39;s cache clears its child&#39;s cache:</span>
+
 <span class="sd">            &gt;&gt;&gt; fill_cache()</span>
 <span class="sd">            &gt;&gt;&gt; t.clear_tree_caches()</span>
 <span class="sd">            &gt;&gt;&gt; t.cache[0]</span>
@@ -936,6 +964,7 @@
 <span class="sd">            KeyError: message</span>
 <span class="sd">        </span>
 <span class="sd">            Clearing a child&#39;s cache clears its parent&#39;s cache:</span>
+
 <span class="sd">            &gt;&gt;&gt; fill_cache()</span>
 <span class="sd">            &gt;&gt;&gt; t.child.clear_tree_caches()</span>
 <span class="sd">            &gt;&gt;&gt; t.cache[0]</span>
@@ -964,6 +993,7 @@
 <span class="sd">            ...     t.child.cache[0] = 456</span>
 
 <span class="sd">            Clearing a parent&#39;s cache clears its child&#39;s cache:</span>
+
 <span class="sd">            &gt;&gt;&gt; fill_cache()</span>
 <span class="sd">            &gt;&gt;&gt; t.clear_subtree_caches()</span>
 <span class="sd">            &gt;&gt;&gt; t.cache[0]</span>
@@ -976,6 +1006,7 @@
 <span class="sd">            KeyError: message</span>
 <span class="sd">        </span>
 <span class="sd">            Clearing a child&#39;s cache does not clear its parent&#39;s cache:</span>
+
 <span class="sd">            &gt;&gt;&gt; fill_cache()</span>
 <span class="sd">            &gt;&gt;&gt; t.child.clear_subtree_caches()</span>
 <span class="sd">            &gt;&gt;&gt; t.cache[0]</span>
@@ -1005,9 +1036,10 @@
 <span class="sd">            ...     t.child_1.cache[0] = &#39;789&#39;</span>
 <span class="sd">            ...     t.child_0.child.cache[0] = &#39;ABC&#39;</span>
 
-<span class="sd">            Clearing `t.child_0.child`&#39;s ancestor&#39;s cache clears</span>
-<span class="sd">            `t`&#39;s cache and `t.child_0`&#39;s cache, but not `t.child_1`&#39;s or</span>
-<span class="sd">            `t.child_0.child`&#39;s.</span>
+<span class="sd">            Clearing `t.child_0.child`\ &#39;s ancestor&#39;s cache clears</span>
+<span class="sd">            `t`\ &#39;s cache and `t.child_0`\ &#39;s cache, but not `t.child_1`\ &#39;s or</span>
+<span class="sd">            `t.child_0.child`\ &#39;s.</span>
+
 <span class="sd">            &gt;&gt;&gt; fill_cache()</span>
 <span class="sd">            &gt;&gt;&gt; t.child_0.child.clear_ancestor_caches()</span>
 <span class="sd">            &gt;&gt;&gt; t.cache[0]</span>

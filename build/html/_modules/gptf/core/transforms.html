@@ -53,16 +53,16 @@
 <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
 <span class="kn">from</span> <span class="nn">overrides</span> <span class="k">import</span> <span class="n">overrides</span>
 
-<div class="viewcode-block" id="Transform"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.transforms.Transform">[docs]</a><span class="k">class</span> <span class="nc">Transform</span><span class="p">(</span><span class="n">with_metaclass</span><span class="p">(</span><span class="n">ABCMeta</span><span class="p">,</span> <span class="nb">object</span><span class="p">)):</span>
+<div class="viewcode-block" id="Transform"><a class="viewcode-back" href="../../../public_api.html#gptf.core.transforms.Transform">[docs]</a><span class="k">class</span> <span class="nc">Transform</span><span class="p">(</span><span class="n">with_metaclass</span><span class="p">(</span><span class="n">ABCMeta</span><span class="p">,</span> <span class="nb">object</span><span class="p">)):</span>
     <span class="sd">&quot;&quot;&quot;A transform, used to constrain the optimisation of a `Param`.</span>
 
 <span class="sd">    NB: Unless otherwise stated, attributes of transforms are read-only</span>
 <span class="sd">    and should be treated as such. If you wish to change the transform</span>
-<span class="sd">    of a `Param`, assign a _new_ `Transform` to its `.transform` attribute.</span>
+<span class="sd">    of a `Param`, assign a *new* `Transform` to its `.transform` attribute.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="nd">@abstractmethod</span>
-<div class="viewcode-block" id="Transform.tf_forward"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.transforms.Transform.tf_forward">[docs]</a>    <span class="k">def</span> <span class="nf">tf_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<div class="viewcode-block" id="Transform.tf_forward"><a class="viewcode-back" href="../../../public_api.html#gptf.core.transforms.Transform.tf_forward">[docs]</a>    <span class="k">def</span> <span class="nf">tf_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Map from the free space to the variable space using TensorFlow.&quot;&quot;&quot;</span>
         <span class="bp">NotImplemented</span></div>
 
@@ -77,14 +77,14 @@
     <span class="c1">#    NotImplemented</span>
 
     <span class="nd">@abstractmethod</span>
-<div class="viewcode-block" id="Transform.np_backward"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.transforms.Transform.np_backward">[docs]</a>    <span class="k">def</span> <span class="nf">np_backward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<div class="viewcode-block" id="Transform.np_backward"><a class="viewcode-back" href="../../../public_api.html#gptf.core.transforms.Transform.np_backward">[docs]</a>    <span class="k">def</span> <span class="nf">np_backward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Map from the variable to the free space using NumPy.&quot;&quot;&quot;</span>
         <span class="bp">NotImplemented</span></div></div>
     
-<div class="viewcode-block" id="Identity"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.transforms.Identity">[docs]</a><span class="k">class</span> <span class="nc">Identity</span><span class="p">(</span><span class="n">Transform</span><span class="p">):</span>
+<div class="viewcode-block" id="Identity"><a class="viewcode-back" href="../../../public_api.html#gptf.core.transforms.Identity">[docs]</a><span class="k">class</span> <span class="nc">Identity</span><span class="p">(</span><span class="n">Transform</span><span class="p">):</span>
     <span class="nd">@staticmethod</span>
     <span class="nd">@overrides</span>
-<div class="viewcode-block" id="Identity.tf_forward"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.transforms.Identity.tf_forward">[docs]</a>    <span class="k">def</span> <span class="nf">tf_forward</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<div class="viewcode-block" id="Identity.tf_forward"><a class="viewcode-back" href="../../../public_api.html#gptf.core.transforms.Identity.tf_forward">[docs]</a>    <span class="k">def</span> <span class="nf">tf_forward</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
 
     <span class="c1">#@overrides</span>
@@ -99,22 +99,22 @@
 
     <span class="nd">@staticmethod</span>
     <span class="nd">@overrides</span>
-<div class="viewcode-block" id="Identity.np_backward"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.transforms.Identity.np_backward">[docs]</a>    <span class="k">def</span> <span class="nf">np_backward</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<div class="viewcode-block" id="Identity.np_backward"><a class="viewcode-back" href="../../../public_api.html#gptf.core.transforms.Identity.np_backward">[docs]</a>    <span class="k">def</span> <span class="nf">np_backward</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">x</span></div>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;identity&quot;</span>
+<div class="viewcode-block" id="Identity.__str__"><a class="viewcode-back" href="../../../public_api.html#gptf.core.transforms.Identity.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;identity&quot;</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">.Identity()&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span></div>
+<div class="viewcode-block" id="Identity.__repr__"><a class="viewcode-back" href="../../../public_api.html#gptf.core.transforms.Identity.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">.Identity()&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span></div></div>
 
-<div class="viewcode-block" id="Exp"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.transforms.Exp">[docs]</a><span class="k">class</span> <span class="nc">Exp</span><span class="p">(</span><span class="n">Transform</span><span class="p">):</span>
+<div class="viewcode-block" id="Exp"><a class="viewcode-back" href="../../../public_api.html#gptf.core.transforms.Exp">[docs]</a><span class="k">class</span> <span class="nc">Exp</span><span class="p">(</span><span class="n">Transform</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;An exponential transform.</span>
 
 <span class="sd">    value = exp(free_state) + lower</span>
 <span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">6</span><span class="p">):</span>
+<div class="viewcode-block" id="Exp.__init__"><a class="viewcode-back" href="../../../public_api.html#gptf.core.transforms.Exp.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">6</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initialises the transform.</span>
 
 <span class="sd">        Args:</span>
@@ -125,10 +125,10 @@
 <span class="sd">                error.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_lower</span> <span class="o">=</span> <span class="n">lower</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lower</span> <span class="o">=</span> <span class="n">lower</span></div>
 
     <span class="nd">@overrides</span>
-<div class="viewcode-block" id="Exp.tf_forward"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.transforms.Exp.tf_forward">[docs]</a>    <span class="k">def</span> <span class="nf">tf_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<div class="viewcode-block" id="Exp.tf_forward"><a class="viewcode-back" href="../../../public_api.html#gptf.core.transforms.Exp.tf_forward">[docs]</a>    <span class="k">def</span> <span class="nf">tf_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lower</span></div>
 
     <span class="c1">#@overrides</span>
@@ -140,14 +140,14 @@
     <span class="c1">#    return np.exp(x) + self._lower</span>
 
     <span class="nd">@overrides</span>
-<div class="viewcode-block" id="Exp.np_backward"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.transforms.Exp.np_backward">[docs]</a>    <span class="k">def</span> <span class="nf">np_backward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+<div class="viewcode-block" id="Exp.np_backward"><a class="viewcode-back" href="../../../public_api.html#gptf.core.transforms.Exp.np_backward">[docs]</a>    <span class="k">def</span> <span class="nf">np_backward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lower</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;+ve (Exp)&quot;</span>
+<div class="viewcode-block" id="Exp.__str__"><a class="viewcode-back" href="../../../public_api.html#gptf.core.transforms.Exp.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;+ve (Exp)&quot;</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">.Exp(lower=</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lower</span><span class="p">)</span></div>
+<div class="viewcode-block" id="Exp.__repr__"><a class="viewcode-back" href="../../../public_api.html#gptf.core.transforms.Exp.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">.Exp(lower=</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lower</span><span class="p">)</span></div></div>
 </pre></div>
 
           </div>

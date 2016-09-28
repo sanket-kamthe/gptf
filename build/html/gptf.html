@@ -82,29 +82,21 @@ variances of the child experts, with a correction term based on
 the prior variance. The mean of the posterior is a weighted sum of
 the means of the child experts multiplied by the posterior variance.</p>
 <div class="math">
-\[\begin{split}σ^{-2}_BCM &amp;= (\sum_{k=1}^{M} σ^{-2}_k)
+\[\begin{split}σ^{-2}_{BCM} &amp;= (\sum_{k=1}^{M} σ^{-2}_k)
               + (1 - M) σ^{-2}_{\star\star} \\
-μ_BCM &amp;= σ^2_BCM \sum_{k=1}^{M} μ_k σ^{-2}_k\end{split}\]</div>
-<p>where <span class="math">\(μ_BCM\)</span> and <span class="math">\(σ^2_BCM\)</span> are the final posterior
+μ_{BCM} &amp;= σ^2_{BCM} \sum_{k=1}^{M} μ_k σ^{-2}_k\end{split}\]</div>
+<p>where <span class="math">\(μ_{BCM}\)</span> and <span class="math">\(σ^2_{BCM}\)</span> are the final posterior
 mean and variance, <span class="math">\(M\)</span> is the number of child experts,
 <span class="math">\(σ^{-2}_{\star\star}\)</span> is the prior precision and
 <span class="math">\(μ_k\)</span> and <span class="math">\(σ^2_k\)</span> are the posterior mean and variance
-for the :math:<a href="#id1"><span class="problematic" id="id2">`</span></a>k`th child.</p>
+for the <span class="math">\(k\)</span>th child.</p>
 <p>Attributes: See <code class="code docutils literal"><span class="pre">GPModel</span></code> and <code class="code docutils literal"><span class="pre">ParamList</span></code>.</p>
 <dl class="method">
 <dt id="gptf.distributed.BCMReduction.build_posterior_mean_var">
 <code class="descname">build_posterior_mean_var</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em>, <em>test_points</em>, <em>full_cov=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#BCMReduction.build_posterior_mean_var"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.distributed.BCMReduction.build_posterior_mean_var" title="Permalink to this definition">¶</a></dt>
 <dd><p>Builds an op for the mean and variance of the posterior(s).</p>
 <p>In the returned tensors, the last index should always be the
-latent function index. Suppose <code class="code docutils literal"><span class="pre">m</span></code> is some model with two
-latent functions:</p>
-<blockquote>
-<div>test_points = tf.constant([[1, 2], [3, 4]])
-mean, var = m.build_posterior_mean_var([[1,2],[3,4]], True)
-mean[:, 0]  # means for the 0th latent func
-mean[:, 1]  # means for the 1st latent func
-var[:, :, 0]  # full covariance matrix for latent func 0
-var[:, :, 1]  # full covariance matrix for latent func 1</div></blockquote>
+latent function index.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -150,27 +142,19 @@ variances of the child experts. The mean of the posterior is a
 weighted sum of the means of the child experts multiplied by
 the posterior variance.</p>
 <div class="math">
-\[\begin{split}σ^{-2}_PoE &amp;= \sum_{k=1}^{M} σ^{-2}_k \\
-μ_PoE &amp;= σ^2_PoE \sum_{k=1}^{M} μ_k σ^{-2}_k\end{split}\]</div>
-<p>where <span class="math">\(μ_PoE\)</span> and <span class="math">\(σ^2_PoE\)</span> are the final posterior
+\[\begin{split}σ^{-2}_{PoE} &amp;= \sum_{k=1}^{M} σ^{-2}_k \\
+μ_{PoE} &amp;= σ^2_{PoE} \sum_{k=1}^{M} μ_k σ^{-2}_k\end{split}\]</div>
+<p>where <span class="math">\(μ_{PoE}\)</span> and <span class="math">\(σ^2_{PoE}\)</span> are the final posterior
 mean and variance, <span class="math">\(M\)</span> is the number of child experts and
 <span class="math">\(μ_k\)</span> and <span class="math">\(σ^2_k\)</span> are the posterior mean and variance
-for the :math:<a href="#id3"><span class="problematic" id="id4">`</span></a>k`th child.</p>
-<p>Attributes: See <code class="code docutils literal"><span class="pre">GPModel</span></code> and <code class="code docutils literal"><span class="pre">ParamList</span></code>.</p>
+for the <span class="math">\(k\)</span>th child.</p>
+<p>Attributes: See <code class="xref py py-obj docutils literal"><span class="pre">GPModel</span></code> and <code class="xref py py-obj docutils literal"><span class="pre">ParamList</span></code>.</p>
 <dl class="method">
 <dt id="gptf.distributed.PoEReduction.build_posterior_mean_var">
 <code class="descname">build_posterior_mean_var</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em>, <em>test_points</em>, <em>full_cov=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#PoEReduction.build_posterior_mean_var"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.distributed.PoEReduction.build_posterior_mean_var" title="Permalink to this definition">¶</a></dt>
 <dd><p>Builds an op for the mean and variance of the posterior(s).</p>
 <p>In the returned tensors, the last index should always be the
-latent function index. Suppose <code class="code docutils literal"><span class="pre">m</span></code> is some model with two
-latent functions:</p>
-<blockquote>
-<div>test_points = tf.constant([[1, 2], [3, 4]])
-mean, var = m.build_posterior_mean_var([[1,2],[3,4]], True)
-mean[:, 0]  # means for the 0th latent func
-mean[:, 1]  # means for the 1st latent func
-var[:, :, 0]  # full covariance matrix for latent func 0
-var[:, :, 1]  # full covariance matrix for latent func 1</div></blockquote>
+latent function index.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -221,10 +205,9 @@ the posterior mean and variance with a prior division term.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt>
-<code class="descname">weightfunction (Callable[[Sequence[GPModel], tf.Tensor,</code></dt>
-<dd><p>tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]):
-A function used to calculate the weight of the expert.</p>
+<dt id="gptf.distributed.PriorDivisorReduction.weightfunction">
+<code class="descname">weightfunction</code><a class="headerlink" href="#gptf.distributed.PriorDivisorReduction.weightfunction" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Callable[[Sequence[GPModel], tf.Tensor, tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]</em> &#8211; A function used to calculate the weight of the expert.</p>
 </dd></dl>
 
 <dl class="method">
@@ -257,15 +240,7 @@ likelihood of the model.</p>
 <code class="descname">build_posterior_mean_var</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em>, <em>test_points</em>, <em>full_cov=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#PriorDivisorReduction.build_posterior_mean_var"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.distributed.PriorDivisorReduction.build_posterior_mean_var" title="Permalink to this definition">¶</a></dt>
 <dd><p>Builds an op for the mean and variance of the posterior(s).</p>
 <p>In the returned tensors, the last index should always be the
-latent function index. Suppose <code class="code docutils literal"><span class="pre">m</span></code> is some model with two
-latent functions:</p>
-<blockquote>
-<div>test_points = tf.constant([[1, 2], [3, 4]])
-mean, var = m.build_posterior_mean_var([[1,2],[3,4]], True)
-mean[:, 0]  # means for the 0th latent func
-mean[:, 1]  # means for the 1st latent func
-var[:, :, 0]  # full covariance matrix for latent func 0
-var[:, :, 1]  # full covariance matrix for latent func 1</div></blockquote>
+latent function index.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -363,13 +338,12 @@ Both tensors have the same dtype.</p>
 <dd><p>The predictive power of the experts at the points.</p>
 <p>The predictive power is calculated as</p>
 <div class="math">
-\[β_k(x_\star)=\frac{1}{2} (\ln (σ^\star_k)^2
-                           - \ln σ^{-2}_k(x_\star))\]</div>
+\[β_k(x_\star)=\frac{1}{2} (\ln (σ^\star_k)^2 - \ln σ^{-2}_k(x_\star))\]</div>
 <p>where <span class="math">\(β_k(x_\star)\)</span> is the predictive power of the
 <span class="math">\(k`th expert at the point :math:`x_\star\)</span>,
-<span class="math">\((σ^\star_k)^2\)</span> is the prior variance of the <span class="math">\(k`th
-expert and :math:`σ^{-2}_k(x_\star)\)</span> is the posterior variance
-of the <span class="math">\(k`th expert at the point :math:`x_\star\)</span>.</p>
+<span class="math">\((σ^\star_k)^2\)</span> is the prior variance of the <span class="math">\(k\)</span>th
+expert and <span class="math">\(σ^{-2}_k(x_\star)\)</span> is the posterior variance
+of the <span class="math">\(k\)</span>th expert at the point <span class="math">\(x_\star\)</span>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -454,11 +428,10 @@ server job.</p>
 <li><strong>experts</strong> (<em>GPModel | Sequence[GPModel]</em>) &#8211; The experts to
 combine the opinions of. If this is a <code class="code docutils literal"><span class="pre">GPModel</span></code>, then it
 will be shallow-copied to fill out the architecture.
-If it is a sequence of <a href="#id5"><span class="problematic" id="id6">`</span></a>GPModel`s, then the architecture
+If it is a sequence of <a href="#id1"><span class="problematic" id="id2">`</span></a>GPModel`s, then the architecture
 will have as many nodes in its final layer as
 there are in the sequence.</li>
-<li><strong>(Callable[[Sequence[GPModel], tf.Tensor,</strong> (<em>weightfunction</em>) &#8211; tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]):
-A function used to calculate the weight of the experts.</li>
+<li><strong>weightfunction</strong> (<em>Callable[[Sequence[GPModel], tf.Tensor, tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]</em>) &#8211; A function used to calculate the weight of the experts.</li>
 <li><strong>clusterspec</strong> (<em>tf.train.ClusterSpec</em>) &#8211; The cluster to
 distribute tasks over.</li>
 <li><strong>worker_job</strong> (<em>str</em>) &#8211; The job to assign computationally
@@ -484,8 +457,8 @@ the target server. Defaults to &#8216;grpc&#8217;.</li>
 <dd><p>Gives each expert an equal weight.</p>
 <div class="math">
 \[\forall k \in 0..M,\ β_k = 1 / M\]</div>
-<p>where <span class="math">\(β_k\)</span> is the weight of the <span class="math">\(k`th expert at
-every point and :math:`M\)</span> is the number of experts.</p>
+<p>where <span class="math">\(β_k\)</span> is the weight of the <span class="math">\(k\)</span>th expert at
+every point and <span class="math">\(M\)</span> is the number of experts.</p>
 <p>The dtype returned matches the dtype of <code class="code docutils literal"><span class="pre">points</span></code>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -524,20 +497,19 @@ posterior variances of the child experts. The mean of the
 posterior is a weighted sum of the means of the child experts
 multiplied by the posterior variance.</p>
 <div class="math">
-\[\begin{split}σ^{-2}_gPoE &amp;= \sum_{k=1}^{M} β_k σ^{-2}_c \\
-μ_gPoE &amp;= σ^2_gPoE \sum_{k=1}^{M} β_k μ_k σ^{-2}_k\end{split}\]</div>
-<p>where <span class="math">\(μ_gPoE\)</span> and <span class="math">\(σ^2_PoE\)</span> are the final posterior
+\[\begin{split}σ^{-2}_{gPoE} &amp;= \sum_{k=1}^{M} β_k σ^{-2}_c \\
+μ_{gPoE} &amp;= σ^2_{gPoE} \sum_{k=1}^{M} β_k μ_k σ^{-2}_k\end{split}\]</div>
+<p>where <span class="math">\(μ_{gPoE}\)</span> and <span class="math">\(σ^2_{gPoE}\)</span> are the final posterior
 mean and variance, <span class="math">\(M\)</span> is the number of child experts and
 <span class="math">\(μ_k\)</span> and <span class="math">\(σ^2_k\)</span> are the posterior mean and variance
-for the <span class="math">\(k`th child and :math:`β_k\)</span> is the weight of the
-:math:<a href="#id7"><span class="problematic" id="id8">`</span></a>k`th child.</p>
+for the <span class="math">\(k\)</span>th child and <span class="math">\(β_k\)</span> is the weight of the
+<span class="math">\(k\)</span>th child.</p>
 <p>Note that when <span class="math">\(\sum_{k} β_k = 1\)</span>, the model falls back to
 the prior outside the range of the data.</p>
 <dl class="attribute">
-<dt>
-<code class="descname">weightfunction (Callable[[Sequence[GPModel], tf.Tensor,</code></dt>
-<dd><p>tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]):
-A function used to calculate the weight of the experts.</p>
+<dt id="gptf.distributed.gPoEReduction.weightfunction">
+<code class="descname">weightfunction</code><a class="headerlink" href="#gptf.distributed.gPoEReduction.weightfunction" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Callable[[Sequence[GPModel], tf.Tensor, tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]</em> &#8211; A function used to calculate the weight of the experts.</p>
 </dd></dl>
 
 <p>For other attributes, see <code class="code docutils literal"><span class="pre">GPModel</span></code> and <code class="code docutils literal"><span class="pre">ParamList</span></code>.</p>
@@ -546,15 +518,7 @@ A function used to calculate the weight of the experts.</p>
 <code class="descname">build_posterior_mean_var</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em>, <em>test_points</em>, <em>full_cov=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#gPoEReduction.build_posterior_mean_var"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.distributed.gPoEReduction.build_posterior_mean_var" title="Permalink to this definition">¶</a></dt>
 <dd><p>Builds an op for the mean and variance of the posterior(s).</p>
 <p>In the returned tensors, the last index should always be the
-latent function index. Suppose <code class="code docutils literal"><span class="pre">m</span></code> is some model with two
-latent functions:</p>
-<blockquote>
-<div>test_points = tf.constant([[1, 2], [3, 4]])
-mean, var = m.build_posterior_mean_var([[1,2],[3,4]], True)
-mean[:, 0]  # means for the 0th latent func
-mean[:, 1]  # means for the 1st latent func
-var[:, :, 0]  # full covariance matrix for latent func 0
-var[:, :, 1]  # full covariance matrix for latent func 1</div></blockquote>
+latent function index.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -630,22 +594,21 @@ variances of the child experts, with a correction term based on
 the prior variance and the sum of the weights. The mean of the
 posterior is a weighted sum of the means of the child experts.</p>
 <div class="math">
-\[\begin{split}σ^{-2}_rBCM &amp;= (\sum_{k=1}^{M} β_k σ^{-2}_k)
+\[\begin{split}σ^{-2}_{rBCM} &amp;= (\sum_{k=1}^{M} β_k σ^{-2}_k)
               + (1 - \sum_{k=1}^{M} β_k) σ^{-2}_{\star\star}\\
-μ_rBCM &amp;= σ^2_rBCM \sum_{k=1}^{M} β_k μ_k σ^{-2}_k\end{split}\]</div>
-<p>where <span class="math">\(μ_rBCM\)</span> and <span class="math">\(σ^2_rBCM\)</span> are the final posterior
+μ_{rBCM} &amp;= σ^2_{rBCM} \sum_{k=1}^{M} β_k μ_k σ^{-2}_k\end{split}\]</div>
+<p>where <span class="math">\(μ_{rBCM}\)</span> and <span class="math">\(σ^2_{rBCM}\)</span> are the final posterior
 mean and variance, <span class="math">\(M\)</span> is the number of child experts,
 <span class="math">\(σ^{-2}_{\star\star}\)</span> is the prior precision and
 <span class="math">\(μ_k\)</span> and <span class="math">\(σ^2_k\)</span> are the posterior mean and variance
-for the <span class="math">\(k`th child and :math:`β_k\)</span> is the weight of the
-:math:<a href="#id9"><span class="problematic" id="id10">`</span></a>k`th child.</p>
+for the <span class="math">\(k\)</span>th child and <span class="math">\(β_k\)</span> is the weight of the
+<span class="math">\(k\)</span>th child.</p>
 <p>The model always falls back to the prior outside of the range of
 the data.</p>
 <dl class="attribute">
-<dt>
-<code class="descname">weightfunction (Callable[[Sequence[GPModel], tf.Tensor,</code></dt>
-<dd><p>tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]):
-A function used to calculate the weight of the experts.</p>
+<dt id="gptf.distributed.rBCMReduction.weightfunction">
+<code class="descname">weightfunction</code><a class="headerlink" href="#gptf.distributed.rBCMReduction.weightfunction" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Callable[[Sequence[GPModel], tf.Tensor, tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]</em> &#8211; A function used to calculate the weight of the experts.</p>
 </dd></dl>
 
 <p>For other attributes, see <code class="code docutils literal"><span class="pre">GPModel</span></code> and <code class="code docutils literal"><span class="pre">ParamList</span></code>.</p>
@@ -654,15 +617,7 @@ A function used to calculate the weight of the experts.</p>
 <code class="descname">build_posterior_mean_var</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em>, <em>test_points</em>, <em>full_cov=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#rBCMReduction.build_posterior_mean_var"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.distributed.rBCMReduction.build_posterior_mean_var" title="Permalink to this definition">¶</a></dt>
 <dd><p>Builds an op for the mean and variance of the posterior(s).</p>
 <p>In the returned tensors, the last index should always be the
-latent function index. Suppose <code class="code docutils literal"><span class="pre">m</span></code> is some model with two
-latent functions:</p>
-<blockquote>
-<div>test_points = tf.constant([[1, 2], [3, 4]])
-mean, var = m.build_posterior_mean_var([[1,2],[3,4]], True)
-mean[:, 0]  # means for the 0th latent func
-mean[:, 1]  # means for the 1st latent func
-var[:, :, 0]  # full covariance matrix for latent func 0
-var[:, :, 1]  # full covariance matrix for latent func 1</div></blockquote>
+latent function index.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -709,14 +664,13 @@ Both tensors have the same dtype.</p>
 <li><strong>experts</strong> (<em>GPModel | Sequence[GPModel]</em>) &#8211; <p>The experts to
 combine the opinions of. If this is a <code class="code docutils literal"><span class="pre">GPModel</span></code>, then it
 will be shallow-copied to fill out the architecture.
-If it is a sequence of <a href="#id11"><span class="problematic" id="id12">`</span></a>GPModel`s, then the architecture
+If it is a sequence of <code class="code docutils literal"><span class="pre">GPModel</span></code>s, then the architecture
 will have to have as many nodes in its final layer as
 there are in the sequence, i.e.</p>
 <blockquote>
 <div>len(experts) == reduce(operator.mul,architecture,1)</div></blockquote>
 </li>
-<li><strong>(Callable[[Sequence[GPModel], tf.Tensor,</strong> (<em>weightfunction</em>) &#8211; tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]):
-A function used to calculate the weight of the experts.</li>
+<li><strong>weightfunction</strong> (<em>Callable[[Sequence[GPModel], tf.Tensor, tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]</em>) &#8211; A function used to calculate the weight of the experts.</li>
 <li><strong>architecture</strong> (<em>Sequence[int]</em>) &#8211; The branching factors at each
 layer of the rBCM.</li>
 </ul>
@@ -732,7 +686,7 @@ layer of the rBCM.</li>
 <p>GP regression with Gaussian noise.</p>
 <dl class="class">
 <dt id="gptf.gpr.GPR">
-<em class="property">class </em><code class="descclassname">gptf.gpr.</code><code class="descname">GPR</code><span class="sig-paren">(</span><em>kernel</em>, <em>meanfunction=&lt;gptf.core.meanfunctions.Zero object</em>, <em>fallback_name unnamed</em>, <em>id 0x7fe38380eb38&gt;</em>, <em>noise_variance=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/gpr.html#GPR"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.gpr.GPR" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">gptf.gpr.</code><code class="descname">GPR</code><span class="sig-paren">(</span><em>kernel</em>, <em>meanfunction=&lt;gptf.core.meanfunctions.Zero object</em>, <em>fallback_name unnamed</em>, <em>id 0x7f09e836e9b0&gt;</em>, <em>noise_variance=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/gpr.html#GPR"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.gpr.GPR" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="gptf.core.html#gptf.core.models.GPModel" title="gptf.core.models.GPModel"><code class="xref py py-class docutils literal"><span class="pre">gptf.core.models.GPModel</span></code></a>, <a class="reference internal" href="gptf.core.html#gptf.core.params.ParamAttributes" title="gptf.core.params.ParamAttributes"><code class="xref py py-class docutils literal"><span class="pre">gptf.core.params.ParamAttributes</span></code></a></p>
 <p>Gaussian process regression with Gaussian noise.</p>
 <dl class="attribute">
@@ -787,24 +741,27 @@ of the GP.</p>
 </div>
 <p>To generate some sample training outputs, we&#8217;ll compute a
 sample from the prior with one latent function at our
-training inputs.
-&gt;&gt;&gt; X = np.random.uniform(0., 5., (50, 1)) # 500 unique 1d points
-&gt;&gt;&gt; Y = gp.compute_prior_samples(X, 1, 1)[0]</p>
-<p>Then we&#8217;ll add some noise:
-&gt;&gt;&gt; sigma = np.sqrt(gp.likelihood.variance.value)
-&gt;&gt;&gt; Y += np.random.normal(0., sigma, Y.shape)</p>
+training inputs.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">5.</span><span class="p">,</span> <span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="c1"># 500 unique 1d points</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Y</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">compute_prior_samples</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Then we&#8217;ll add some noise:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">gp</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">variance</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Y</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">Y</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</pre></div>
+</div>
 <p>Then we&#8217;ll mess with the value of the parameters. When
 we optimise the model, they should return to something close
-to their original state.
-&gt;&gt;&gt; gp.kernel.variance = 5.
-&gt;&gt;&gt; gp.kernel.lengthscales = 5.
-&gt;&gt;&gt; gp.likelihood.variance = 5.
-&gt;&gt;&gt; gp.optimize(X, Y, disp=False)
-message: &#8216;SciPy optimizer completed successfully.&#8217;
-success: True</p>
-<blockquote>
-<div>x: array([...,...,...])</div></blockquote>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">vaguely_close_to</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+to their original state.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gp</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">variance</span> <span class="o">=</span> <span class="mf">5.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gp</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">lengthscales</span> <span class="o">=</span> <span class="mf">5.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gp</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">variance</span> <span class="o">=</span> <span class="mf">5.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gp</span><span class="o">.</span><span class="n">optimize</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">disp</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="go">message: &#39;SciPy optimizer completed successfully.&#39;</span>
+<span class="go">success: True</span>
+<span class="go">      x: array([...,...,...])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">vaguely_close_to</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="n">v</span> <span class="o">=</span> <span class="n">param</span><span class="o">.</span><span class="n">value</span>
 <span class="gp">... </span>    <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="n">v</span> <span class="o">-</span> <span class="n">v</span><span class="o">*.</span><span class="mi">25</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">b</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">vaguely_close_to</span><span class="p">(</span><span class="n">gp</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">lengthscales</span><span class="p">,</span> <span class="mf">1.</span><span class="p">)</span>
@@ -845,15 +802,7 @@ likelihood of the model.</p>
 <code class="descname">build_posterior_mean_var</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em>, <em>test_points</em>, <em>full_cov=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/gpr.html#GPR.build_posterior_mean_var"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.gpr.GPR.build_posterior_mean_var" title="Permalink to this definition">¶</a></dt>
 <dd><p>Builds an op for the mean and variance of the posterior(s).</p>
 <p>In the returned tensors, the last index should always be the
-latent function index. Suppose <code class="code docutils literal"><span class="pre">m</span></code> is some model with two
-latent functions:</p>
-<blockquote>
-<div>test_points = tf.constant([[1, 2], [3, 4]])
-mean, var = m.build_posterior_mean_var([[1,2],[3,4]], True)
-mean[:, 0]  # means for the 0th latent func
-mean[:, 1]  # means for the 1st latent func
-var[:, :, 0]  # full covariance matrix for latent func 0
-var[:, :, 1]  # full covariance matrix for latent func 1</div></blockquote>
+latent function index.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />

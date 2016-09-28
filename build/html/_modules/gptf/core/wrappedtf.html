@@ -111,6 +111,7 @@
 <span class="sd">        ...         print(&quot;exit called&quot;)</span>
 
 <span class="sd">        Wrapping a context manager causes it to do nothing.</span>
+
 <span class="sd">        &gt;&gt;&gt; e = Example()</span>
 <span class="sd">        &gt;&gt;&gt; with e:</span>
 <span class="sd">        ...     print(&quot;with body&quot;)</span>
@@ -124,6 +125,7 @@
 
 <span class="sd">        You can access other attributes of the context manager</span>
 <span class="sd">        through the wrapper.</span>
+
 <span class="sd">        &gt;&gt;&gt; e.attribute = &quot;horse&quot;</span>
 <span class="sd">        &gt;&gt;&gt; NullContextWrapper(e).attribute</span>
 <span class="sd">        &#39;horse&#39;</span>
@@ -171,8 +173,7 @@
 <span class="sd">    Attributes:</span>
 <span class="sd">        NO_DEVICE (object): A class-level constant, used to specify an</span>
 <span class="sd">            empty op placement context.</span>
-<span class="sd">        tf_device (str | Callable[[tf.Operation], str] | tf.DeviceSpec</span>
-<span class="sd">                | WrappedTF.NO_DEVICE | None):</span>
+<span class="sd">        tf_device (str | Callable[[tf.Operation], str] | tf.DeviceSpec | WrappedTF.NO_DEVICE | None):</span>
 <span class="sd">            The device context onto which this object&#39;s ops should be pinned.</span>
 <span class="sd">            Device contexts are applied hierarchically, starting from the</span>
 <span class="sd">            highest parent. See `.op_placement_context()`.</span>
@@ -249,6 +250,7 @@
 <span class="sd">            ...         self.tf_graph = tf.Graph()</span>
 
 <span class="sd">            Choose the op placement context by assigning to `.tf_device`:</span>
+
 <span class="sd">            &gt;&gt;&gt; a, b, c, d, e = [Example() for _ in range(5)]</span>
 <span class="sd">            &gt;&gt;&gt; a.tf_device = &#39;/job:worker&#39;</span>
 <span class="sd">            &gt;&gt;&gt; b.tf_device = tf.DeviceSpec(device_type=&#39;GPU&#39;, device_index=0)</span>
@@ -259,6 +261,7 @@
 <span class="sd">            Device contexts are combined, starting from the context of the</span>
 <span class="sd">            root of the tree. `c.tf_device` is `None`, so it uses the context</span>
 <span class="sd">            of its parent.</span>
+
 <span class="sd">            &gt;&gt;&gt; a.child = c</span>
 <span class="sd">            &gt;&gt;&gt; with a.op_placement_context():</span>
 <span class="sd">            ...     print(tf.constant(0).device)</span>
@@ -269,12 +272,14 @@
 
 <span class="sd">            `d.tf_device` is `WrappedTF.NO_DEVICE`, so it resets the device</span>
 <span class="sd">            context.</span>
+
 <span class="sd">            &gt;&gt;&gt; a.child = d</span>
 <span class="sd">            &gt;&gt;&gt; with d.op_placement_context():</span>
 <span class="sd">            ...     print(tf.constant(0).device)</span>
 <span class="sd">            &lt;BLANKLINE&gt;</span>
 
 <span class="sd">            Other device contexts combine the way you would expect them to.</span>
+
 <span class="sd">            &gt;&gt;&gt; a.child = b</span>
 <span class="sd">            &gt;&gt;&gt; b.child = e</span>
 <span class="sd">            &gt;&gt;&gt; with b.op_placement_context():</span>
@@ -288,6 +293,7 @@
 
 <span class="sd">            The root node of the tree may define a `.tf_graph`. Child ops will</span>
 <span class="sd">            be placed in the `.tf_graph` of their highest parent.</span>
+
 <span class="sd">            &gt;&gt;&gt; a.tf_graph = tf.Graph()</span>
 <span class="sd">            &gt;&gt;&gt; b.tf_graph = tf.Graph()</span>
 <span class="sd">            &gt;&gt;&gt; with a.op_placement_context():</span>
@@ -302,6 +308,7 @@
 
 <span class="sd">            In addition, a name scope is opened that matches the object</span>
 <span class="sd">            hierachy:</span>
+
 <span class="sd">            &gt;&gt;&gt; with a.op_placement_context():</span>
 <span class="sd">            ...     print(tf.constant(0).name)</span>
 <span class="sd">            unnamed/Const...</span>
@@ -353,6 +360,7 @@
 
 <span class="sd">            If there is already a default session, returns that </span>
 <span class="sd">            session in a NullContextWrapper.</span>
+
 <span class="sd">            &gt;&gt;&gt; with tf.Session() as sess:</span>
 <span class="sd">            ...     sess0 = w.get_session()</span>
 <span class="sd">            ...     print(type(sess0).__name__)</span>
@@ -363,6 +371,7 @@
 <span class="sd">            It&#39;s safe to use w.get_session() in a with block, even if</span>
 <span class="sd">            there is a default session. Doing so won&#39;t call the</span>
 <span class="sd">            `__enter__` or `__exit__` methods of the default session.</span>
+
 <span class="sd">            &gt;&gt;&gt; class AnnounceSession(tf.Session):</span>
 <span class="sd">            ...     def __enter__(self):</span>
 <span class="sd">            ...         print(&#39;__enter__ called&#39;)</span>
@@ -383,6 +392,7 @@
 <span class="sd">            __exit__ called</span>
 <span class="sd">            </span>
 <span class="sd">            Else, returns a new session each time:</span>
+
 <span class="sd">            &gt;&gt;&gt; sess2 = w.get_session()</span>
 <span class="sd">            &gt;&gt;&gt; sess2 is sess</span>
 <span class="sd">            False</span>
@@ -413,6 +423,7 @@
 
 <span class="sd">            `Example` is a simple class that provides a method, `.depth()`,</span>
 <span class="sd">            that uses TensorFlow to calculate an object&#39;s depth in the tree.</span>
+
 <span class="sd">            &gt;&gt;&gt; a.depth()</span>
 <span class="sd">            1</span>
 <span class="sd">            &gt;&gt;&gt; a.child.depth()</span>
@@ -421,6 +432,7 @@
 <span class="sd">            `Example.op()` places its op based on the hierachical device </span>
 <span class="sd">            context. If we change `a`&#39;s device context, we also change</span>
 <span class="sd">            `a.child`&#39;s.</span>
+
 <span class="sd">            &gt;&gt;&gt; print(a.child.op().device)</span>
 <span class="sd">            </span>
 <span class="sd">            &gt;&gt;&gt; a.tf_device = &#39;/job:worker/task:0&#39;</span>
@@ -428,6 +440,7 @@
 <span class="sd">            /job:worker/task:0</span>
 
 <span class="sd">            `a.child.depth()` will now result in an error:</span>
+
 <span class="sd">            &gt;&gt;&gt; a.child.depth()</span>
 <span class="sd">            Traceback (most recent call last):</span>
 <span class="sd">                ...</span>
@@ -438,6 +451,7 @@
 <span class="sd">            However, if we set `a.session_target` appropriately, </span>
 <span class="sd">            `a.child.get_session()` will return a session capable of</span>
 <span class="sd">            running ops created with `a.child.op_placement_context`.</span>
+
 <span class="sd">            &gt;&gt;&gt; clusterdict = \\</span>
 <span class="sd">            ...     { &#39;worker&#39;: [&#39;localhost:2222&#39;]</span>
 <span class="sd">            ...     , &#39;master&#39;: [&#39;localhost:2223&#39;]</span>
@@ -449,6 +463,7 @@
 <span class="sd">            &gt;&gt;&gt; a.tf_session_target = master.target</span>
 
 <span class="sd">            `a.child.depth()` should now run smoothly.</span>
+
 <span class="sd">            &gt;&gt;&gt; a.child.depth()</span>
 <span class="sd">            2</span>
 
@@ -549,6 +564,7 @@
 <span class="sd">            clear its subtree&#39;s cache. `w`, which knows nothing about `y` so</span>
 <span class="sd">            should not have any ops that depend on `y`&#39;s device context,</span>
 <span class="sd">            should not have its cache cleared; the same goes for `x`.</span>
+
 <span class="sd">            &gt;&gt;&gt; setup()</span>
 <span class="sd">            &gt;&gt;&gt; w.child_1 = y</span>
 <span class="sd">            &gt;&gt;&gt; &#39;tf&#39; in w.cache and &#39;tf&#39; in w.child_0.cache</span>
@@ -560,6 +576,7 @@
 <span class="sd">            about `y` and might have ops that depend on `y`&#39;s device context,</span>
 <span class="sd">            so we should clear its cache. `w.child_0` still knows nothing</span>
 <span class="sd">            about `y`, so its cache should still not be cleared.</span>
+
 <span class="sd">            &gt;&gt;&gt; setup()</span>
 <span class="sd">            &gt;&gt;&gt; del w.child_1</span>
 <span class="sd">            &gt;&gt;&gt; &#39;tf&#39; in w.child_0.cache</span>
@@ -572,6 +589,7 @@
 <span class="sd">            When a `WrappedTF` is copied between trees, the caches in the</span>
 <span class="sd">            copy are cleared and session births are registered in the</span>
 <span class="sd">            subtree of the copy.</span>
+
 <span class="sd">            &gt;&gt;&gt; setup()</span>
 <span class="sd">            &gt;&gt;&gt; y.child_1 = w.child_0</span>
 <span class="sd">            &gt;&gt;&gt; &#39;tf&#39; in y.cache and &#39;tf&#39; in y.child.cache</span>
@@ -601,7 +619,7 @@
         <span class="c1">#    copy._on_op_placement_context_change()</span>
         <span class="k">return</span> <span class="n">copy</span></div></div>
 
-<div class="viewcode-block" id="tf_method"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.wrappedtf.tf_method">[docs]</a><span class="k">def</span> <span class="nf">tf_method</span><span class="p">(</span><span class="n">name_scope</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rename_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+<div class="viewcode-block" id="tf_method"><a class="viewcode-back" href="../../../public_api.html#gptf.core.wrappedtf.tf_method">[docs]</a><span class="k">def</span> <span class="nf">tf_method</span><span class="p">(</span><span class="n">name_scope</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rename_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
         <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cache_limit</span><span class="o">=</span><span class="mi">128</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Decorator version of `WrappedTF.op_placement_context`.</span>
 <span class="sd">    </span>
@@ -619,6 +637,7 @@
 <span class="sd">    Examples:</span>
 <span class="sd">        In the following example, `Example.method_a` is equivalent </span>
 <span class="sd">        to `Example.method_b`.</span>
+
 <span class="sd">        &gt;&gt;&gt; from gptf.core.trees import AttributeTree</span>
 <span class="sd">        &gt;&gt;&gt; class Example(WrappedTF, AttributeTree):</span>
 <span class="sd">        ...     def method_a(self, a, b):</span>
@@ -632,6 +651,7 @@
 <span class="sd">        ...         return tf.add(a, b)</span>
 
 <span class="sd">        Devices are set properly in both methods:</span>
+
 <span class="sd">        &gt;&gt;&gt; e = Example()</span>
 <span class="sd">        &gt;&gt;&gt; e.tf_graph = tf.Graph()  # don&#39;t break other doctests</span>
 <span class="sd">        &gt;&gt;&gt; e.tf_device = &#39;/job:worker/task:0&#39;</span>
@@ -643,17 +663,20 @@
 <span class="sd">        True</span>
 
 <span class="sd">        The returned tensor(s) are given the name of the name scope.</span>
+
 <span class="sd">        &gt;&gt;&gt; print(a.name)</span>
 <span class="sd">        unnamed.method_a/0:0</span>
 <span class="sd">        &gt;&gt;&gt; print(b.name)</span>
 <span class="sd">        unnamed.method_b/0:0</span>
 
 <span class="sd">        Multiple method calls produce unique names.</span>
+
 <span class="sd">        &gt;&gt;&gt; print(e.method_b(1, 2).name)</span>
 <span class="sd">        unnamed.method_b/0_1:0</span>
 
 <span class="sd">        If a method returns a sequence of tensors, they are named</span>
 <span class="sd">        `&lt;scope&gt;/0`, `&lt;scope&gt;/1`, etc.</span>
+
 <span class="sd">        &gt;&gt;&gt; class DoubleReturnExample(WrappedTF, AttributeTree):</span>
 <span class="sd">        ...     @tf_method(cache=False)</span>
 <span class="sd">        ...     def method(self):</span>
@@ -671,6 +694,7 @@
 <span class="sd">        unnamed.method/1_1:0</span>
 
 <span class="sd">        Calls to other tensorflow methods do not cause nested name scopes.</span>
+
 <span class="sd">        &gt;&gt;&gt; class NestedExample(WrappedTF, AttributeTree):</span>
 <span class="sd">        ...     def __init__(self, child):</span>
 <span class="sd">        ...         super().__init__()</span>
@@ -682,6 +706,7 @@
 <span class="sd">        unnamed.child.method_b/0:0</span>
 
 <span class="sd">        Else, no attempt is made to rename the output.</span>
+
 <span class="sd">        &gt;&gt;&gt; class NumpyReturnExample(WrappedTF, AttributeTree):</span>
 <span class="sd">        ...     @tf_method()</span>
 <span class="sd">        ...     def method(self):</span>
@@ -691,6 +716,7 @@
 
 <span class="sd">        If caching is enabled, then multiple calls with the same </span>
 <span class="sd">        arguments will result in the same return value.</span>
+
 <span class="sd">        &gt;&gt;&gt; tensor = e.method_b(5, 5)</span>
 <span class="sd">        &gt;&gt;&gt; tensor is e.method_b(5, 5)</span>
 <span class="sd">        True</span>
@@ -701,6 +727,7 @@
 <span class="sd">        If the cache is cleared (perhaps due to a device context</span>
 <span class="sd">        change), the method cache is also cleared, and new tensors</span>
 <span class="sd">        will be returned.</span>
+
 <span class="sd">        &gt;&gt;&gt; e.clear_cache()</span>
 <span class="sd">        &gt;&gt;&gt; tensor is e.method_b(5, 5)</span>
 <span class="sd">        False</span>

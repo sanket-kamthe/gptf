@@ -54,7 +54,7 @@
 
 
 <span class="c1">#TODO: Write tests.</span>
-<div class="viewcode-block" id="GPR"><a class="viewcode-back" href="../../gptf.html#gptf.gpr.GPR">[docs]</a><span class="k">class</span> <span class="nc">GPR</span><span class="p">(</span><span class="n">GPModel</span><span class="p">,</span> <span class="n">ParamAttributes</span><span class="p">):</span>
+<div class="viewcode-block" id="GPR"><a class="viewcode-back" href="../../public_api.html#gptf.gpr.GPR">[docs]</a><span class="k">class</span> <span class="nc">GPR</span><span class="p">(</span><span class="n">GPModel</span><span class="p">,</span> <span class="n">ParamAttributes</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Gaussian process regression with Gaussian noise.</span>
 <span class="sd">    </span>
 <span class="sd">    Attributes:</span>
@@ -87,16 +87,19 @@
 <span class="sd">        To generate some sample training outputs, we&#39;ll compute a </span>
 <span class="sd">        sample from the prior with one latent function at our</span>
 <span class="sd">        training inputs.</span>
+<span class="sd">        </span>
 <span class="sd">        &gt;&gt;&gt; X = np.random.uniform(0., 5., (50, 1)) # 500 unique 1d points</span>
 <span class="sd">        &gt;&gt;&gt; Y = gp.compute_prior_samples(X, 1, 1)[0]</span>
 
 <span class="sd">        Then we&#39;ll add some noise:</span>
+
 <span class="sd">        &gt;&gt;&gt; sigma = np.sqrt(gp.likelihood.variance.value)</span>
 <span class="sd">        &gt;&gt;&gt; Y += np.random.normal(0., sigma, Y.shape)</span>
 <span class="sd">        </span>
 <span class="sd">        Then we&#39;ll mess with the value of the parameters. When</span>
 <span class="sd">        we optimise the model, they should return to something close</span>
 <span class="sd">        to their original state.</span>
+
 <span class="sd">        &gt;&gt;&gt; gp.kernel.variance = 5.</span>
 <span class="sd">        &gt;&gt;&gt; gp.kernel.lengthscales = 5.</span>
 <span class="sd">        &gt;&gt;&gt; gp.likelihood.variance = 5.</span>
@@ -115,7 +118,7 @@
 <span class="sd">        True</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kernel</span><span class="p">,</span> <span class="n">meanfunction</span><span class="o">=</span><span class="n">meanfunctions</span><span class="o">.</span><span class="n">Zero</span><span class="p">(),</span>
+<div class="viewcode-block" id="GPR.__init__"><a class="viewcode-back" href="../../public_api.html#gptf.gpr.GPR.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kernel</span><span class="p">,</span> <span class="n">meanfunction</span><span class="o">=</span><span class="n">meanfunctions</span><span class="o">.</span><span class="n">Zero</span><span class="p">(),</span>
                  <span class="n">noise_variance</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initializer.</span>
 
@@ -130,11 +133,11 @@
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span> <span class="o">=</span> <span class="n">likelihoods</span><span class="o">.</span><span class="n">Gaussian</span><span class="p">(</span><span class="n">noise_variance</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span> <span class="o">=</span> <span class="n">kernel</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">meanfunction</span> <span class="o">=</span> <span class="n">meanfunction</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">meanfunction</span> <span class="o">=</span> <span class="n">meanfunction</span></div>
     
     <span class="nd">@tf_method</span><span class="p">()</span>
     <span class="nd">@overrides</span>
-<div class="viewcode-block" id="GPR.build_log_likelihood"><a class="viewcode-back" href="../../gptf.html#gptf.gpr.GPR.build_log_likelihood">[docs]</a>    <span class="k">def</span> <span class="nf">build_log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
+<div class="viewcode-block" id="GPR.build_log_likelihood"><a class="viewcode-back" href="../../public_api.html#gptf.gpr.GPR.build_log_likelihood">[docs]</a>    <span class="k">def</span> <span class="nf">build_log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
         <span class="n">noise_variance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">variance</span><span class="o">.</span><span class="n">tensor</span>
         <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">K</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
         <span class="c1"># Add gaussian noise to kernel</span>
@@ -146,7 +149,7 @@
 
     <span class="nd">@tf_method</span><span class="p">()</span>
     <span class="nd">@overrides</span>
-<div class="viewcode-block" id="GPR.build_prior_mean_var"><a class="viewcode-back" href="../../gptf.html#gptf.gpr.GPR.build_prior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_prior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">num_latent</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="GPR.build_prior_mean_var"><a class="viewcode-back" href="../../public_api.html#gptf.gpr.GPR.build_prior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_prior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">num_latent</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="n">noise_var</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">variance</span><span class="o">.</span><span class="n">tensor</span>
         <span class="n">X</span> <span class="o">=</span> <span class="n">test_points</span>
         <span class="n">fmean</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">meanfunction</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
@@ -161,7 +164,7 @@
 
     <span class="nd">@tf_method</span><span class="p">()</span>
     <span class="nd">@overrides</span>
-<div class="viewcode-block" id="GPR.build_posterior_mean_var"><a class="viewcode-back" href="../../gptf.html#gptf.gpr.GPR.build_posterior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_posterior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="GPR.build_posterior_mean_var"><a class="viewcode-back" href="../../public_api.html#gptf.gpr.GPR.build_posterior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_posterior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="n">noise_var</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">variance</span><span class="o">.</span><span class="n">tensor</span>
         <span class="n">Kx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">K</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">test_points</span><span class="p">)</span>
         <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">K</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>

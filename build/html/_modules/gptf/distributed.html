@@ -66,20 +66,19 @@
 
 <span class="kn">from</span> <span class="nn">gptf</span> <span class="k">import</span> <span class="n">GPModel</span><span class="p">,</span> <span class="n">Parameterized</span><span class="p">,</span> <span class="n">ParamList</span><span class="p">,</span> <span class="n">ParamAttributes</span><span class="p">,</span> <span class="n">tf_method</span>
 
-<div class="viewcode-block" id="cao_fleet_weights"><a class="viewcode-back" href="../../gptf.html#gptf.distributed.cao_fleet_weights">[docs]</a><span class="k">def</span> <span class="nf">cao_fleet_weights</span><span class="p">(</span><span class="n">experts</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">points</span><span class="p">):</span>
+<div class="viewcode-block" id="cao_fleet_weights"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.cao_fleet_weights">[docs]</a><span class="k">def</span> <span class="nf">cao_fleet_weights</span><span class="p">(</span><span class="n">experts</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">points</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;The predictive power of the experts at the points.</span>
 
 <span class="sd">    The predictive power is calculated as</span>
 
 <span class="sd">    .. math::</span>
-<span class="sd">        β_k(x_\star)=\\frac{1}{2} (\ln (σ^\star_k)^2 </span>
-<span class="sd">                                   - \ln σ^{-2}_k(x_\star))</span>
+<span class="sd">        β_k(x_\star)=\\frac{1}{2} (\ln (σ^\star_k)^2 - \ln σ^{-2}_k(x_\star))</span>
 
 <span class="sd">    where :math:`β_k(x_\star)` is the predictive power of the</span>
 <span class="sd">    :math:`k`th expert at the point :math:`x_\star`, </span>
-<span class="sd">    :math:`(σ^\star_k)^2` is the prior variance of the :math:`k`th</span>
+<span class="sd">    :math:`(σ^\star_k)^2` is the prior variance of the :math:`k`\ th</span>
 <span class="sd">    expert and :math:`σ^{-2}_k(x_\star)` is the posterior variance</span>
-<span class="sd">    of the :math:`k`th expert at the point :math:`x_\star`.</span>
+<span class="sd">    of the :math:`k`\ th expert at the point :math:`x_\star`.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        experts (Sequence[GPModel]): the experts to calculate</span>
@@ -105,13 +104,13 @@
     <span class="n">chunks</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">experts</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">X</span><span class="p">),</span> <span class="n">tf</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">Y</span><span class="p">))</span>
     <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">weight</span><span class="p">(</span><span class="o">*</span><span class="n">chunk</span><span class="p">)</span> <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">chunks</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="equal_weights"><a class="viewcode-back" href="../../gptf.html#gptf.distributed.equal_weights">[docs]</a><span class="k">def</span> <span class="nf">equal_weights</span><span class="p">(</span><span class="n">experts</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">points</span><span class="p">):</span>
+<div class="viewcode-block" id="equal_weights"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.equal_weights">[docs]</a><span class="k">def</span> <span class="nf">equal_weights</span><span class="p">(</span><span class="n">experts</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">points</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Gives each expert an equal weight.</span>
 
 <span class="sd">    .. math::</span>
 <span class="sd">        \\forall k \in 0..M,\ β_k = 1 / M</span>
 
-<span class="sd">    where :math:`β_k` is the weight of the :math:`k`th expert at</span>
+<span class="sd">    where :math:`β_k` is the weight of the :math:`k`\ th expert at</span>
 <span class="sd">    every point and :math:`M` is the number of experts.</span>
 
 <span class="sd">    The dtype returned matches the dtype of `points`.</span>
@@ -133,7 +132,7 @@
     <span class="n">beta</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">fill</span><span class="p">((</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">points</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">),</span> <span class="n">beta</span><span class="p">)</span>
     <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">beta</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">experts</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="ones_weights"><a class="viewcode-back" href="../../gptf.html#gptf.distributed.ones_weights">[docs]</a><span class="k">def</span> <span class="nf">ones_weights</span><span class="p">(</span><span class="n">experts</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">points</span><span class="p">):</span>
+<div class="viewcode-block" id="ones_weights"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.ones_weights">[docs]</a><span class="k">def</span> <span class="nf">ones_weights</span><span class="p">(</span><span class="n">experts</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">points</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;All weights are 1.</span>
 
 <span class="sd">    The dtype returned matches the dtype of `points`.</span>
@@ -154,11 +153,11 @@
     <span class="n">ones</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">points</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">points</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
     <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">ones</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">experts</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Reduction"><a class="viewcode-back" href="../../gptf.html#gptf.distributed.Reduction">[docs]</a><span class="k">class</span> <span class="nc">Reduction</span><span class="p">(</span><span class="n">GPModel</span><span class="p">,</span> <span class="n">ParamList</span><span class="p">):</span>
+<div class="viewcode-block" id="Reduction"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.Reduction">[docs]</a><span class="k">class</span> <span class="nc">Reduction</span><span class="p">(</span><span class="n">GPModel</span><span class="p">,</span> <span class="n">ParamList</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Common code for distributed GP reductions.&quot;&quot;&quot;</span>
     <span class="nd">@tf_method</span><span class="p">()</span>
     <span class="nd">@overrides</span>
-<div class="viewcode-block" id="Reduction.build_log_likelihood"><a class="viewcode-back" href="../../gptf.html#gptf.distributed.Reduction.build_log_likelihood">[docs]</a>    <span class="k">def</span> <span class="nf">build_log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
+<div class="viewcode-block" id="Reduction.build_log_likelihood"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.Reduction.build_log_likelihood">[docs]</a>    <span class="k">def</span> <span class="nf">build_log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;The sum of the log likelihoods of the children.&quot;&quot;&quot;</span>
         <span class="n">chunks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_chunks</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
         <span class="n">lmls</span> <span class="o">=</span> <span class="p">[</span><span class="n">child</span><span class="o">.</span><span class="n">build_log_likelihood</span><span class="p">(</span><span class="n">Xk</span><span class="p">,</span> <span class="n">Yk</span><span class="p">)</span> <span class="k">for</span> <span class="n">child</span><span class="p">,</span> <span class="n">Xk</span><span class="p">,</span> <span class="n">Yk</span> <span class="ow">in</span> <span class="n">chunks</span><span class="p">]</span>
@@ -166,7 +165,7 @@
 
     <span class="nd">@tf_method</span><span class="p">()</span>
     <span class="nd">@overrides</span>
-<div class="viewcode-block" id="Reduction.build_prior_mean_var"><a class="viewcode-back" href="../../gptf.html#gptf.distributed.Reduction.build_prior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_prior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">num_latent</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="Reduction.build_prior_mean_var"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.Reduction.build_prior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_prior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">num_latent</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;The arithetic mean of the prior mean / variance of the chilren.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">full_cov</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Full covariance matrix not yet&quot;</span>
@@ -184,7 +183,7 @@
         <span class="n">M</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">X</span><span class="p">),</span> <span class="n">tf</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">Y</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="PoEReduction"><a class="viewcode-back" href="../../gptf.html#gptf.distributed.PoEReduction">[docs]</a><span class="k">class</span> <span class="nc">PoEReduction</span><span class="p">(</span><span class="n">Reduction</span><span class="p">):</span>
+<div class="viewcode-block" id="PoEReduction"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.PoEReduction">[docs]</a><span class="k">class</span> <span class="nc">PoEReduction</span><span class="p">(</span><span class="n">Reduction</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Combines the predictions of its children using the PoE model.</span>
 <span class="sd">    </span>
 <span class="sd">    In the Product of Experts (PoE) model, the variance of the </span>
@@ -195,18 +194,18 @@
 <span class="sd">        </span>
 <span class="sd">    .. math::</span>
 
-<span class="sd">        σ^{-2}_PoE &amp;= \sum_{k=1}^{M} σ^{-2}_k \\\\</span>
-<span class="sd">        μ_PoE &amp;= σ^2_PoE \sum_{k=1}^{M} μ_k σ^{-2}_k</span>
+<span class="sd">        σ^{-2}_{PoE} &amp;= \sum_{k=1}^{M} σ^{-2}_k \\\\</span>
+<span class="sd">        μ_{PoE} &amp;= σ^2_{PoE} \sum_{k=1}^{M} μ_k σ^{-2}_k</span>
 
-<span class="sd">    where :math:`μ_PoE` and :math:`σ^2_PoE` are the final posterior</span>
+<span class="sd">    where :math:`μ_{PoE}` and :math:`σ^2_{PoE}` are the final posterior</span>
 <span class="sd">    mean and variance, :math:`M` is the number of child experts and</span>
 <span class="sd">    :math:`μ_k` and :math:`σ^2_k` are the posterior mean and variance</span>
-<span class="sd">    for the :math:`k`th child.</span>
+<span class="sd">    for the :math:`k`\ th child.</span>
 
-<span class="sd">    Attributes: See `GPModel` and `ParamList`.</span>
+<span class="sd">    Attributes: See :obj:`GPModel` and :obj:`ParamList`.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">children</span><span class="p">):</span>
+<div class="viewcode-block" id="PoEReduction.__init__"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.PoEReduction.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">children</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initialiser.</span>
 
 <span class="sd">        Args:</span>
@@ -215,11 +214,11 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">children</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">children</span><span class="p">)</span></div>
 
     <span class="nd">@tf_method</span><span class="p">()</span>
     <span class="nd">@overrides</span>
-<div class="viewcode-block" id="PoEReduction.build_posterior_mean_var"><a class="viewcode-back" href="../../gptf.html#gptf.distributed.PoEReduction.build_posterior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_posterior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="PoEReduction.build_posterior_mean_var"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.PoEReduction.build_posterior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_posterior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">full_cov</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Full covariance matrix not yet&quot;</span>
                     <span class="s2">&quot;implemented for distributed GPs.&quot;</span><span class="p">)</span>
@@ -232,7 +231,7 @@
         <span class="n">joint_mu</span> <span class="o">=</span> <span class="n">joint_var</span> <span class="o">*</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="n">mu</span> <span class="o">/</span> <span class="n">var</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">joint_mu</span><span class="p">,</span> <span class="n">joint_var</span></div></div>
 
-<div class="viewcode-block" id="gPoEReduction"><a class="viewcode-back" href="../../gptf.html#gptf.distributed.gPoEReduction">[docs]</a><span class="k">class</span> <span class="nc">gPoEReduction</span><span class="p">(</span><span class="n">Reduction</span><span class="p">):</span>
+<div class="viewcode-block" id="gPoEReduction"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.gPoEReduction">[docs]</a><span class="k">class</span> <span class="nc">gPoEReduction</span><span class="p">(</span><span class="n">Reduction</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Combines the predictions of its children using the gPoE model.</span>
 <span class="sd">    </span>
 <span class="sd">    The generalised Product of Experts (gPoE) model is similar to the</span>
@@ -244,40 +243,38 @@
 
 <span class="sd">    .. math::</span>
 
-<span class="sd">        σ^{-2}_gPoE &amp;= \sum_{k=1}^{M} β_k σ^{-2}_c \\\\</span>
-<span class="sd">        μ_gPoE &amp;= σ^2_gPoE \sum_{k=1}^{M} β_k μ_k σ^{-2}_k</span>
+<span class="sd">        σ^{-2}_{gPoE} &amp;= \sum_{k=1}^{M} β_k σ^{-2}_c \\\\</span>
+<span class="sd">        μ_{gPoE} &amp;= σ^2_{gPoE} \sum_{k=1}^{M} β_k μ_k σ^{-2}_k</span>
 
-<span class="sd">    where :math:`μ_gPoE` and :math:`σ^2_PoE` are the final posterior</span>
+<span class="sd">    where :math:`μ_{gPoE}` and :math:`σ^2_{gPoE}` are the final posterior</span>
 <span class="sd">    mean and variance, :math:`M` is the number of child experts and</span>
 <span class="sd">    :math:`μ_k` and :math:`σ^2_k` are the posterior mean and variance</span>
-<span class="sd">    for the :math:`k`th child and :math:`β_k` is the weight of the</span>
-<span class="sd">    :math:`k`th child.</span>
+<span class="sd">    for the :math:`k`\ th child and :math:`β_k` is the weight of the</span>
+<span class="sd">    :math:`k`\ th child.</span>
 
 <span class="sd">    Note that when :math:`\sum_{k} β_k = 1`, the model falls back to</span>
 <span class="sd">    the prior outside the range of the data.</span>
 
 <span class="sd">    Attributes:</span>
-<span class="sd">        weightfunction (Callable[[Sequence[GPModel], tf.Tensor,</span>
-<span class="sd">            tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): </span>
+<span class="sd">        weightfunction (Callable[[Sequence[GPModel], tf.Tensor, tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): </span>
 <span class="sd">            A function used to calculate the weight of the experts.</span>
 
 <span class="sd">    For other attributes, see `GPModel` and `ParamList`.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">children</span><span class="p">,</span> <span class="n">weightfunction</span><span class="p">):</span>
+<div class="viewcode-block" id="gPoEReduction.__init__"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.gPoEReduction.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">children</span><span class="p">,</span> <span class="n">weightfunction</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initialiser.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            children (Sequence[GPModel]): The experts to combine the</span>
 <span class="sd">                opinions of.</span>
-<span class="sd">            weightfunction (Callable[[Sequence[GPModel], tf.Tensor,</span>
-<span class="sd">                tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): </span>
+<span class="sd">            weightfunction (Callable[[Sequence[GPModel], tf.Tensor, tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): </span>
 <span class="sd">                A function used to calculate the weight of the experts.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">children</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">weightfunction</span> <span class="o">=</span> <span class="n">weightfunction</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weightfunction</span> <span class="o">=</span> <span class="n">weightfunction</span></div>
     <span class="c1">#TODO: better weight functions that don&#39;t need X and Y</span>
     <span class="c1">#@tf_method()</span>
     <span class="c1">#@overrides</span>
@@ -299,7 +296,7 @@
 
     <span class="nd">@tf_method</span><span class="p">()</span>
     <span class="nd">@overrides</span>
-<div class="viewcode-block" id="gPoEReduction.build_posterior_mean_var"><a class="viewcode-back" href="../../gptf.html#gptf.distributed.gPoEReduction.build_posterior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_posterior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="gPoEReduction.build_posterior_mean_var"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.gPoEReduction.build_posterior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_posterior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">full_cov</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Full covariance matrix not yet&quot;</span>
                     <span class="s2">&quot;implemented for distributed GPs.&quot;</span><span class="p">)</span>
@@ -314,7 +311,7 @@
         <span class="n">joint_mu</span> <span class="o">=</span> <span class="n">joint_var</span> <span class="o">*</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="n">weight</span> <span class="o">*</span> <span class="n">mu</span> <span class="o">/</span> <span class="n">var</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">joint_mu</span><span class="p">,</span> <span class="n">joint_var</span></div></div>
 
-<div class="viewcode-block" id="BCMReduction"><a class="viewcode-back" href="../../gptf.html#gptf.distributed.BCMReduction">[docs]</a><span class="k">class</span> <span class="nc">BCMReduction</span><span class="p">(</span><span class="n">Reduction</span><span class="p">):</span>
+<div class="viewcode-block" id="BCMReduction"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.BCMReduction">[docs]</a><span class="k">class</span> <span class="nc">BCMReduction</span><span class="p">(</span><span class="n">Reduction</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Combines the predictions of its children using the BCM model.</span>
 <span class="sd">    </span>
 <span class="sd">    In the Bayesian Committee Machine (BCM) model, the variance of the </span>
@@ -325,20 +322,20 @@
 <span class="sd">        </span>
 <span class="sd">    .. math::</span>
 
-<span class="sd">        σ^{-2}_BCM &amp;= (\sum_{k=1}^{M} σ^{-2}_k)</span>
+<span class="sd">        σ^{-2}_{BCM} &amp;= (\sum_{k=1}^{M} σ^{-2}_k)</span>
 <span class="sd">                      + (1 - M) σ^{-2}_{\star\star} \\\\</span>
-<span class="sd">        μ_BCM &amp;= σ^2_BCM \sum_{k=1}^{M} μ_k σ^{-2}_k</span>
+<span class="sd">        μ_{BCM} &amp;= σ^2_{BCM} \sum_{k=1}^{M} μ_k σ^{-2}_k</span>
 
-<span class="sd">    where :math:`μ_BCM` and :math:`σ^2_BCM` are the final posterior</span>
+<span class="sd">    where :math:`μ_{BCM}` and :math:`σ^2_{BCM}` are the final posterior</span>
 <span class="sd">    mean and variance, :math:`M` is the number of child experts,</span>
 <span class="sd">    :math:`σ^{-2}_{\star\star}` is the prior precision and</span>
 <span class="sd">    :math:`μ_k` and :math:`σ^2_k` are the posterior mean and variance</span>
-<span class="sd">    for the :math:`k`th child.</span>
+<span class="sd">    for the :math:`k`\ th child.</span>
 
 <span class="sd">    Attributes: See `GPModel` and `ParamList`.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">children</span><span class="p">):</span>
+<div class="viewcode-block" id="BCMReduction.__init__"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.BCMReduction.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">children</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initialiser.</span>
 
 <span class="sd">        Args:</span>
@@ -347,11 +344,11 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">children</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">children</span><span class="p">)</span></div>
 
     <span class="nd">@tf_method</span><span class="p">()</span>
     <span class="nd">@overrides</span>
-<div class="viewcode-block" id="BCMReduction.build_posterior_mean_var"><a class="viewcode-back" href="../../gptf.html#gptf.distributed.BCMReduction.build_posterior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_posterior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="BCMReduction.build_posterior_mean_var"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.BCMReduction.build_posterior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_posterior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">full_cov</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Full covariance matrix not yet&quot;</span>
                     <span class="s2">&quot;implemented for distributed GPs.&quot;</span><span class="p">)</span>
@@ -368,7 +365,7 @@
         <span class="n">joint_mu</span> <span class="o">=</span> <span class="n">joint_var</span> <span class="o">*</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="n">mu</span> <span class="o">/</span> <span class="n">var</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">joint_mu</span><span class="p">,</span> <span class="n">joint_var</span></div></div>
 
-<div class="viewcode-block" id="rBCMReduction"><a class="viewcode-back" href="../../gptf.html#gptf.distributed.rBCMReduction">[docs]</a><span class="k">class</span> <span class="nc">rBCMReduction</span><span class="p">(</span><span class="n">Reduction</span><span class="p">):</span>
+<div class="viewcode-block" id="rBCMReduction"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.rBCMReduction">[docs]</a><span class="k">class</span> <span class="nc">rBCMReduction</span><span class="p">(</span><span class="n">Reduction</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Combines the predictions of its children using the rBCM model.</span>
 <span class="sd">    </span>
 <span class="sd">    In the Bayesian Committee Machine (rBCM) model, the variance of the </span>
@@ -379,42 +376,40 @@
 <span class="sd">        </span>
 <span class="sd">    .. math::</span>
 
-<span class="sd">        σ^{-2}_rBCM &amp;= (\sum_{k=1}^{M} β_k σ^{-2}_k)</span>
+<span class="sd">        σ^{-2}_{rBCM} &amp;= (\sum_{k=1}^{M} β_k σ^{-2}_k)</span>
 <span class="sd">                      + (1 - \sum_{k=1}^{M} β_k) σ^{-2}_{\star\star}\\\\</span>
-<span class="sd">        μ_rBCM &amp;= σ^2_rBCM \sum_{k=1}^{M} β_k μ_k σ^{-2}_k</span>
+<span class="sd">        μ_{rBCM} &amp;= σ^2_{rBCM} \sum_{k=1}^{M} β_k μ_k σ^{-2}_k</span>
 
-<span class="sd">    where :math:`μ_rBCM` and :math:`σ^2_rBCM` are the final posterior</span>
+<span class="sd">    where :math:`μ_{rBCM}` and :math:`σ^2_{rBCM}` are the final posterior</span>
 <span class="sd">    mean and variance, :math:`M` is the number of child experts,</span>
 <span class="sd">    :math:`σ^{-2}_{\star\star}` is the prior precision and</span>
 <span class="sd">    :math:`μ_k` and :math:`σ^2_k` are the posterior mean and variance</span>
-<span class="sd">    for the :math:`k`th child and :math:`β_k` is the weight of the</span>
-<span class="sd">    :math:`k`th child.</span>
+<span class="sd">    for the :math:`k`\ th child and :math:`β_k` is the weight of the</span>
+<span class="sd">    :math:`k`\ th child.</span>
 
 <span class="sd">    The model always falls back to the prior outside of the range of</span>
 <span class="sd">    the data.</span>
 
 <span class="sd">    Attributes:</span>
-<span class="sd">        weightfunction (Callable[[Sequence[GPModel], tf.Tensor,</span>
-<span class="sd">            tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): </span>
+<span class="sd">        weightfunction (Callable[[Sequence[GPModel], tf.Tensor, tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): </span>
 <span class="sd">            A function used to calculate the weight of the experts.</span>
 
 <span class="sd">    For other attributes, see `GPModel` and `ParamList`.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">children</span><span class="p">,</span> <span class="n">weightfunction</span><span class="p">):</span>
+<div class="viewcode-block" id="rBCMReduction.__init__"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.rBCMReduction.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">children</span><span class="p">,</span> <span class="n">weightfunction</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initialiser.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            children (Sequence[GPModel]): The experts to combine the</span>
 <span class="sd">                opinions of.</span>
-<span class="sd">            weightfunction (Callable[[Sequence[GPModel], tf.Tensor,</span>
-<span class="sd">                tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): </span>
+<span class="sd">            weightfunction (Callable[[Sequence[GPModel], tf.Tensor, tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): </span>
 <span class="sd">                A function used to calculate the weight of the experts.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">children</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">weightfunction</span> <span class="o">=</span> <span class="n">weightfunction</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weightfunction</span> <span class="o">=</span> <span class="n">weightfunction</span></div>
 
     <span class="c1">#TODO: better weight functions that don&#39;t need X and Y</span>
     <span class="c1">#@tf_method()</span>
@@ -437,7 +432,7 @@
 
     <span class="nd">@tf_method</span><span class="p">()</span>
     <span class="nd">@overrides</span>
-<div class="viewcode-block" id="rBCMReduction.build_posterior_mean_var"><a class="viewcode-back" href="../../gptf.html#gptf.distributed.rBCMReduction.build_posterior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_posterior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="rBCMReduction.build_posterior_mean_var"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.rBCMReduction.build_posterior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_posterior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">full_cov</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Full covariance matrix not yet&quot;</span>
                     <span class="s2">&quot;implemented for distributed GPs.&quot;</span><span class="p">)</span>
@@ -455,7 +450,7 @@
         <span class="n">joint_mu</span> <span class="o">=</span> <span class="n">joint_var</span> <span class="o">*</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="n">weight</span> <span class="o">*</span> <span class="n">mu</span> <span class="o">/</span> <span class="n">var</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">joint_mu</span><span class="p">,</span> <span class="n">joint_var</span></div></div>
 
-<div class="viewcode-block" id="PriorDivisorReduction"><a class="viewcode-back" href="../../gptf.html#gptf.distributed.PriorDivisorReduction">[docs]</a><span class="k">class</span> <span class="nc">PriorDivisorReduction</span><span class="p">(</span><span class="n">GPModel</span><span class="p">,</span> <span class="n">ParamAttributes</span><span class="p">):</span>
+<div class="viewcode-block" id="PriorDivisorReduction"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.PriorDivisorReduction">[docs]</a><span class="k">class</span> <span class="nc">PriorDivisorReduction</span><span class="p">(</span><span class="n">GPModel</span><span class="p">,</span> <span class="n">ParamAttributes</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Divides by the prior in proportion to the weight.</span>
 
 <span class="sd">    This is mostly a convenience cljkass for constructing a hierarchical</span>
@@ -465,39 +460,37 @@
 <span class="sd">    </span>
 <span class="sd">    Attributes:</span>
 <span class="sd">        child (GPModel): The expert to correct the opinion of.</span>
-<span class="sd">        weightfunction (Callable[[Sequence[GPModel], tf.Tensor,</span>
-<span class="sd">            tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): </span>
+<span class="sd">        weightfunction (Callable[[Sequence[GPModel], tf.Tensor, tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): </span>
 <span class="sd">            A function used to calculate the weight of the expert.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">child</span><span class="p">,</span> <span class="n">weightfunction</span><span class="p">):</span>
+<div class="viewcode-block" id="PriorDivisorReduction.__init__"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.PriorDivisorReduction.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">child</span><span class="p">,</span> <span class="n">weightfunction</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initialiser.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            child (GPModel): The expert to correct the opinion of.</span>
-<span class="sd">            weightfunction (Callable[[Sequence[GPModel], tf.Tensor,</span>
-<span class="sd">                tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): </span>
+<span class="sd">            weightfunction (Callable[[Sequence[GPModel], tf.Tensor, tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): </span>
 <span class="sd">                A function used to calculate the weight of the expert.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">child</span> <span class="o">=</span> <span class="n">child</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">weightfunction</span> <span class="o">=</span> <span class="n">weightfunction</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weightfunction</span> <span class="o">=</span> <span class="n">weightfunction</span></div>
 
     <span class="nd">@tf_method</span><span class="p">()</span>
     <span class="nd">@overrides</span>
-<div class="viewcode-block" id="PriorDivisorReduction.build_log_likelihood"><a class="viewcode-back" href="../../gptf.html#gptf.distributed.PriorDivisorReduction.build_log_likelihood">[docs]</a>    <span class="k">def</span> <span class="nf">build_log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
+<div class="viewcode-block" id="PriorDivisorReduction.build_log_likelihood"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.PriorDivisorReduction.build_log_likelihood">[docs]</a>    <span class="k">def</span> <span class="nf">build_log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">child</span><span class="o">.</span><span class="n">build_log_likelihood</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span> </div>
 
     <span class="nd">@tf_method</span><span class="p">()</span>
     <span class="nd">@overrides</span>
-<div class="viewcode-block" id="PriorDivisorReduction.build_prior_mean_var"><a class="viewcode-back" href="../../gptf.html#gptf.distributed.PriorDivisorReduction.build_prior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_prior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">num_latent</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="PriorDivisorReduction.build_prior_mean_var"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.PriorDivisorReduction.build_prior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_prior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">num_latent</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">build_prior_mean_var</span><span class="p">(</span>
                 <span class="n">test_points</span><span class="p">,</span> <span class="n">num_latent</span><span class="p">,</span> <span class="n">full_cov</span><span class="p">)</span></div>
 
     <span class="nd">@tf_method</span><span class="p">()</span>
     <span class="nd">@overrides</span>
-<div class="viewcode-block" id="PriorDivisorReduction.build_posterior_mean_var"><a class="viewcode-back" href="../../gptf.html#gptf.distributed.PriorDivisorReduction.build_posterior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_posterior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="PriorDivisorReduction.build_posterior_mean_var"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.PriorDivisorReduction.build_posterior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_posterior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">full_cov</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Full covariance matrix not yet&quot;</span>
                     <span class="s2">&quot;implemented for distributed GPs.&quot;</span><span class="p">)</span>
@@ -512,7 +505,7 @@
         <span class="n">joint_mu</span> <span class="o">=</span> <span class="n">joint_var</span> <span class="o">*</span> <span class="n">mu</span> <span class="o">/</span> <span class="n">var</span>
         <span class="k">return</span> <span class="n">joint_mu</span><span class="p">,</span> <span class="n">joint_var</span></div></div>
 
-<div class="viewcode-block" id="chunks"><a class="viewcode-back" href="../../gptf.html#gptf.distributed.chunks">[docs]</a><span class="k">def</span> <span class="nf">chunks</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">iterable</span><span class="p">,</span> <span class="n">padvalue</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="chunks"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.chunks">[docs]</a><span class="k">def</span> <span class="nf">chunks</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">iterable</span><span class="p">,</span> <span class="n">padvalue</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Iterator for equal-sized chunks of an iterable.</span>
 
 <span class="sd">    Args:</span>
@@ -531,21 +524,20 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">zip_longest</span><span class="p">(</span><span class="o">*</span><span class="p">((</span><span class="nb">iter</span><span class="p">(</span><span class="n">iterable</span><span class="p">),)</span> <span class="o">*</span> <span class="n">n</span><span class="p">),</span> <span class="n">fillvalue</span><span class="o">=</span><span class="n">padvalue</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="tree_rBCM"><a class="viewcode-back" href="../../gptf.html#gptf.distributed.tree_rBCM">[docs]</a><span class="k">def</span> <span class="nf">tree_rBCM</span><span class="p">(</span><span class="n">experts</span><span class="p">,</span> <span class="n">weightfunction</span><span class="p">,</span> <span class="n">architecture</span><span class="p">):</span>
+<div class="viewcode-block" id="tree_rBCM"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.tree_rBCM">[docs]</a><span class="k">def</span> <span class="nf">tree_rBCM</span><span class="p">(</span><span class="n">experts</span><span class="p">,</span> <span class="n">weightfunction</span><span class="p">,</span> <span class="n">architecture</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;An rBCM, expressed as a tree of reductions.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        experts (GPModel | Sequence[GPModel]): The experts to </span>
 <span class="sd">            combine the opinions of. If this is a `GPModel`, then it</span>
 <span class="sd">            will be shallow-copied to fill out the architecture.</span>
-<span class="sd">            If it is a sequence of `GPModel`s, then the architecture</span>
+<span class="sd">            If it is a sequence of `GPModel`\ s, then the architecture</span>
 <span class="sd">            will have to have as many nodes in its final layer as</span>
 <span class="sd">            there are in the sequence, i.e.</span>
 
 <span class="sd">                len(experts) == reduce(operator.mul,architecture,1)</span>
 
-<span class="sd">        weightfunction (Callable[[Sequence[GPModel], tf.Tensor,</span>
-<span class="sd">            tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): </span>
+<span class="sd">        weightfunction (Callable[[Sequence[GPModel], tf.Tensor, tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): </span>
 <span class="sd">            A function used to calculate the weight of the experts.</span>
 <span class="sd">        architecture (Sequence[int]): The branching factors at each</span>
 <span class="sd">            layer of the rBCM.</span>
@@ -573,7 +565,7 @@
 
     <span class="k">return</span> <span class="n">PriorDivisorReduction</span><span class="p">(</span><span class="n">layer</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">total_weight</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="distributed_tree_rBCM"><a class="viewcode-back" href="../../gptf.html#gptf.distributed.distributed_tree_rBCM">[docs]</a><span class="k">def</span> <span class="nf">distributed_tree_rBCM</span><span class="p">(</span><span class="n">experts</span><span class="p">,</span> <span class="n">weightfunction</span><span class="p">,</span> 
+<div class="viewcode-block" id="distributed_tree_rBCM"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.distributed_tree_rBCM">[docs]</a><span class="k">def</span> <span class="nf">distributed_tree_rBCM</span><span class="p">(</span><span class="n">experts</span><span class="p">,</span> <span class="n">weightfunction</span><span class="p">,</span> 
         <span class="n">clusterspec</span><span class="p">,</span> <span class="n">worker_job</span><span class="o">=</span><span class="s1">&#39;worker&#39;</span><span class="p">,</span> <span class="n">param_server_job</span><span class="o">=</span><span class="s1">&#39;ps&#39;</span><span class="p">,</span> 
         <span class="n">target_job</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">target_protocol</span><span class="o">=</span><span class="s1">&#39;grpc&#39;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Constructs a TreerBCM and distributes its computations.</span>
@@ -607,8 +599,7 @@
 <span class="sd">            If it is a sequence of `GPModel`s, then the architecture</span>
 <span class="sd">            will have as many nodes in its final layer as</span>
 <span class="sd">            there are in the sequence.</span>
-<span class="sd">        weightfunction (Callable[[Sequence[GPModel], tf.Tensor,</span>
-<span class="sd">            tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): </span>
+<span class="sd">        weightfunction (Callable[[Sequence[GPModel], tf.Tensor, tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): </span>
 <span class="sd">            A function used to calculate the weight of the experts.</span>
 <span class="sd">        clusterspec (tf.train.ClusterSpec): The cluster to</span>
 <span class="sd">            distribute tasks over.</span>

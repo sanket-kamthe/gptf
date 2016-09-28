@@ -42,7 +42,8 @@
           <div class="body" role="main">
             
   <h1>Source code for gptf.core.models</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Provides base classes for models of all kinds.&quot;&quot;&quot;</span>
+<span></span><span class="c1"># -*- encoding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Provides base classes for models of all kinds.&quot;&quot;&quot;</span>
 <span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">super</span><span class="p">,</span> <span class="nb">range</span>
 <span class="kn">from</span> <span class="nn">future.utils</span> <span class="k">import</span> <span class="n">with_metaclass</span>
 <span class="kn">from</span> <span class="nn">abc</span> <span class="k">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span>
@@ -56,7 +57,7 @@
 <span class="kn">from</span> <span class="nn">.params</span> <span class="k">import</span> <span class="n">Parameterized</span><span class="p">,</span> <span class="n">ParamAttributes</span><span class="p">,</span> <span class="n">DataHolder</span><span class="p">,</span> <span class="n">autoflow</span>
 <span class="kn">from</span> <span class="nn">.wrappedtf</span> <span class="k">import</span> <span class="n">tf_method</span>
 
-<div class="viewcode-block" id="Model"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.models.Model">[docs]</a><span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="n">with_metaclass</span><span class="p">(</span><span class="n">ABCMeta</span><span class="p">,</span> <span class="n">Parameterized</span><span class="p">)):</span>
+<div class="viewcode-block" id="Model"><a class="viewcode-back" href="../../../public_api.html#gptf.core.models.Model">[docs]</a><span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="n">with_metaclass</span><span class="p">(</span><span class="n">ABCMeta</span><span class="p">,</span> <span class="n">Parameterized</span><span class="p">)):</span>
     <span class="sd">&quot;&quot;&quot;Base class for models. </span>
 <span class="sd">    </span>
 <span class="sd">    Inheriting classes must define `.build_log_likelihood(self)`.</span>
@@ -64,6 +65,7 @@
 <span class="sd">    `Param` and `Parameterized` objects that are children of the model</span>
 <span class="sd">    can be used in the tensorflow expression. Children on the model are</span>
 <span class="sd">    defined like so:</span>
+
 <span class="sd">    &gt;&gt;&gt; from overrides import overrides</span>
 <span class="sd">    &gt;&gt;&gt; from gptf import Param, ParamAttributes</span>
 <span class="sd">    &gt;&gt;&gt; class Example(Model, ParamAttributes):</span>
@@ -84,7 +86,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="nd">@abstractmethod</span>
-<div class="viewcode-block" id="Model.build_log_likelihood"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.models.Model.build_log_likelihood">[docs]</a>    <span class="k">def</span> <span class="nf">build_log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
+<div class="viewcode-block" id="Model.build_log_likelihood"><a class="viewcode-back" href="../../../public_api.html#gptf.core.models.Model.build_log_likelihood">[docs]</a>    <span class="k">def</span> <span class="nf">build_log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Builds the log likelihood of the model w.r.t. the data.</span>
 
 <span class="sd">        Args:</span>
@@ -99,11 +101,11 @@
         <span class="bp">NotImplemented</span></div>
 
     <span class="nd">@tf_method</span><span class="p">()</span>
-<div class="viewcode-block" id="Model.build_log_prior"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.models.Model.build_log_prior">[docs]</a>    <span class="k">def</span> <span class="nf">build_log_prior</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Model.build_log_prior"><a class="viewcode-back" href="../../../public_api.html#gptf.core.models.Model.build_log_prior">[docs]</a>    <span class="k">def</span> <span class="nf">build_log_prior</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">NotImplemented</span></div>
 
     <span class="nd">@autoflow</span><span class="p">((</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]),</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]))</span>
-<div class="viewcode-block" id="Model.compute_log_likelihood"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.models.Model.compute_log_likelihood">[docs]</a>    <span class="k">def</span> <span class="nf">compute_log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
+<div class="viewcode-block" id="Model.compute_log_likelihood"><a class="viewcode-back" href="../../../public_api.html#gptf.core.models.Model.compute_log_likelihood">[docs]</a>    <span class="k">def</span> <span class="nf">compute_log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Computes the likelihood of the model w.r.t. the data.</span>
 <span class="sd">        </span>
 <span class="sd">        Returns:</span>
@@ -113,11 +115,11 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_log_likelihood</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span></div>
 
     <span class="nd">@autoflow</span><span class="p">()</span>
-<div class="viewcode-block" id="Model.compute_log_prior"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.models.Model.compute_log_prior">[docs]</a>    <span class="k">def</span> <span class="nf">compute_log_prior</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Model.compute_log_prior"><a class="viewcode-back" href="../../../public_api.html#gptf.core.models.Model.compute_log_prior">[docs]</a>    <span class="k">def</span> <span class="nf">compute_log_prior</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">NotImplemented</span></div>
 
     <span class="nd">@tf_method</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<div class="viewcode-block" id="Model.optimize"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.models.Model.optimize">[docs]</a>    <span class="k">def</span> <span class="nf">optimize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;L-BFGS-B&#39;</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+<div class="viewcode-block" id="Model.optimize"><a class="viewcode-back" href="../../../public_api.html#gptf.core.models.Model.optimize">[docs]</a>    <span class="k">def</span> <span class="nf">optimize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;L-BFGS-B&#39;</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
             <span class="n">maxiter</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Optimize the model by maximising the log likelihood.</span>
 
@@ -151,6 +153,7 @@
 <span class="sd">            purposes. It has two (scalar) parameters, `.a` and `.b`, </span>
 <span class="sd">            which are constrained to be positive, and its likelihood is</span>
 <span class="sd">            `10 - a - b`, regardless of X and Y.</span>
+
 <span class="sd">            &gt;&gt;&gt; import numbers</span>
 <span class="sd">            &gt;&gt;&gt; import numpy as np</span>
 <span class="sd">            &gt;&gt;&gt; from overrides import overrides</span>
@@ -168,6 +171,7 @@
 <span class="sd">            ...         return 10. - self.a.tensor - self.b.tensor</span>
 
 <span class="sd">            We won&#39;t care about the values of X and Y.</span>
+
 <span class="sd">            &gt;&gt;&gt; X = np.array(0.)</span>
 <span class="sd">            &gt;&gt;&gt; Y = np.array(0.)</span>
 
@@ -175,6 +179,7 @@
 
 <span class="sd">            We can optimise the parameters of the model using a TensorFlow</span>
 <span class="sd">            optimizer like so:</span>
+
 <span class="sd">            &gt;&gt;&gt; m = Example(3., 4.)</span>
 <span class="sd">            &gt;&gt;&gt; opt = tf.train.GradientDescentOptimizer(learning_rate=1)</span>
 <span class="sd">            &gt;&gt;&gt; m.optimize(X, Y, opt)  # use None for X, Y</span>
@@ -185,12 +190,14 @@
 <span class="sd">            After the optimisation, both parameters are optimised</span>
 <span class="sd">            towards 0, but are still positive. The constraints on the </span>
 <span class="sd">            parameters have been respected.</span>
+
 <span class="sd">            &gt;&gt;&gt; print(&quot;m.a: {:.3f}&quot;.format(np.asscalar(m.a.value)))</span>
 <span class="sd">            m.a: 0.001</span>
 <span class="sd">            &gt;&gt;&gt; print(&quot;m.b: {:.3f}&quot;.format(np.asscalar(m.b.value)))</span>
 <span class="sd">            m.b: 0.001</span>
 
 <span class="sd">            If we fix a parameter, it is not optimized:</span>
+<span class="sd">            </span>
 <span class="sd">            &gt;&gt;&gt; m.a = 5.</span>
 <span class="sd">            &gt;&gt;&gt; m.b = 1.</span>
 <span class="sd">            &gt;&gt;&gt; m.b.fixed = True</span>
@@ -207,6 +214,7 @@
 
 <span class="sd">            We can optimise the parameters of the model using a SciPy</span>
 <span class="sd">            optimizer by provided a string value for `method`:</span>
+
 <span class="sd">            &gt;&gt;&gt; m = Example(3., 4.)</span>
 <span class="sd">            &gt;&gt;&gt; m.optimize(X, Y, &#39;L-BFGS-B&#39;, disp=False, ftol=.0001)</span>
 <span class="sd">            message: &#39;SciPy optimizer completed successfully.&#39;</span>
@@ -216,12 +224,14 @@
 <span class="sd">            As for TensorFlow optimizers, after the optimisation both </span>
 <span class="sd">            parameters are optimised towards 0, but are still positive. </span>
 <span class="sd">            The constraints on the parameters have been respected.</span>
+
 <span class="sd">            &gt;&gt;&gt; print(&quot;m.a: {:.3f}&quot;.format(np.asscalar(m.a.value)))</span>
 <span class="sd">            m.a: 0.000</span>
 <span class="sd">            &gt;&gt;&gt; print(&quot;m.b: {:.3f}&quot;.format(np.asscalar(m.b.value)))</span>
 <span class="sd">            m.b: 0.000</span>
 
 <span class="sd">            If we fix a parameter, it is not optimized:</span>
+
 <span class="sd">            &gt;&gt;&gt; m.a = 5.</span>
 <span class="sd">            &gt;&gt;&gt; m.b = 1.</span>
 <span class="sd">            &gt;&gt;&gt; m.b.fixed = True</span>
@@ -238,6 +248,7 @@
 
 <span class="sd">            Optimisation still works, even with weird device contexts and</span>
 <span class="sd">            session targets.</span>
+
 <span class="sd">            &gt;&gt;&gt; # set up a distributed execution environment</span>
 <span class="sd">            &gt;&gt;&gt; clusterdict = \\</span>
 <span class="sd">            ...     { &#39;worker&#39;: [&#39;localhost:2226&#39;]</span>
@@ -256,6 +267,7 @@
 <span class="sd">            &gt;&gt;&gt; m.tf_session_target = master.target</span>
 
 <span class="sd">            TensorFlow:</span>
+
 <span class="sd">            &gt;&gt;&gt; m.a = 4.5</span>
 <span class="sd">            &gt;&gt;&gt; m.optimize(X, Y, opt)</span>
 <span class="sd">            message: &#39;Finished iterations.&#39;</span>
@@ -267,6 +279,7 @@
 <span class="sd">            m.b: 1.000</span>
 <span class="sd">            </span>
 <span class="sd">            SciPy:</span>
+
 <span class="sd">            &gt;&gt;&gt; m.a = 4.5</span>
 <span class="sd">            &gt;&gt;&gt; m.optimize(X, Y, &#39;L-BFGS-B&#39;, disp=False, ftol=.0001)</span>
 <span class="sd">            message: &#39;SciPy optimizer completed successfully.&#39;</span>
@@ -334,13 +347,19 @@
     <span class="k">def</span> <span class="nf">_compile_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
         <span class="k">return</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">build_log_likelihood</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="GPModel"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.models.GPModel">[docs]</a><span class="k">class</span> <span class="nc">GPModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="viewcode-block" id="GPModel"><a class="viewcode-back" href="../../../public_api.html#gptf.core.models.GPModel">[docs]</a><span class="k">class</span> <span class="nc">GPModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A base class for Guassian Process models.</span>
 
 <span class="sd">    A Gaussian process model is a model of the form</span>
-<span class="sd">        theta ~ p(theta)</span>
-<span class="sd">        f ~ GP(m(x), k(x, x&#39;; theta))</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        θ ~ p(θ)</span>
+
+<span class="sd">        f ~ GP(m(x), k(x, x&#39;; θ))</span>
+
 <span class="sd">        F = f(X)</span>
+
 <span class="sd">        Y|F ~ p(Y|F)</span>
 
 <span class="sd">    Adds functionality to compile various predictions. Inheriting </span>
@@ -351,7 +370,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="nd">@abstractmethod</span>
-<div class="viewcode-block" id="GPModel.build_prior_mean_var"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.models.GPModel.build_prior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_prior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">num_latent</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="GPModel.build_prior_mean_var"><a class="viewcode-back" href="../../../public_api.html#gptf.core.models.GPModel.build_prior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_prior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">num_latent</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Builds an op for the mean and variance of the prior(s).</span>
 <span class="sd">        </span>
 <span class="sd">        In the returned tensors, the last index should always be the </span>
@@ -380,19 +399,11 @@
         <span class="bp">NotImplemented</span></div>
 
     <span class="nd">@abstractmethod</span>
-<div class="viewcode-block" id="GPModel.build_posterior_mean_var"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.models.GPModel.build_posterior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_posterior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="GPModel.build_posterior_mean_var"><a class="viewcode-back" href="../../../public_api.html#gptf.core.models.GPModel.build_posterior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_posterior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Builds an op for the mean and variance of the posterior(s).</span>
 
 <span class="sd">        In the returned tensors, the last index should always be the </span>
-<span class="sd">        latent function index. Suppose `m` is some model with two</span>
-<span class="sd">        latent functions:</span>
-
-<span class="sd">            test_points = tf.constant([[1, 2], [3, 4]])</span>
-<span class="sd">            mean, var = m.build_posterior_mean_var([[1,2],[3,4]], True)</span>
-<span class="sd">            mean[:, 0]  # means for the 0th latent func</span>
-<span class="sd">            mean[:, 1]  # means for the 1st latent func</span>
-<span class="sd">            var[:, :, 0]  # full covariance matrix for latent func 0</span>
-<span class="sd">            var[:, :, 1]  # full covariance matrix for latent func 1</span>
+<span class="sd">        latent function index.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            X (tf.Tensor): The training inputs, shape `[n, point_dims]`</span>
@@ -417,7 +428,7 @@
         <span class="bp">NotImplemented</span></div>
 
     <span class="nd">@autoflow</span><span class="p">((</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]),</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="p">[]))</span>
-<div class="viewcode-block" id="GPModel.compute_prior_mean_var"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.models.GPModel.compute_prior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">compute_prior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">num_latent</span><span class="p">):</span>
+<div class="viewcode-block" id="GPModel.compute_prior_mean_var"><a class="viewcode-back" href="../../../public_api.html#gptf.core.models.GPModel.compute_prior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">compute_prior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">num_latent</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Computes the means and variances of the prior(s).</span>
 
 <span class="sd">        This is just an autoflowed version of </span>
@@ -439,7 +450,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_prior_mean_var</span><span class="p">(</span><span class="n">test_points</span><span class="p">,</span> <span class="n">num_latent</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span></div>
 
     <span class="nd">@autoflow</span><span class="p">((</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]),</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="p">[]))</span>
-<div class="viewcode-block" id="GPModel.compute_prior_mean_cov"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.models.GPModel.compute_prior_mean_cov">[docs]</a>    <span class="k">def</span> <span class="nf">compute_prior_mean_cov</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">num_latent</span><span class="p">):</span>
+<div class="viewcode-block" id="GPModel.compute_prior_mean_cov"><a class="viewcode-back" href="../../../public_api.html#gptf.core.models.GPModel.compute_prior_mean_cov">[docs]</a>    <span class="k">def</span> <span class="nf">compute_prior_mean_cov</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">num_latent</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Computes the means and full covariance matrices.</span>
 
 <span class="sd">        This is just an autoflowed version of </span>
@@ -462,7 +473,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_prior_mean_var</span><span class="p">(</span><span class="n">test_points</span><span class="p">,</span> <span class="n">num_latent</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span></div>
 
     <span class="nd">@autoflow</span><span class="p">((</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]),</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="p">[]),</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="p">[]))</span>
-<div class="viewcode-block" id="GPModel.compute_prior_samples"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.models.GPModel.compute_prior_samples">[docs]</a>    <span class="k">def</span> <span class="nf">compute_prior_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">num_latent</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">):</span> 
+<div class="viewcode-block" id="GPModel.compute_prior_samples"><a class="viewcode-back" href="../../../public_api.html#gptf.core.models.GPModel.compute_prior_samples">[docs]</a>    <span class="k">def</span> <span class="nf">compute_prior_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">num_latent</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">):</span> 
         <span class="sd">&quot;&quot;&quot;Computes samples from the prior distribution(s).</span>
 
 <span class="sd">        Args:</span>
@@ -482,6 +493,7 @@
 <span class="sd">            likelihood is always `0` and whose `.build_predict()`</span>
 <span class="sd">            returns mean `0` and variance `1` for every test point,</span>
 <span class="sd">            or an independent covariance matrix.</span>
+
 <span class="sd">            &gt;&gt;&gt; from overrides import overrides</span>
 <span class="sd">            &gt;&gt;&gt; from gptf import ParamAttributes, tfhacks</span>
 <span class="sd">            &gt;&gt;&gt; class Example(GPModel, ParamAttributes):</span>
@@ -524,12 +536,14 @@
 <span class="sd">            The shape of the returned array is `(a, b, c)`, where `a`</span>
 <span class="sd">            is the number of samples, `b` is the number of test points</span>
 <span class="sd">            and `c` is the number of latent functions.</span>
+
 <span class="sd">            &gt;&gt;&gt; samples = m.compute_prior_samples(test_points, 1, 2)</span>
 <span class="sd">            &gt;&gt;&gt; samples.shape</span>
 <span class="sd">            (2, 4, 1)</span>
 
 <span class="sd">            `.compute_prior_samples()` respects the dtype of the tensors</span>
 <span class="sd">            returned by `.build_predict()`.</span>
+
 <span class="sd">            &gt;&gt;&gt; samples.dtype</span>
 <span class="sd">            dtype(&#39;float64&#39;)</span>
 <span class="sd">            &gt;&gt;&gt; m.dtype = tf.float32</span>
@@ -548,7 +562,7 @@
         
     <span class="nd">@autoflow</span><span class="p">((</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]),</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]),</span>
               <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]))</span>
-<div class="viewcode-block" id="GPModel.compute_posterior_mean_var"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.models.GPModel.compute_posterior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">compute_posterior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">):</span>
+<div class="viewcode-block" id="GPModel.compute_posterior_mean_var"><a class="viewcode-back" href="../../../public_api.html#gptf.core.models.GPModel.compute_posterior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">compute_posterior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Computes the means and variances of the posterior(s).</span>
 
 <span class="sd">        This is just an autoflowed version of </span>
@@ -572,7 +586,7 @@
 
     <span class="nd">@autoflow</span><span class="p">((</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]),</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]),</span>
               <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]))</span>
-<div class="viewcode-block" id="GPModel.compute_posterior_mean_cov"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.models.GPModel.compute_posterior_mean_cov">[docs]</a>    <span class="k">def</span> <span class="nf">compute_posterior_mean_cov</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">):</span>
+<div class="viewcode-block" id="GPModel.compute_posterior_mean_cov"><a class="viewcode-back" href="../../../public_api.html#gptf.core.models.GPModel.compute_posterior_mean_cov">[docs]</a>    <span class="k">def</span> <span class="nf">compute_posterior_mean_cov</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Computes the means and full covariance matrices.</span>
 
 <span class="sd">        This is just an autoflowed version of </span>
@@ -597,7 +611,7 @@
 
     <span class="nd">@autoflow</span><span class="p">((</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]),</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]),</span> 
               <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]),</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="p">[]))</span>
-<div class="viewcode-block" id="GPModel.compute_posterior_samples"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.models.GPModel.compute_posterior_samples">[docs]</a>    <span class="k">def</span> <span class="nf">compute_posterior_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">):</span> 
+<div class="viewcode-block" id="GPModel.compute_posterior_samples"><a class="viewcode-back" href="../../../public_api.html#gptf.core.models.GPModel.compute_posterior_samples">[docs]</a>    <span class="k">def</span> <span class="nf">compute_posterior_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">):</span> 
         <span class="sd">&quot;&quot;&quot;Computes samples from the posterior distribution(s).</span>
 
 <span class="sd">        Args:</span>
@@ -618,6 +632,7 @@
 <span class="sd">            likelihood is always `0` and whose `.build_predict()`</span>
 <span class="sd">            returns mean `0` and variance `1` for every test point,</span>
 <span class="sd">            or an independent covariance matrix.</span>
+
 <span class="sd">            &gt;&gt;&gt; from overrides import overrides</span>
 <span class="sd">            &gt;&gt;&gt; from gptf import ParamAttributes, tfhacks</span>
 <span class="sd">            &gt;&gt;&gt; class Example(GPModel, ParamAttributes):</span>
@@ -663,12 +678,14 @@
 <span class="sd">            The shape of the returned array is `(a, b, c)`, where `a`</span>
 <span class="sd">            is the number of samples, `b` is the number of test points</span>
 <span class="sd">            and `c` is the number of latent functions.</span>
+
 <span class="sd">            &gt;&gt;&gt; samples = m.compute_posterior_samples(X, Y, test_points, 2)</span>
 <span class="sd">            &gt;&gt;&gt; samples.shape</span>
 <span class="sd">            (2, 4, 1)</span>
 
 <span class="sd">            `.compute_posterior_samples()` respects the dtype of the tensors</span>
 <span class="sd">            returned by `.build_predict()`.</span>
+
 <span class="sd">            &gt;&gt;&gt; samples.dtype</span>
 <span class="sd">            dtype(&#39;float64&#39;)</span>
 <span class="sd">            &gt;&gt;&gt; m.dtype = tf.float32</span>
@@ -692,12 +709,12 @@
         <span class="c1">#return tf.transpose(tf.pack(samples))</span>
 
     <span class="nd">@autoflow</span><span class="p">((</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]))</span>
-<div class="viewcode-block" id="GPModel.predict_y"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.models.GPModel.predict_y">[docs]</a>    <span class="k">def</span> <span class="nf">predict_y</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_points</span><span class="p">):</span>
+<div class="viewcode-block" id="GPModel.predict_y"><a class="viewcode-back" href="../../../public_api.html#gptf.core.models.GPModel.predict_y">[docs]</a>    <span class="k">def</span> <span class="nf">predict_y</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_points</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Computes the mean and variance of held-out data.&quot;&quot;&quot;</span>
         <span class="bp">NotImplemented</span></div>
 
     <span class="nd">@autoflow</span><span class="p">((</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]),</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]))</span>
-<div class="viewcode-block" id="GPModel.predict_density"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.models.GPModel.predict_density">[docs]</a>    <span class="k">def</span> <span class="nf">predict_density</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">test_values</span><span class="p">):</span>
+<div class="viewcode-block" id="GPModel.predict_density"><a class="viewcode-back" href="../../../public_api.html#gptf.core.models.GPModel.predict_density">[docs]</a>    <span class="k">def</span> <span class="nf">predict_density</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">test_values</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Computes the (log) density of the test values at the test points.&quot;&quot;&quot;</span>
         <span class="bp">NotImplemented</span></div></div>
 </pre></div>
