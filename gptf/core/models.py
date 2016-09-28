@@ -1,3 +1,4 @@
+# -*- encoding: utf-8 -*-
 """Provides base classes for models of all kinds."""
 from builtins import super, range
 from future.utils import with_metaclass
@@ -306,9 +307,15 @@ class GPModel(Model):
     """A base class for Guassian Process models.
 
     A Gaussian process model is a model of the form
-        theta ~ p(theta)
-        f ~ GP(m(x), k(x, x'; theta))
+
+    .. math::
+
+        θ ~ p(θ)
+
+        f ~ GP(m(x), k(x, x'; θ))
+
         F = f(X)
+
         Y|F ~ p(Y|F)
 
     Adds functionality to compile various predictions. Inheriting 
@@ -352,15 +359,7 @@ class GPModel(Model):
         """Builds an op for the mean and variance of the posterior(s).
 
         In the returned tensors, the last index should always be the 
-        latent function index. Suppose `m` is some model with two
-        latent functions:
-
-            test_points = tf.constant([[1, 2], [3, 4]])
-            mean, var = m.build_posterior_mean_var([[1,2],[3,4]], True)
-            mean[:, 0]  # means for the 0th latent func
-            mean[:, 1]  # means for the 1st latent func
-            var[:, :, 0]  # full covariance matrix for latent func 0
-            var[:, :, 1]  # full covariance matrix for latent func 1
+        latent function index.
 
         Args:
             X (tf.Tensor): The training inputs, shape `[n, point_dims]`
