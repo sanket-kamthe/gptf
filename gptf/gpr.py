@@ -14,10 +14,6 @@ class GPR(GPModel, ParamAttributes):
     """Gaussian process regression with Gaussian noise.
     
     Attributes:
-        inputs (DataHolder): The input data, size `N`x`D`. By default,
-            this is set to recompile the model if the shape changes.
-        values (DataHolder): The input data, size `N`x`D`. By default,
-            this is set to recompile the model if the shape changes.
         kernel (gptf.kernels.Kernel): The kernel of the GP.
         meanfunc (gptf.meanfunctions.MeanFunctions): The mean function
             of the GP.

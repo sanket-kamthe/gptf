@@ -540,7 +540,7 @@ def distributed_tree_rBCM(experts, weightfunction,
     copied to fill out the architecture, with each copy being pinned to 
     a different worker task.
 
-    `Param`s will be pinned to parameter server tasks in a round-robin
+    `Param`\ s will be pinned to parameter server tasks in a round-robin
     fashion, based on the order they appear in `TreerBCM.params`.
 
     Additionally, the `.tf_graph` of the `TreerBCM` will be set to a
@@ -552,7 +552,7 @@ def distributed_tree_rBCM(experts, weightfunction,
         experts (GPModel | Sequence[GPModel]): The experts to 
             combine the opinions of. If this is a `GPModel`, then it
             will be shallow-copied to fill out the architecture.
-            If it is a sequence of `GPModel`s, then the architecture
+            If it is a sequence of `GPModel`\ s, then the architecture
             will have as many nodes in its final layer as
             there are in the sequence.
         weightfunction (Callable[[Sequence[GPModel], tf.Tensor, tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): 

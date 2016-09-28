@@ -1,4 +1,4 @@
-"""Provides a number of transforms that can be used to constrain `Param`s."""
+"""Provides a number of transforms that can be used to constrain `Param`\ s."""
 from builtins import object
 from future.utils import with_metaclass
 

@@ -384,7 +384,7 @@ class Param(ProxyWrappedValue, Leaf):
         ...     print(sess.run(p.free_state))
         4.0
 
-        If we have multiple `Param`s, as long as they are in the same
+        If we have multiple `Param`\ s, as long as they are in the same
         tree of `WrappedTF`, each `Param`'s `.get_session()` will return
         the same session, and every `Param` in the tree will have its free
         state maintained in that session.
@@ -465,7 +465,7 @@ class Param(ProxyWrappedValue, Leaf):
 
         .. rubric:: Transforms
 
-        Constraints can be applied to a parameter in the form of `Transform`s.
+        Constraints can be applied to a parameter in the form of `Transform`\ s.
         A `Transform` is used to transform the parameter into a free state,
         where it can then be optimized. The transform can be set either by
         specifying `transform` paramater of the constructor or after creation
@@ -838,7 +838,7 @@ class DataHolder(ProxyWrappedValue, Leaf):
         >>> d.tensor is copy.tensor
         True
 
-        This means that it, just in the case of `Param`s, it is 
+        This means that it, just in the case of `Param`\ s, it is 
         *very important* that every copy of a `DataHolder` has the
         same device context and graph, or odd things happen.
 
@@ -1228,7 +1228,7 @@ class ParamAttributes(Parameterized, AttributeTree):
     """Parameters are accessed using attributes."""
     @overrides
     def __setattr__(self, name, value):
-        """Set the value of `Param`s and `DataHolder`s on assignment.
+        """Set the value of `Param`\ s and `DataHolder`\ s on assignment.
         
         Args:
             name (str): The name of the attribute.

@@ -179,10 +179,11 @@ class Linear(MeanFunction, ParamAttributes):
 
         Args:
             A (Param | np.ndarray): A matrix which maps each element of
-                `X` to `Y`. If `X` is an `N`x`D` matrix and `Y` is 
-                intended to be `N`x`Q`, then `A` should be `D`x`Q`.
+                `X` to `Y`. If `X` is an :math:`N \\times D` matrix and `Y` is 
+                intended to be :math:`N \\times Q`, then `A` should be 
+                :math:`D \\times Q`.
             b (Param | np.ndarray): An additive constant to `Y`. If
-                `Y` is intended to be `N`x`Q` then `b` should be a
+                `Y` is intended to be :math:`N \\times Q` then `b` should be a
                 rank 1 tensor of length `Q`.
 
         """

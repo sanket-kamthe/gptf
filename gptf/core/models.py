@@ -96,7 +96,7 @@ class Model(with_metaclass(ABCMeta, Parameterized)):
                 be called at each optimization step with the current value
                 of the variable vector (a vector constructed by flattening
                 the free state of each free `Param` and then concatenating 
-                them in the order the `Param`s are returned by `.params`.
+                them in the order the `Param`\ s are returned by `.params`.
             maxiter (int): The maximum number of iterations of the optimizer.
             **kw: Additional keyword arguments are passed through to the
                 optimizer.
