@@ -9,7 +9,8 @@ GPflow include:
 - Autoflow that plays nicely with the distributed runtime.
 - Better trees for a better world.
 
-Explanatory notebooks can be found in the [notebooks directory][notebooks].
+Explanatory notebooks can be found in the [notebooks directory][notebooks],
+and documentation can be found [here][documentation].
 
 ## Installation
 
@@ -25,3 +26,4 @@ Tests can be run using `python setup.py nosetests`.
 [install tensorflow]: https://www.tensorflow.org/versions/r0.10/get_started/os_setup.html#pip-installation
 [GPflow]: https://github.com/GPflow/GPflow
 [notebooks]: notebooks
+[documentation]: http://icl-sml.github.io/gptf/
