@@ -43,16 +43,19 @@ class GPR(GPModel, ParamAttributes):
         To generate some sample training outputs, we'll compute a 
         sample from the prior with one latent function at our
         training inputs.
+        
         >>> X = np.random.uniform(0., 5., (50, 1)) # 500 unique 1d points
         >>> Y = gp.compute_prior_samples(X, 1, 1)[0]
 
         Then we'll add some noise:
+
         >>> sigma = np.sqrt(gp.likelihood.variance.value)
         >>> Y += np.random.normal(0., sigma, Y.shape)
         
         Then we'll mess with the value of the parameters. When
         we optimise the model, they should return to something close
         to their original state.
+
         >>> gp.kernel.variance = 5.
         >>> gp.kernel.lengthscales = 5.
         >>> gp.likelihood.variance = 5.

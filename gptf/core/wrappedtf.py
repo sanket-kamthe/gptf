@@ -67,6 +67,7 @@ class NullContextWrapper(object):
         ...         print("exit called")
 
         Wrapping a context manager causes it to do nothing.
+
         >>> e = Example()
         >>> with e:
         ...     print("with body")
@@ -80,6 +81,7 @@ class NullContextWrapper(object):
 
         You can access other attributes of the context manager
         through the wrapper.
+
         >>> e.attribute = "horse"
         >>> NullContextWrapper(e).attribute
         'horse'
@@ -205,6 +207,7 @@ class WrappedTF(TreeWithCache):
             ...         self.tf_graph = tf.Graph()
 
             Choose the op placement context by assigning to `.tf_device`:
+
             >>> a, b, c, d, e = [Example() for _ in range(5)]
             >>> a.tf_device = '/job:worker'
             >>> b.tf_device = tf.DeviceSpec(device_type='GPU', device_index=0)
@@ -215,6 +218,7 @@ class WrappedTF(TreeWithCache):
             Device contexts are combined, starting from the context of the
             root of the tree. `c.tf_device` is `None`, so it uses the context
             of its parent.
+
             >>> a.child = c
             >>> with a.op_placement_context():
             ...     print(tf.constant(0).device)
@@ -225,12 +229,14 @@ class WrappedTF(TreeWithCache):
 
             `d.tf_device` is `WrappedTF.NO_DEVICE`, so it resets the device
             context.
+
             >>> a.child = d
             >>> with d.op_placement_context():
             ...     print(tf.constant(0).device)
             <BLANKLINE>
 
             Other device contexts combine the way you would expect them to.
+
             >>> a.child = b
             >>> b.child = e
             >>> with b.op_placement_context():
@@ -244,6 +250,7 @@ class WrappedTF(TreeWithCache):
 
             The root node of the tree may define a `.tf_graph`. Child ops will
             be placed in the `.tf_graph` of their highest parent.
+
             >>> a.tf_graph = tf.Graph()
             >>> b.tf_graph = tf.Graph()
             >>> with a.op_placement_context():
@@ -258,6 +265,7 @@ class WrappedTF(TreeWithCache):
 
             In addition, a name scope is opened that matches the object
             hierachy:
+
             >>> with a.op_placement_context():
             ...     print(tf.constant(0).name)
             unnamed/Const...
@@ -309,6 +317,7 @@ class WrappedTF(TreeWithCache):
 
             If there is already a default session, returns that 
             session in a NullContextWrapper.
+
             >>> with tf.Session() as sess:
             ...     sess0 = w.get_session()
             ...     print(type(sess0).__name__)
@@ -319,6 +328,7 @@ class WrappedTF(TreeWithCache):
             It's safe to use w.get_session() in a with block, even if
             there is a default session. Doing so won't call the
             `__enter__` or `__exit__` methods of the default session.
+
             >>> class AnnounceSession(tf.Session):
             ...     def __enter__(self):
             ...         print('__enter__ called')
@@ -339,6 +349,7 @@ class WrappedTF(TreeWithCache):
             __exit__ called
             
             Else, returns a new session each time:
+
             >>> sess2 = w.get_session()
             >>> sess2 is sess
             False
@@ -369,6 +380,7 @@ class WrappedTF(TreeWithCache):
 
             `Example` is a simple class that provides a method, `.depth()`,
             that uses TensorFlow to calculate an object's depth in the tree.
+
             >>> a.depth()
             1
             >>> a.child.depth()
@@ -377,6 +389,7 @@ class WrappedTF(TreeWithCache):
             `Example.op()` places its op based on the hierachical device 
             context. If we change `a`'s device context, we also change
             `a.child`'s.
+
             >>> print(a.child.op().device)
             
             >>> a.tf_device = '/job:worker/task:0'
@@ -384,6 +397,7 @@ class WrappedTF(TreeWithCache):
             /job:worker/task:0
 
             `a.child.depth()` will now result in an error:
+
             >>> a.child.depth()
             Traceback (most recent call last):
                 ...
@@ -394,6 +408,7 @@ class WrappedTF(TreeWithCache):
             However, if we set `a.session_target` appropriately, 
             `a.child.get_session()` will return a session capable of
             running ops created with `a.child.op_placement_context`.
+
             >>> clusterdict = \\
             ...     { 'worker': ['localhost:2222']
             ...     , 'master': ['localhost:2223']
@@ -405,6 +420,7 @@ class WrappedTF(TreeWithCache):
             >>> a.tf_session_target = master.target
 
             `a.child.depth()` should now run smoothly.
+
             >>> a.child.depth()
             2
 
@@ -505,6 +521,7 @@ class WrappedTF(TreeWithCache):
             clear its subtree's cache. `w`, which knows nothing about `y` so
             should not have any ops that depend on `y`'s device context,
             should not have its cache cleared; the same goes for `x`.
+
             >>> setup()
             >>> w.child_1 = y
             >>> 'tf' in w.cache and 'tf' in w.child_0.cache
@@ -516,6 +533,7 @@ class WrappedTF(TreeWithCache):
             about `y` and might have ops that depend on `y`'s device context,
             so we should clear its cache. `w.child_0` still knows nothing
             about `y`, so its cache should still not be cleared.
+
             >>> setup()
             >>> del w.child_1
             >>> 'tf' in w.child_0.cache
@@ -528,6 +546,7 @@ class WrappedTF(TreeWithCache):
             When a `WrappedTF` is copied between trees, the caches in the
             copy are cleared and session births are registered in the
             subtree of the copy.
+
             >>> setup()
             >>> y.child_1 = w.child_0
             >>> 'tf' in y.cache and 'tf' in y.child.cache
@@ -575,6 +594,7 @@ def tf_method(name_scope=True, rename_output=True,
     Examples:
         In the following example, `Example.method_a` is equivalent 
         to `Example.method_b`.
+
         >>> from gptf.core.trees import AttributeTree
         >>> class Example(WrappedTF, AttributeTree):
         ...     def method_a(self, a, b):
@@ -588,6 +608,7 @@ def tf_method(name_scope=True, rename_output=True,
         ...         return tf.add(a, b)
 
         Devices are set properly in both methods:
+
         >>> e = Example()
         >>> e.tf_graph = tf.Graph()  # don't break other doctests
         >>> e.tf_device = '/job:worker/task:0'
@@ -599,17 +620,20 @@ def tf_method(name_scope=True, rename_output=True,
         True
 
         The returned tensor(s) are given the name of the name scope.
+
         >>> print(a.name)
         unnamed.method_a/0:0
         >>> print(b.name)
         unnamed.method_b/0:0
 
         Multiple method calls produce unique names.
+
         >>> print(e.method_b(1, 2).name)
         unnamed.method_b/0_1:0
 
         If a method returns a sequence of tensors, they are named
         `<scope>/0`, `<scope>/1`, etc.
+
         >>> class DoubleReturnExample(WrappedTF, AttributeTree):
         ...     @tf_method(cache=False)
         ...     def method(self):
@@ -627,6 +651,7 @@ def tf_method(name_scope=True, rename_output=True,
         unnamed.method/1_1:0
 
         Calls to other tensorflow methods do not cause nested name scopes.
+
         >>> class NestedExample(WrappedTF, AttributeTree):
         ...     def __init__(self, child):
         ...         super().__init__()
@@ -638,6 +663,7 @@ def tf_method(name_scope=True, rename_output=True,
         unnamed.child.method_b/0:0
 
         Else, no attempt is made to rename the output.
+
         >>> class NumpyReturnExample(WrappedTF, AttributeTree):
         ...     @tf_method()
         ...     def method(self):
@@ -647,6 +673,7 @@ def tf_method(name_scope=True, rename_output=True,
 
         If caching is enabled, then multiple calls with the same 
         arguments will result in the same return value.
+
         >>> tensor = e.method_b(5, 5)
         >>> tensor is e.method_b(5, 5)
         True
@@ -657,6 +684,7 @@ def tf_method(name_scope=True, rename_output=True,
         If the cache is cleared (perhaps due to a device context
         change), the method cache is also cleared, and new tensors
         will be returned.
+
         >>> e.clear_cache()
         >>> tensor is e.method_b(5, 5)
         False

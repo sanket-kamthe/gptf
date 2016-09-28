@@ -131,12 +131,14 @@ class Tree(with_metaclass(ABCMeta, Iterable)):
             ...             raise BadParentError
 
             An object at the top of the tree is its own highest parent.
+
             >>> p = Example()
             >>> p.highest_parent is p
             True
 
             Objects lower down in the tree recurse up the tree to find their
             highest parent.
+
             >>> p.add_child(Example())
             >>> p.children[0].add_child(Example())
             >>> p.children[0].children[0].highest_parent is p
@@ -227,6 +229,7 @@ class Tree(with_metaclass(ABCMeta, Iterable)):
 
             Objects at the top of the tree return their name in the global
             namespace, if only one such name exists.
+
             >>> p = Example()
             >>> # doctest does not run these tests in __main__, but if it
             >>> # did, this would return true.
@@ -235,12 +238,14 @@ class Tree(with_metaclass(ABCMeta, Iterable)):
 
             If no unique global aliases to the root exists, `.fallback_name`
             is returned.
+
             >>> q = p  # now p has two global aliases, 'p' and 'q'
             >>> p.name == p.fallback_name
             True
 
             Otherwise, an object's name is the name its parent gives it,
             as return by `child.parent.name_of(child)`.
+
             >>> q = Example()
             >>> p.add_child(q)
             >>> print(q.name)
@@ -298,6 +303,7 @@ class Tree(with_metaclass(ABCMeta, Iterable)):
 
             In the default implementation, this returns `'.children[x]'`
             where `x` is `self.children.index(value)`.
+
             >>> p = Example()
             >>> q = Example()
             >>> p.add_child(q)
@@ -326,6 +332,7 @@ class Leaf(Tree):
     
     Examples:
         A `Leaf` will not automatically add children on attribute assignment:
+
         >>> l = Leaf()
         >>> l.child = AttributeTree()
         >>> l.children
@@ -334,6 +341,7 @@ class Leaf(Tree):
         True
 
         Leaves still know who their parent is and what their name is:
+
         >>> t = AttributeTree()
         >>> t.fallback_name = 't'
         >>> t.leaf = Leaf()
@@ -475,6 +483,7 @@ class AttributeTree(Tree):
 
             Shallow copy returns an entirely new tree, but non-tree
             attributes are shallowly copied (as references).
+
             >>> copy = t.copy()
             >>> copy is t
             False
@@ -486,10 +495,12 @@ class AttributeTree(Tree):
             True
 
             The parent of the new copy is `None`.
+
             >>> t.child.copy().parent is None
             True
           
             This behaviour is inherited correctly:
+
             >>> class Example(AttributeTree):
             ...     pass
             >>> e = Example()
@@ -542,11 +553,13 @@ class AttributeTree(Tree):
 
             If `q` is a child of `p`, we return the name of `q` in the
             `p`'s `.__dict__`.
+
             >>> print(p.name_of(q))
             .child
 
             We are contractually obliged to return a string that when appended
             to `'p'` evaluates to `q`.
+
             >>> eval('p' + p.name_of(q)) is q
             True
             
@@ -563,6 +576,7 @@ class AttributeTree(Tree):
 
         Examples:
             Sets the parent of new children appropriately on assignment.
+
             >>> p = AttributeTree()
             >>> q = AttributeTree()
             >>> p.child = q
@@ -570,6 +584,7 @@ class AttributeTree(Tree):
             True
 
             Overwriting a name unsets the parent of the previous occupant.
+
             >>> r = AttributeTree()
             >>> p.child = r
             >>> q.parent is None
@@ -577,6 +592,7 @@ class AttributeTree(Tree):
 
             Attempting to add a `Tree` to the graph twice causes it to be
             surreptitiously shallow-copied:
+
             >>> r.some_attribute = object()
             >>> p.other_child = r
             >>> p.other_child is r
@@ -585,6 +601,7 @@ class AttributeTree(Tree):
             True
 
             However, repeated assignment does not shallow-copy:
+
             >>> s = AttributeTree()
             >>> p.s = s
             >>> p.s = s
@@ -593,6 +610,7 @@ class AttributeTree(Tree):
 
             Attempting to add a `Tree` to two different graphs causes it
             to be shallow-copied to the new graph.
+
             >>> s = AttributeTree()
             >>> s.child = r
             >>> p.child is r
@@ -646,6 +664,7 @@ class ListTree(Tree, MutableSequence):
     
     Examples:
         `ListTree`s know their parent and their name:
+
         >>> root = AttributeTree()
         >>> root.fallback_name = "root"
         >>> root.list = ListTree()
@@ -656,6 +675,7 @@ class ListTree(Tree, MutableSequence):
 
         Children can be assigned to the list through normal sequence
         assignment:
+
         >>> child = AttributeTree()
         >>> root.list.append(child)
         >>> child in root.list.children
@@ -665,6 +685,7 @@ class ListTree(Tree, MutableSequence):
 
         Attempting to add a `Tree` to the graph twice causes it to be
         surreptitiously shallow-copied:
+
         >>> child.some_attribute = object()
         >>> root.list.append(child)
         >>> len(root.list)
@@ -675,17 +696,20 @@ class ListTree(Tree, MutableSequence):
         True
 
         Overwriting a child with itself does nothing:
+
         >>> root.list[0] = child
         >>> root.list[0] is child
         True
 
         The name of the child of a `ListTree` is its index:
+
         >>> print(child.name)
         [0]
         >>> print(child.long_name)
         root.list[0]
 
         Assigning a child to another tree shallow-copies it to the other tree.
+
         >>> t = AttributeTree()
         >>> t.child = child
         >>> t.child is child
@@ -696,6 +720,7 @@ class ListTree(Tree, MutableSequence):
         True
 
         Overwriting a child doesn't cause a dangling parent:
+
         >>> root.list = ListTree()
         >>> child_a = AttributeTree()
         >>> child_b = AttributeTree()
@@ -787,6 +812,7 @@ class ListTree(Tree, MutableSequence):
 
             Shallow copy returns an entirely new tree, but non-tree
             attributes are shallowly copied (as references).
+
             >>> copy = t.copy()
             >>> copy is t
             False
@@ -800,6 +826,7 @@ class ListTree(Tree, MutableSequence):
             True
             
             This behaviour is inherited correctly:
+
             >>> class Example(ListTree):
             ...     pass
             >>> e = Example()
@@ -880,6 +907,7 @@ class TreeWithCache(Tree):
             ...     t.child.cache[0] = 456
 
             Clearing a parent's cache clears its child's cache:
+
             >>> fill_cache()
             >>> t.clear_tree_caches()
             >>> t.cache[0]
@@ -892,6 +920,7 @@ class TreeWithCache(Tree):
             KeyError: message
         
             Clearing a child's cache clears its parent's cache:
+
             >>> fill_cache()
             >>> t.child.clear_tree_caches()
             >>> t.cache[0]
@@ -920,6 +949,7 @@ class TreeWithCache(Tree):
             ...     t.child.cache[0] = 456
 
             Clearing a parent's cache clears its child's cache:
+
             >>> fill_cache()
             >>> t.clear_subtree_caches()
             >>> t.cache[0]
@@ -932,6 +962,7 @@ class TreeWithCache(Tree):
             KeyError: message
         
             Clearing a child's cache does not clear its parent's cache:
+
             >>> fill_cache()
             >>> t.child.clear_subtree_caches()
             >>> t.cache[0]
@@ -964,6 +995,7 @@ class TreeWithCache(Tree):
             Clearing `t.child_0.child`'s ancestor's cache clears
             `t`'s cache and `t.child_0`'s cache, but not `t.child_1`'s or
             `t.child_0.child`'s.
+
             >>> fill_cache()
             >>> t.child_0.child.clear_ancestor_caches()
             >>> t.cache[0]
