@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Public API &#8212; gptf 1.0.0 documentation</title>
+    <title>Public API &mdash; gptf 1.0.0 documentation</title>
     
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -29,7 +29,6 @@
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
-  
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
   </head>
@@ -44,6 +43,8 @@
   <div class="section" id="public-api">
 <h1>Public API<a class="headerlink" href="#public-api" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
+<ul class="simple">
+</ul>
 </div>
 <div class="section" id="parameterized-classes">
 <h2>Parameterized classes<a class="headerlink" href="#parameterized-classes" title="Permalink to this headline">¶</a></h2>
@@ -739,7 +740,7 @@ where <code class="code docutils literal"><span class="pre">x</span></code> is <
 
 <dl class="method">
 <dt id="gptf.Parameterized.op_placement_context">
-<code class="descname">op_placement_context</code><span class="sig-paren">(</span><em>name_scope=True</em><span class="sig-paren">)</span><a class="headerlink" href="#gptf.Parameterized.op_placement_context" title="Permalink to this definition">¶</a></dt>
+<code class="descname">op_placement_context</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="headerlink" href="#gptf.Parameterized.op_placement_context" title="Permalink to this definition">¶</a></dt>
 <dd><p>Applies op placement rules based on the object hierarchy.</p>
 <p class="rubric">Examples</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gptf.core.trees</span> <span class="k">import</span> <span class="n">AttributeTree</span>
@@ -1790,12 +1791,12 @@ likelihood of the model.</p>
 
 <dl class="method">
 <dt id="gptf.Model.build_log_prior">
-<code class="descname">build_log_prior</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#Model.build_log_prior"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.Model.build_log_prior" title="Permalink to this definition">¶</a></dt>
+<code class="descname">build_log_prior</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#Model.build_log_prior"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.Model.build_log_prior" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="gptf.Model.compute_log_likelihood">
-<code class="descname">compute_log_likelihood</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#Model.compute_log_likelihood"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.Model.compute_log_likelihood" title="Permalink to this definition">¶</a></dt>
+<code class="descname">compute_log_likelihood</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#Model.compute_log_likelihood"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.Model.compute_log_likelihood" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the likelihood of the model w.r.t. the data.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1811,12 +1812,12 @@ likelihood of the model.</p>
 
 <dl class="method">
 <dt id="gptf.Model.compute_log_prior">
-<code class="descname">compute_log_prior</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#Model.compute_log_prior"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.Model.compute_log_prior" title="Permalink to this definition">¶</a></dt>
+<code class="descname">compute_log_prior</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#Model.compute_log_prior"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.Model.compute_log_prior" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="gptf.Model.optimize">
-<code class="descname">optimize</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em>, <em>method='L-BFGS-B'</em>, <em>callback=None</em>, <em>maxiter=1000</em>, <em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#Model.optimize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.Model.optimize" title="Permalink to this definition">¶</a></dt>
+<code class="descname">optimize</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#Model.optimize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.Model.optimize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Optimize the model by maximising the log likelihood.</p>
 <p>Maximises the sum of the log likelihood given X &amp; Y and any
 priors with respect to any free variables.</p>
@@ -2083,7 +2084,7 @@ Both tensors have the same dtype.</p>
 
 <dl class="method">
 <dt id="gptf.GPModel.compute_posterior_mean_cov">
-<code class="descname">compute_posterior_mean_cov</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em>, <em>test_points</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#GPModel.compute_posterior_mean_cov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.GPModel.compute_posterior_mean_cov" title="Permalink to this definition">¶</a></dt>
+<code class="descname">compute_posterior_mean_cov</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#GPModel.compute_posterior_mean_cov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.GPModel.compute_posterior_mean_cov" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the means and full covariance matrices.</p>
 <p>This is just an autoflowed version of
 <code class="code docutils literal"><span class="pre">.build_predict(X,</span> <span class="pre">Y,</span> <span class="pre">test_points,</span> <span class="pre">full_cov=True)</span></code>.</p>
@@ -2116,7 +2117,7 @@ matri(x|ces) for the posterior distribution(s)
 
 <dl class="method">
 <dt id="gptf.GPModel.compute_posterior_mean_var">
-<code class="descname">compute_posterior_mean_var</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em>, <em>test_points</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#GPModel.compute_posterior_mean_var"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.GPModel.compute_posterior_mean_var" title="Permalink to this definition">¶</a></dt>
+<code class="descname">compute_posterior_mean_var</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#GPModel.compute_posterior_mean_var"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.GPModel.compute_posterior_mean_var" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the means and variances of the posterior(s).</p>
 <p>This is just an autoflowed version of
 <code class="code docutils literal"><span class="pre">.build_posterior_mean_var(X,</span> <span class="pre">Y,</span> <span class="pre">test_points)</span></code>.</p>
@@ -2148,7 +2149,7 @@ of the posterior distribution(s), shape
 
 <dl class="method">
 <dt id="gptf.GPModel.compute_posterior_samples">
-<code class="descname">compute_posterior_samples</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em>, <em>test_points</em>, <em>num_samples</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#GPModel.compute_posterior_samples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.GPModel.compute_posterior_samples" title="Permalink to this definition">¶</a></dt>
+<code class="descname">compute_posterior_samples</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#GPModel.compute_posterior_samples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.GPModel.compute_posterior_samples" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes samples from the posterior distribution(s).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -2244,7 +2245,7 @@ returned by <code class="code docutils literal"><span class="pre">.build_predict
 
 <dl class="method">
 <dt id="gptf.GPModel.compute_prior_mean_cov">
-<code class="descname">compute_prior_mean_cov</code><span class="sig-paren">(</span><em>test_points</em>, <em>num_latent</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#GPModel.compute_prior_mean_cov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.GPModel.compute_prior_mean_cov" title="Permalink to this definition">¶</a></dt>
+<code class="descname">compute_prior_mean_cov</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#GPModel.compute_prior_mean_cov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.GPModel.compute_prior_mean_cov" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the means and full covariance matrices.</p>
 <p>This is just an autoflowed version of
 <code class="code docutils literal"><span class="pre">.build_prior_mean_var(test_points,</span> <span class="pre">num_latent,</span> <span class="pre">True)</span></code>.</p>
@@ -2276,7 +2277,7 @@ matri(x|ces) for the prior distribution(s) (shape
 
 <dl class="method">
 <dt id="gptf.GPModel.compute_prior_mean_var">
-<code class="descname">compute_prior_mean_var</code><span class="sig-paren">(</span><em>test_points</em>, <em>num_latent</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#GPModel.compute_prior_mean_var"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.GPModel.compute_prior_mean_var" title="Permalink to this definition">¶</a></dt>
+<code class="descname">compute_prior_mean_var</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#GPModel.compute_prior_mean_var"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.GPModel.compute_prior_mean_var" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the means and variances of the prior(s).</p>
 <p>This is just an autoflowed version of
 <code class="code docutils literal"><span class="pre">.build_prior_mean_var(test_points,</span> <span class="pre">num_latent)</span></code>.</p>
@@ -2307,7 +2308,7 @@ points (shape <code class="code docutils literal"><span class="pre">[m,</span> <
 
 <dl class="method">
 <dt id="gptf.GPModel.compute_prior_samples">
-<code class="descname">compute_prior_samples</code><span class="sig-paren">(</span><em>test_points</em>, <em>num_latent</em>, <em>num_samples</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#GPModel.compute_prior_samples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.GPModel.compute_prior_samples" title="Permalink to this definition">¶</a></dt>
+<code class="descname">compute_prior_samples</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#GPModel.compute_prior_samples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.GPModel.compute_prior_samples" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes samples from the prior distribution(s).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -2399,13 +2400,13 @@ returned by <code class="code docutils literal"><span class="pre">.build_predict
 
 <dl class="method">
 <dt id="gptf.GPModel.predict_density">
-<code class="descname">predict_density</code><span class="sig-paren">(</span><em>test_points</em>, <em>test_values</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#GPModel.predict_density"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.GPModel.predict_density" title="Permalink to this definition">¶</a></dt>
+<code class="descname">predict_density</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#GPModel.predict_density"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.GPModel.predict_density" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the (log) density of the test values at the test points.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="gptf.GPModel.predict_y">
-<code class="descname">predict_y</code><span class="sig-paren">(</span><em>test_points</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#GPModel.predict_y"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.GPModel.predict_y" title="Permalink to this definition">¶</a></dt>
+<code class="descname">predict_y</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#GPModel.predict_y"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.GPModel.predict_y" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the mean and variance of held-out data.</p>
 </dd></dl>
 
@@ -2607,7 +2608,7 @@ size of L.</p>
 <em class="property">class </em><code class="descclassname">gptf.core.likelihoods.</code><code class="descname">Gaussian</code><span class="sig-paren">(</span><em>variance=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Gaussian"><span class="viewcode-link">[source]</span></a></dt>
 <dd><dl class="method">
 <dt>
-<code class="descname">conditional_mean</code><span class="sig-paren">(</span><em>F</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Gaussian.conditional_mean"><span class="viewcode-link">[source]</span></a></dt>
+<code class="descname">conditional_mean</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Gaussian.conditional_mean"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Computes the mean of the data given values of the latent func.</p>
 <p>If this object represents <span class="math">\(p(y|f)\)</span>, then this method
 computes</p>
@@ -2630,7 +2631,7 @@ latent function.</td>
 
 <dl class="method">
 <dt>
-<code class="descname">conditional_variance</code><span class="sig-paren">(</span><em>F</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Gaussian.conditional_variance"><span class="viewcode-link">[source]</span></a></dt>
+<code class="descname">conditional_variance</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Gaussian.conditional_variance"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Computes the variance of the data given values of the latent func.</p>
 <p>If this object represents <span class="math">\(p(y|f)\)</span>, then this method
 computes</p>
@@ -2653,7 +2654,7 @@ latent function.</td>
 
 <dl class="method">
 <dt>
-<code class="descname">logp</code><span class="sig-paren">(</span><em>F</em>, <em>Y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Gaussian.logp"><span class="viewcode-link">[source]</span></a></dt>
+<code class="descname">logp</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Gaussian.logp"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>The log density of the data given the function values.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -2677,19 +2678,19 @@ latent function.</td>
 
 <dl class="method">
 <dt>
-<code class="descname">predict_density</code><span class="sig-paren">(</span><em>mu_F</em>, <em>var_F</em>, <em>Y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Gaussian.predict_density"><span class="viewcode-link">[source]</span></a></dt>
+<code class="descname">predict_density</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Gaussian.predict_density"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>The (log) density of Y given a mean &amp; variance of the f.</p>
 </dd></dl>
 
 <dl class="method">
 <dt>
-<code class="descname">predict_mean_and_var</code><span class="sig-paren">(</span><em>mu_F</em>, <em>var_F</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Gaussian.predict_mean_and_var"><span class="viewcode-link">[source]</span></a></dt>
+<code class="descname">predict_mean_and_var</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Gaussian.predict_mean_and_var"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>The mean &amp; variance of Y given a mean &amp; variance of the f.</p>
 </dd></dl>
 
 <dl class="method">
 <dt>
-<code class="descname">variational_expectations</code><span class="sig-paren">(</span><em>mu_F</em>, <em>var_F</em>, <em>Y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Gaussian.variational_expectations"><span class="viewcode-link">[source]</span></a></dt>
+<code class="descname">variational_expectations</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Gaussian.variational_expectations"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Compute the expected log density of the data.</p>
 </dd></dl>
 
@@ -2773,7 +2774,7 @@ latent function.</td>
 
 <dl class="method">
 <dt>
-<code class="descname">predict_density</code><span class="sig-paren">(</span><em>mu_F</em>, <em>var_F</em>, <em>Y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Likelihood.predict_density"><span class="viewcode-link">[source]</span></a></dt>
+<code class="descname">predict_density</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Likelihood.predict_density"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>The (log) density of Y given a mean &amp; variance of the latent func.</p>
 <p>if <span class="math">\(q(f) = N(mu_F, var_F)\)</span> and this object represents
 <span class="math">\(p(y|f)\)</span>,
@@ -2786,7 +2787,7 @@ likelihoods (e.g. Gaussian, Poisson) will implement specific cases.</p>
 
 <dl class="method">
 <dt>
-<code class="descname">predict_mean_and_var</code><span class="sig-paren">(</span><em>mu_F</em>, <em>var_F</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Likelihood.predict_mean_and_var"><span class="viewcode-link">[source]</span></a></dt>
+<code class="descname">predict_mean_and_var</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Likelihood.predict_mean_and_var"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>The mean &amp; variance of Y given a mean &amp; variance of the latent func.</p>
 <p>if <span class="math">\(q(f) = N(mu_F, var_F)\)</span> and this object represents
 <span class="math">\(p(y|f)\)</span>,
@@ -2803,7 +2804,7 @@ likelihoods (e.g. Gaussian) will implement specific cases.</p>
 
 <dl class="method">
 <dt>
-<code class="descname">variational_expectations</code><span class="sig-paren">(</span><em>mu_F</em>, <em>var_F</em>, <em>Y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Likelihood.variational_expectations"><span class="viewcode-link">[source]</span></a></dt>
+<code class="descname">variational_expectations</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Likelihood.variational_expectations"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Compute the expected log density of the data.</p>
 <p>if <span class="math">\(q(f) = N(mu_F, var_F)\)</span> and this object represents
 <span class="math">\(p(y|f)\)</span>,
@@ -2930,7 +2931,7 @@ likelihoods (e.g. Gaussian, Poisson) will implement specific cases.</p>
 <p>GP regression with Gaussian noise.</p>
 <dl class="class">
 <dt>
-<em class="property">class </em><code class="descclassname">gptf.gpr.</code><code class="descname">GPR</code><span class="sig-paren">(</span><em>kernel</em>, <em>meanfunction=&lt;gptf.core.meanfunctions.Zero object</em>, <em>fallback_name unnamed</em>, <em>id 0x7f0485151f60&gt;</em>, <em>noise_variance=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/gpr.html#GPR"><span class="viewcode-link">[source]</span></a></dt>
+<em class="property">class </em><code class="descclassname">gptf.gpr.</code><code class="descname">GPR</code><span class="sig-paren">(</span><em>kernel</em>, <em>meanfunction=&lt;gptf.core.meanfunctions.Zero object</em>, <em>fallback_name unnamed</em>, <em>id 0x7f6582177510&gt;</em>, <em>noise_variance=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/gpr.html#GPR"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Gaussian process regression with Gaussian noise.</p>
 <dl class="attribute">
 <dt id="gptf.gpr.GPR.kernel">
@@ -3003,7 +3004,7 @@ to their original state.</p>
 </div>
 <dl class="method">
 <dt>
-<code class="descname">build_log_likelihood</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/gpr.html#GPR.build_log_likelihood"><span class="viewcode-link">[source]</span></a></dt>
+<code class="descname">build_log_likelihood</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/gpr.html#GPR.build_log_likelihood"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Builds the log likelihood of the model w.r.t. the data.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -3028,7 +3029,7 @@ likelihood of the model.</p>
 
 <dl class="method">
 <dt>
-<code class="descname">build_posterior_mean_var</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em>, <em>test_points</em>, <em>full_cov=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/gpr.html#GPR.build_posterior_mean_var"><span class="viewcode-link">[source]</span></a></dt>
+<code class="descname">build_posterior_mean_var</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/gpr.html#GPR.build_posterior_mean_var"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Builds an op for the mean and variance of the posterior(s).</p>
 <p>In the returned tensors, the last index should always be the
 latent function index.</p>
@@ -3066,7 +3067,7 @@ Both tensors have the same dtype.</p>
 
 <dl class="method">
 <dt>
-<code class="descname">build_prior_mean_var</code><span class="sig-paren">(</span><em>test_points</em>, <em>num_latent</em>, <em>full_cov=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/gpr.html#GPR.build_prior_mean_var"><span class="viewcode-link">[source]</span></a></dt>
+<code class="descname">build_prior_mean_var</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/gpr.html#GPR.build_prior_mean_var"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Builds an op for the mean and variance of the prior(s).</p>
 <p>In the returned tensors, the last index should always be the
 latent function index.</p>
@@ -3131,7 +3132,7 @@ for the <span class="math">\(k\)</span>th child.</p>
 <p>Attributes: See <code class="code docutils literal"><span class="pre">GPModel</span></code> and <code class="code docutils literal"><span class="pre">ParamList</span></code>.</p>
 <dl class="method">
 <dt>
-<code class="descname">build_posterior_mean_var</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em>, <em>test_points</em>, <em>full_cov=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#BCMReduction.build_posterior_mean_var"><span class="viewcode-link">[source]</span></a></dt>
+<code class="descname">build_posterior_mean_var</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#BCMReduction.build_posterior_mean_var"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Builds an op for the mean and variance of the posterior(s).</p>
 <p>In the returned tensors, the last index should always be the
 latent function index.</p>
@@ -3188,7 +3189,7 @@ for the <span class="math">\(k\)</span>th child.</p>
 <p>Attributes: See <code class="xref py py-obj docutils literal"><span class="pre">GPModel</span></code> and <code class="xref py py-obj docutils literal"><span class="pre">ParamList</span></code>.</p>
 <dl class="method">
 <dt>
-<code class="descname">build_posterior_mean_var</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em>, <em>test_points</em>, <em>full_cov=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#PoEReduction.build_posterior_mean_var"><span class="viewcode-link">[source]</span></a></dt>
+<code class="descname">build_posterior_mean_var</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#PoEReduction.build_posterior_mean_var"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Builds an op for the mean and variance of the posterior(s).</p>
 <p>In the returned tensors, the last index should always be the
 latent function index.</p>
@@ -3248,7 +3249,7 @@ the posterior mean and variance with a prior division term.</p>
 
 <dl class="method">
 <dt>
-<code class="descname">build_log_likelihood</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#PriorDivisorReduction.build_log_likelihood"><span class="viewcode-link">[source]</span></a></dt>
+<code class="descname">build_log_likelihood</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#PriorDivisorReduction.build_log_likelihood"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Builds the log likelihood of the model w.r.t. the data.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -3273,7 +3274,7 @@ likelihood of the model.</p>
 
 <dl class="method">
 <dt>
-<code class="descname">build_posterior_mean_var</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em>, <em>test_points</em>, <em>full_cov=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#PriorDivisorReduction.build_posterior_mean_var"><span class="viewcode-link">[source]</span></a></dt>
+<code class="descname">build_posterior_mean_var</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#PriorDivisorReduction.build_posterior_mean_var"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Builds an op for the mean and variance of the posterior(s).</p>
 <p>In the returned tensors, the last index should always be the
 latent function index.</p>
@@ -3311,7 +3312,7 @@ Both tensors have the same dtype.</p>
 
 <dl class="method">
 <dt>
-<code class="descname">build_prior_mean_var</code><span class="sig-paren">(</span><em>test_points</em>, <em>num_latent</em>, <em>full_cov=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#PriorDivisorReduction.build_prior_mean_var"><span class="viewcode-link">[source]</span></a></dt>
+<code class="descname">build_prior_mean_var</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#PriorDivisorReduction.build_prior_mean_var"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Builds an op for the mean and variance of the prior(s).</p>
 <p>In the returned tensors, the last index should always be the
 latent function index.</p>
@@ -3355,13 +3356,13 @@ Both tensors have the same dtype.</p>
 <dd><p>Common code for distributed GP reductions.</p>
 <dl class="method">
 <dt>
-<code class="descname">build_log_likelihood</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#Reduction.build_log_likelihood"><span class="viewcode-link">[source]</span></a></dt>
+<code class="descname">build_log_likelihood</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#Reduction.build_log_likelihood"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>The sum of the log likelihoods of the children.</p>
 </dd></dl>
 
 <dl class="method">
 <dt>
-<code class="descname">build_prior_mean_var</code><span class="sig-paren">(</span><em>test_points</em>, <em>num_latent</em>, <em>full_cov=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#Reduction.build_prior_mean_var"><span class="viewcode-link">[source]</span></a></dt>
+<code class="descname">build_prior_mean_var</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#Reduction.build_prior_mean_var"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>The arithetic mean of the prior mean / variance of the chilren.</p>
 </dd></dl>
 
@@ -3549,7 +3550,7 @@ the prior outside the range of the data.</p>
 <p>For other attributes, see <code class="code docutils literal"><span class="pre">GPModel</span></code> and <code class="code docutils literal"><span class="pre">ParamList</span></code>.</p>
 <dl class="method">
 <dt>
-<code class="descname">build_posterior_mean_var</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em>, <em>test_points</em>, <em>full_cov=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#gPoEReduction.build_posterior_mean_var"><span class="viewcode-link">[source]</span></a></dt>
+<code class="descname">build_posterior_mean_var</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#gPoEReduction.build_posterior_mean_var"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Builds an op for the mean and variance of the posterior(s).</p>
 <p>In the returned tensors, the last index should always be the
 latent function index.</p>
@@ -3647,7 +3648,7 @@ the data.</p>
 <p>For other attributes, see <code class="code docutils literal"><span class="pre">GPModel</span></code> and <code class="code docutils literal"><span class="pre">ParamList</span></code>.</p>
 <dl class="method">
 <dt>
-<code class="descname">build_posterior_mean_var</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em>, <em>test_points</em>, <em>full_cov=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#rBCMReduction.build_posterior_mean_var"><span class="viewcode-link">[source]</span></a></dt>
+<code class="descname">build_posterior_mean_var</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/distributed.html#rBCMReduction.build_posterior_mean_var"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Builds an op for the mean and variance of the posterior(s).</p>
 <p>In the returned tensors, the last index should always be the
 latent function index.</p>
@@ -3759,8 +3760,8 @@ layer of the rBCM.</li>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
@@ -3774,8 +3775,8 @@ layer of the rBCM.</li>
       &copy;2016, Blaine Rogers.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.6</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
       
       |
       <a href="_sources/public_api.txt"

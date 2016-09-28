@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>tensorflow.python.client.session &#8212; gptf 1.0.0 documentation</title>
+    <title>tensorflow.python.client.session &mdash; gptf 1.0.0 documentation</title>
     
     <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
@@ -28,7 +28,6 @@
     <link rel="up" title="Module code" href="../../../index.html" />
    
   <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
-  
   
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
@@ -59,23 +58,24 @@
 
 <span class="sd">&quot;&quot;&quot;A client interface for TensorFlow.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span>
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
 
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">threading</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">six</span>
 
-<span class="kn">from</span> <span class="nn">tensorflow.core.protobuf</span> <span class="k">import</span> <span class="n">config_pb2</span>
-<span class="kn">from</span> <span class="nn">tensorflow.python</span> <span class="k">import</span> <span class="n">pywrap_tensorflow</span> <span class="k">as</span> <span class="n">tf_session</span>
-<span class="kn">from</span> <span class="nn">tensorflow.python.framework</span> <span class="k">import</span> <span class="n">errors</span>
-<span class="kn">from</span> <span class="nn">tensorflow.python.framework</span> <span class="k">import</span> <span class="n">ops</span>
-<span class="kn">from</span> <span class="nn">tensorflow.python.ops</span> <span class="k">import</span> <span class="n">session_ops</span>
-<span class="kn">from</span> <span class="nn">tensorflow.python.platform</span> <span class="k">import</span> <span class="n">tf_logging</span> <span class="k">as</span> <span class="n">logging</span>
-<span class="kn">from</span> <span class="nn">tensorflow.python.util</span> <span class="k">import</span> <span class="n">compat</span>
-<span class="kn">from</span> <span class="nn">tensorflow.python.util</span> <span class="k">import</span> <span class="n">nest</span>
+<span class="kn">from</span> <span class="nn">tensorflow.core.protobuf</span> <span class="kn">import</span> <span class="n">config_pb2</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python</span> <span class="kn">import</span> <span class="n">pywrap_tensorflow</span> <span class="k">as</span> <span class="n">tf_session</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.framework</span> <span class="kn">import</span> <span class="n">errors</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.framework</span> <span class="kn">import</span> <span class="n">ops</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.ops</span> <span class="kn">import</span> <span class="n">session_ops</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.platform</span> <span class="kn">import</span> <span class="n">tf_logging</span> <span class="k">as</span> <span class="n">logging</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.util</span> <span class="kn">import</span> <span class="n">compat</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.util</span> <span class="kn">import</span> <span class="n">nest</span>
 
 
 <span class="k">class</span> <span class="nc">SessionInterface</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -91,398 +91,53 @@
     <span class="sd">&quot;&quot;&quot;The TensorFlow process to which this session will connect.&quot;&quot;&quot;</span>
     <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;sess_str&#39;</span><span class="p">)</span>
 
-  <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fetches</span><span class="p">,</span> <span class="n">feed_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">run_metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+  <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fetches</span><span class="p">,</span> <span class="n">feed_dict</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">run_metadata</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Runs operations in the session. See `Session.run()` for details.&quot;&quot;&quot;</span>
     <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;run&#39;</span><span class="p">)</span>
 
-  <span class="k">def</span> <span class="nf">partial_run_setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fetches</span><span class="p">,</span> <span class="n">feeds</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+  <span class="k">def</span> <span class="nf">partial_run_setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fetches</span><span class="p">,</span> <span class="n">feeds</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Sets up the feeds and fetches for partial runs in the session.&quot;&quot;&quot;</span>
     <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;partial_run_setup&#39;</span><span class="p">)</span>
 
-  <span class="k">def</span> <span class="nf">partial_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">handle</span><span class="p">,</span> <span class="n">fetches</span><span class="p">,</span> <span class="n">feed_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+  <span class="k">def</span> <span class="nf">partial_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">handle</span><span class="p">,</span> <span class="n">fetches</span><span class="p">,</span> <span class="n">feed_dict</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Continues the execution with additional feeds and fetches.&quot;&quot;&quot;</span>
     <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;partial_run&#39;</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">_get_indexed_slices_value_from_fetches</span><span class="p">(</span><span class="n">fetched_vals</span><span class="p">):</span>
   <span class="k">return</span> <span class="n">ops</span><span class="o">.</span><span class="n">IndexedSlicesValue</span><span class="p">(</span><span class="n">fetched_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">fetched_vals</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
                                 <span class="n">fetched_vals</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-                                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">fetched_vals</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+                                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">fetched_vals</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span> <span class="k">else</span> <span class="bp">None</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_get_feeds_for_indexed_slices</span><span class="p">(</span><span class="n">feed</span><span class="p">,</span> <span class="n">feed_val</span><span class="p">):</span>
-  <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">([</span><span class="n">feed</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">feed</span><span class="o">.</span><span class="n">indices</span><span class="p">]</span> <span class="k">if</span> <span class="n">feed</span><span class="o">.</span><span class="n">dense_shape</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span>
+  <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">([</span><span class="n">feed</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">feed</span><span class="o">.</span><span class="n">indices</span><span class="p">]</span> <span class="k">if</span> <span class="n">feed</span><span class="o">.</span><span class="n">dense_shape</span> <span class="ow">is</span> <span class="bp">None</span> <span class="k">else</span>
                   <span class="p">[</span><span class="n">feed</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">feed</span><span class="o">.</span><span class="n">indices</span><span class="p">,</span> <span class="n">feed</span><span class="o">.</span><span class="n">dense_shape</span><span class="p">],</span> <span class="n">feed_val</span><span class="p">))</span>
 
 
-<span class="c1"># List of extensions supported to convert run arguments into actual fetches and</span>
-<span class="c1"># feeds.</span>
-<span class="c1">#</span>
-<span class="c1"># Each element in the list is a tuple of (Type, fetch_fn, feed_fn1, feed_fn2),</span>
-<span class="c1"># where the function signatures are:</span>
-<span class="c1">#   fetch_fn : Type -&gt; (list of Tensors,</span>
-<span class="c1">#                       lambda: list of fetched np.ndarray -&gt; TypeVal)</span>
-<span class="c1">#   feed_fn1 : Type, TypeVal -&gt; list of (Tensor, value)</span>
-<span class="c1">#   feed_fn2 : Type -&gt; list of Tensors</span>
-<span class="c1">#</span>
-<span class="c1"># `fetch_fn` describes how to expand fetch into its</span>
-<span class="c1"># component Tensors and how to contract the fetched results back into</span>
-<span class="c1"># a single return value.</span>
-<span class="c1">#</span>
-<span class="c1"># Each feed function describes how to unpack a single fed value and map it to</span>
-<span class="c1"># feeds of one or more tensors and their corresponding values: `feed_fn1` is</span>
-<span class="c1"># used to feed a run, `feed_fn2` to set up a partial run.</span>
-<span class="c1">#</span>
-<span class="c1"># TODO(touts): We could reimplement these as specialized _FeedMapper</span>
-<span class="c1"># implementations after we refactor the feed handling code to use them.</span>
-<span class="c1">#</span>
-<span class="c1"># Eventually, this registration could be opened up to support custom Tensor</span>
-<span class="c1"># expansions.</span>
-<span class="c1"># pylint: disable=g-long-lambda</span>
-<span class="n">_REGISTERED_EXPANSIONS</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="c1"># SparseTensors are fetched as SparseTensorValues. They can be fed</span>
-    <span class="c1"># SparseTensorValues or normal tuples.</span>
-    <span class="p">(</span><span class="n">ops</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">,</span>
-     <span class="k">lambda</span> <span class="n">fetch</span><span class="p">:</span> <span class="p">(</span>
-         <span class="p">[</span><span class="n">fetch</span><span class="o">.</span><span class="n">indices</span><span class="p">,</span> <span class="n">fetch</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">fetch</span><span class="o">.</span><span class="n">shape</span><span class="p">],</span>
-         <span class="k">lambda</span> <span class="n">fetched_vals</span><span class="p">:</span> <span class="n">ops</span><span class="o">.</span><span class="n">SparseTensorValue</span><span class="p">(</span><span class="o">*</span><span class="n">fetched_vals</span><span class="p">)),</span>
-     <span class="k">lambda</span> <span class="n">feed</span><span class="p">,</span> <span class="n">feed_val</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span>
-         <span class="p">[</span><span class="n">feed</span><span class="o">.</span><span class="n">indices</span><span class="p">,</span> <span class="n">feed</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">feed</span><span class="o">.</span><span class="n">shape</span><span class="p">],</span> <span class="n">feed_val</span><span class="p">)),</span>
-     <span class="k">lambda</span> <span class="n">feed</span><span class="p">:</span> <span class="p">[</span><span class="n">feed</span><span class="o">.</span><span class="n">indices</span><span class="p">,</span> <span class="n">feed</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">feed</span><span class="o">.</span><span class="n">shape</span><span class="p">]),</span>
-    <span class="c1"># IndexedSlices are fetched as IndexedSlicesValues. They can be fed</span>
-    <span class="c1"># IndexedSlicesValues or normal tuples.</span>
-    <span class="p">(</span><span class="n">ops</span><span class="o">.</span><span class="n">IndexedSlices</span><span class="p">,</span>
-     <span class="k">lambda</span> <span class="n">fetch</span><span class="p">:</span> <span class="p">(</span>
-         <span class="p">[</span><span class="n">fetch</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">fetch</span><span class="o">.</span><span class="n">indices</span><span class="p">]</span> <span class="k">if</span> <span class="n">fetch</span><span class="o">.</span><span class="n">dense_shape</span> <span class="ow">is</span> <span class="kc">None</span>
-         <span class="k">else</span> <span class="p">[</span><span class="n">fetch</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">fetch</span><span class="o">.</span><span class="n">indices</span><span class="p">,</span> <span class="n">fetch</span><span class="o">.</span><span class="n">dense_shape</span><span class="p">],</span>
-         <span class="n">_get_indexed_slices_value_from_fetches</span><span class="p">),</span>
-     <span class="n">_get_feeds_for_indexed_slices</span><span class="p">,</span>
-     <span class="k">lambda</span> <span class="n">feed</span><span class="p">:</span> <span class="p">[</span><span class="n">feed</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">feed</span><span class="o">.</span><span class="n">indices</span><span class="p">]</span> <span class="k">if</span> <span class="n">feed</span><span class="o">.</span><span class="n">dense_shape</span> <span class="ow">is</span> <span class="kc">None</span>
-                  <span class="k">else</span> <span class="p">[</span><span class="n">feed</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">feed</span><span class="o">.</span><span class="n">indices</span><span class="p">,</span> <span class="n">feed</span><span class="o">.</span><span class="n">dense_shape</span><span class="p">]),</span>
-    <span class="c1"># The default catches all other types and performs no expansions.</span>
-    <span class="p">(</span><span class="nb">object</span><span class="p">,</span>
-     <span class="k">lambda</span> <span class="n">fetch</span><span class="p">:</span> <span class="p">([</span><span class="n">fetch</span><span class="p">],</span> <span class="k">lambda</span> <span class="n">fetched_vals</span><span class="p">:</span> <span class="n">fetched_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
-     <span class="k">lambda</span> <span class="n">feed</span><span class="p">,</span> <span class="n">feed_val</span><span class="p">:</span> <span class="p">[(</span><span class="n">feed</span><span class="p">,</span> <span class="n">feed_val</span><span class="p">)],</span>
-     <span class="k">lambda</span> <span class="n">feed</span><span class="p">:</span> <span class="p">[</span><span class="n">feed</span><span class="p">])]</span>
-<span class="c1"># pylint: enable=g-long-lambda</span>
-
-
-<span class="k">class</span> <span class="nc">_FetchMapper</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-  <span class="sd">&quot;&quot;&quot;Definition of the interface provided by fetch mappers.</span>
-
-<span class="sd">  Fetch mappers are utility classes used by the _FetchHandler to handle</span>
-<span class="sd">  arbitrary structures for the `fetch` argument to `Session.run()`.</span>
-
-<span class="sd">  The `fetch` argument can be of various shapes: single tensor or op, list of</span>
-<span class="sd">  fetches, tuple of fetches, namedtuple of fetches, or dict of fetches.  The</span>
-<span class="sd">  structures can be arbitrarily nested.</span>
-
-<span class="sd">  The low level run() API only wants a list of tensor or op names.  The various</span>
-<span class="sd">  `_FetchMapper` subclasses below take care of handling the different shapes:</span>
-<span class="sd">  uniquifying the fetches, and constructing results with the original shape.</span>
-<span class="sd">  &quot;&quot;&quot;</span>
-
-  <span class="k">def</span> <span class="nf">unique_fetches</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return the list of unique tensors or ops needed by this fetch mapper.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">      A list of tensors or ops.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Must be implemented by subclasses&#39;</span><span class="p">)</span>
-
-  <span class="k">def</span> <span class="nf">build_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Build results that match the original shape of the fetch.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">      values: List of values returned by run(). The values correspond</span>
-<span class="sd">        exactly to the list tensors or ops returned by unique_fetches().</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">      A struct of the same shape as the original fetch object handled by</span>
-<span class="sd">      this fetch mapper.  In the returned struct, the original fetches are</span>
-<span class="sd">      replaced by their fetched values.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Must be implemented by subclasses&#39;</span><span class="p">)</span>
-
-  <span class="nd">@staticmethod</span>
-  <span class="k">def</span> <span class="nf">for_fetch</span><span class="p">(</span><span class="n">fetch</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Creates fetch mapper that handles the structure of `fetch`.</span>
-
-<span class="sd">    The default graph must be the one from which we want to fetch values when</span>
-<span class="sd">    this function is called.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">      fetch: An arbitrary fetch structure: singleton, list, tuple,</span>
-<span class="sd">        namedtuple, or dict.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">      An instance of a subclass of `_FetchMapper` that handles the shape.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">fetch</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-      <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Fetch argument </span><span class="si">%r</span><span class="s1"> has invalid type </span><span class="si">%r</span><span class="s1">&#39;</span> <span class="o">%</span>
-                      <span class="p">(</span><span class="n">fetch</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">fetch</span><span class="p">)))</span>
-    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fetch</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
-      <span class="c1"># NOTE(touts): This is also the code path for namedtuples.</span>
-      <span class="k">return</span> <span class="n">_ListFetchMapper</span><span class="p">(</span><span class="n">fetch</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fetch</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-      <span class="k">return</span> <span class="n">_DictFetchMapper</span><span class="p">(</span><span class="n">fetch</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-      <span class="c1"># Look for a handler in the registered expansions.</span>
-      <span class="k">for</span> <span class="n">tensor_type</span><span class="p">,</span> <span class="n">fetch_fn</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">_REGISTERED_EXPANSIONS</span><span class="p">:</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fetch</span><span class="p">,</span> <span class="n">tensor_type</span><span class="p">):</span>
-          <span class="n">fetches</span><span class="p">,</span> <span class="n">contraction_fn</span> <span class="o">=</span> <span class="n">fetch_fn</span><span class="p">(</span><span class="n">fetch</span><span class="p">)</span>
-          <span class="k">return</span> <span class="n">_ElementFetchMapper</span><span class="p">(</span><span class="n">fetches</span><span class="p">,</span> <span class="n">contraction_fn</span><span class="p">)</span>
-    <span class="c1"># Did not find anything.</span>
-    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Fetch argument </span><span class="si">%r</span><span class="s1"> has invalid type </span><span class="si">%r</span><span class="s1">&#39;</span> <span class="o">%</span>
-                    <span class="p">(</span><span class="n">fetch</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">fetch</span><span class="p">)))</span>
-
-
-<span class="k">class</span> <span class="nc">_ElementFetchMapper</span><span class="p">(</span><span class="n">_FetchMapper</span><span class="p">):</span>
-  <span class="sd">&quot;&quot;&quot;Fetch mapper for singleton tensors and ops.&quot;&quot;&quot;</span>
-
-  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fetches</span><span class="p">,</span> <span class="n">contraction_fn</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Creates an _ElementFetchMapper.</span>
-
-<span class="sd">    This is the fetch mapper used for leaves in the fetch struct.  Because of</span>
-<span class="sd">    the expansions mechanism, a leaf can actually fetch more than one tensor.</span>
-
-<span class="sd">    Also note that the fetches here can be just strings (tensor or op names) or</span>
-<span class="sd">    any other object that the graph knows how to convert to a tensor, such as a</span>
-<span class="sd">    Variable.  So we have to run each fetch through `as_graph_element()` to get</span>
-<span class="sd">    the corresponding tensor or op.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">      fetches: List of objects, as returned by a fetch_fn defined</span>
-<span class="sd">        in _REGISTERED_EXPANSIONS.</span>
-<span class="sd">      contraction_fn: Callable as returned by a fetch_fn.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">_unique_fetches</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">fetch</span> <span class="ow">in</span> <span class="n">fetches</span><span class="p">:</span>
-      <span class="k">try</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_unique_fetches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ops</span><span class="o">.</span><span class="n">get_default_graph</span><span class="p">()</span><span class="o">.</span><span class="n">as_graph_element</span><span class="p">(</span>
-            <span class="n">fetch</span><span class="p">,</span> <span class="n">allow_tensor</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">allow_operation</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
-      <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Fetch argument </span><span class="si">%r</span><span class="s1"> has invalid type </span><span class="si">%r</span><span class="s1">, &#39;</span>
-                        <span class="s1">&#39;must be a string or Tensor. (</span><span class="si">%s</span><span class="s1">)&#39;</span>
-                        <span class="o">%</span> <span class="p">(</span><span class="n">fetch</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">fetch</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
-      <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Fetch argument </span><span class="si">%r</span><span class="s1"> cannot be interpreted as a &#39;</span>
-                         <span class="s1">&#39;Tensor. (</span><span class="si">%s</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">fetch</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
-      <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Fetch argument </span><span class="si">%r</span><span class="s1"> cannot be interpreted as a &#39;</span>
-                         <span class="s1">&#39;Tensor. (</span><span class="si">%s</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">fetch</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">_contraction_fn</span> <span class="o">=</span> <span class="n">contraction_fn</span>
-
-  <span class="k">def</span> <span class="nf">unique_fetches</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unique_fetches</span>
-
-  <span class="k">def</span> <span class="nf">build_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">values</span><span class="p">:</span>
-      <span class="c1"># &#39;Operation&#39; case</span>
-      <span class="k">return</span> <span class="kc">None</span>
-    <span class="k">else</span><span class="p">:</span>
-      <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_contraction_fn</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">_uniquify_fetches</span><span class="p">(</span><span class="n">fetch_mappers</span><span class="p">):</span>
-  <span class="sd">&quot;&quot;&quot;Uniquifies fetches from a list of fetch_mappers.</span>
-
-<span class="sd">  This is a utility function used by _ListFetchMapper and _DictFetchMapper.  It</span>
-<span class="sd">  gathers all the unique fetches from a list of mappers and builds a list</span>
-<span class="sd">  containing all of them but without duplicates (unique_fetches).</span>
-
-<span class="sd">  It also returns a 2-D list of integers (values_indices) indicating at which</span>
-<span class="sd">  index in unique_fetches the fetches of the mappers are located.</span>
-
-<span class="sd">  This list is as follows:</span>
-<span class="sd">    values_indices[mapper_index][mapper_fetch_index] = unique_fetches_index</span>
+<span class="k">def</span> <span class="nf">_unflatten_fetches</span><span class="p">(</span><span class="n">fetches</span><span class="p">,</span> <span class="n">flat_values</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Creates a dictionary mapping fetched keys to values.</span>
 
 <span class="sd">  Args:</span>
-<span class="sd">    fetch_mappers: list of fetch mappers.</span>
+<span class="sd">    fetches: A dictionary of either graph elements or lists/tuples</span>
+<span class="sd">      of graph elements.</span>
+<span class="sd">    flat_values: A flat list of fetched values.</span>
 
 <span class="sd">  Returns:</span>
-<span class="sd">    A list of fetches.</span>
-<span class="sd">    A 2-D list of integers.</span>
+<span class="sd">    A dictionary with the same keys as `fetches`, mapping to the fetched value</span>
+<span class="sd">    (or list of values) in `flat_values`.</span>
 <span class="sd">  &quot;&quot;&quot;</span>
-  <span class="n">unique_fetches</span> <span class="o">=</span> <span class="p">[]</span>
-  <span class="n">value_indices</span> <span class="o">=</span> <span class="p">[]</span>
-  <span class="n">seen_fetches</span> <span class="o">=</span> <span class="p">{}</span>
-  <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">fetch_mappers</span><span class="p">:</span>
-    <span class="n">m_value_indices</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">m</span><span class="o">.</span><span class="n">unique_fetches</span><span class="p">():</span>
-      <span class="n">j</span> <span class="o">=</span> <span class="n">seen_fetches</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
-      <span class="k">if</span> <span class="n">j</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">j</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">seen_fetches</span><span class="p">)</span>
-        <span class="n">seen_fetches</span><span class="p">[</span><span class="n">f</span><span class="p">]</span> <span class="o">=</span> <span class="n">j</span>
-        <span class="n">unique_fetches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
-      <span class="n">m_value_indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
-    <span class="n">value_indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">m_value_indices</span><span class="p">)</span>
-  <span class="k">return</span> <span class="n">unique_fetches</span><span class="p">,</span> <span class="n">value_indices</span>
-
-
-<span class="k">class</span> <span class="nc">_ListFetchMapper</span><span class="p">(</span><span class="n">_FetchMapper</span><span class="p">):</span>
-  <span class="sd">&quot;&quot;&quot;Fetch mapper for lists, tuples, and namedtuples.&quot;&quot;&quot;</span>
-
-  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fetches</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Creates a _ListFetchMapper.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">      fetches: List, tuple, or namedtuple of fetches.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">fetches</span><span class="p">)</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">_mappers</span> <span class="o">=</span> <span class="p">[</span><span class="n">_FetchMapper</span><span class="o">.</span><span class="n">for_fetch</span><span class="p">(</span><span class="n">fetch</span><span class="p">)</span> <span class="k">for</span> <span class="n">fetch</span> <span class="ow">in</span> <span class="n">fetches</span><span class="p">]</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">_unique_fetches</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value_indices</span> <span class="o">=</span> <span class="n">_uniquify_fetches</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mappers</span><span class="p">)</span>
-
-  <span class="k">def</span> <span class="nf">unique_fetches</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unique_fetches</span>
-
-  <span class="k">def</span> <span class="nf">build_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
-    <span class="c1"># Create the list of results for each mapper.</span>
-    <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="n">vi</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mappers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value_indices</span><span class="p">):</span>
-      <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">build_results</span><span class="p">([</span><span class="n">values</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">vi</span><span class="p">]))</span>
-    <span class="c1"># Return a value of the original type of the fetches.</span>
-    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_type</span> <span class="o">==</span> <span class="nb">list</span><span class="p">:</span>
-      <span class="k">return</span> <span class="n">results</span>
-    <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_type</span> <span class="o">==</span> <span class="nb">tuple</span><span class="p">:</span>
-      <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+  <span class="n">used</span> <span class="o">=</span> <span class="mi">0</span>
+  <span class="n">ret</span> <span class="o">=</span> <span class="p">{}</span>
+  <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">fetch</span> <span class="ow">in</span> <span class="n">six</span><span class="o">.</span><span class="n">iteritems</span><span class="p">(</span><span class="n">fetches</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fetch</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+      <span class="n">flat_fetch_values</span> <span class="o">=</span> <span class="n">nest</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">fetch</span><span class="p">)</span>
+      <span class="n">start</span><span class="p">,</span> <span class="n">used</span> <span class="o">=</span> <span class="n">used</span><span class="p">,</span> <span class="n">used</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">flat_fetch_values</span><span class="p">)</span>
+      <span class="n">ret</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">nest</span><span class="o">.</span><span class="n">pack_sequence_as</span><span class="p">(</span><span class="n">fetch</span><span class="p">,</span> <span class="n">flat_values</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">used</span><span class="p">])</span>
     <span class="k">else</span><span class="p">:</span>
-      <span class="c1"># This is the code path for namedtuple.</span>
-      <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_type</span><span class="p">(</span><span class="o">*</span><span class="n">results</span><span class="p">)</span>
-
-
-<span class="k">class</span> <span class="nc">_DictFetchMapper</span><span class="p">(</span><span class="n">_FetchMapper</span><span class="p">):</span>
-  <span class="sd">&quot;&quot;&quot;Fetch mapper for dicts.&quot;&quot;&quot;</span>
-
-  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fetches</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Creates a _DictFetchMapper.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">      fetches: Dict of fetches.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">_keys</span> <span class="o">=</span> <span class="n">fetches</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">_mappers</span> <span class="o">=</span> <span class="p">[</span><span class="n">_FetchMapper</span><span class="o">.</span><span class="n">for_fetch</span><span class="p">(</span><span class="n">fetch</span><span class="p">)</span>
-                     <span class="k">for</span> <span class="n">fetch</span> <span class="ow">in</span> <span class="n">fetches</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">_unique_fetches</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value_indices</span> <span class="o">=</span> <span class="n">_uniquify_fetches</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mappers</span><span class="p">)</span>
-
-  <span class="k">def</span> <span class="nf">unique_fetches</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unique_fetches</span>
-
-  <span class="k">def</span> <span class="nf">build_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
-    <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">vi</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_keys</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mappers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value_indices</span><span class="p">):</span>
-      <span class="n">results</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">build_results</span><span class="p">([</span><span class="n">values</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">vi</span><span class="p">])</span>
-    <span class="k">return</span> <span class="n">results</span>
-
-
-<span class="k">class</span> <span class="nc">_FetchHandler</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-  <span class="sd">&quot;&quot;&quot;Handler for structured fetches.</span>
-
-<span class="sd">  Given a graph, a user-provided structure for fetches, and a feed dict, this</span>
-<span class="sd">  class takes care of generating a list of tensor names to fetch and op names</span>
-<span class="sd">  to run for a low level `run()` call.</span>
-
-<span class="sd">  Given the results of the low level run call, this class can also rebuild a</span>
-<span class="sd">  result structure matching the user-provided structure for fetches, but</span>
-<span class="sd">  containing the corresponding results.</span>
-<span class="sd">  &quot;&quot;&quot;</span>
-  <span class="c1"># TODO(touts): Make this class also take care of destructuring the feed</span>
-  <span class="c1"># dict instead of doing it in the callers.</span>
-
-  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">fetches</span><span class="p">,</span> <span class="n">feeds</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Creates a fetch handler.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">      graph: Graph of the fetches.   Used to check for fetchability</span>
-<span class="sd">        and to convert all fetches to tensors or ops as needed.</span>
-<span class="sd">      fetches: An arbitrary fetch structure: singleton, list, tuple,</span>
-<span class="sd">        namedtuple, or dict.</span>
-<span class="sd">      feeds: A feed dict where keys are fully resolved tensor names.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">with</span> <span class="n">graph</span><span class="o">.</span><span class="n">as_default</span><span class="p">():</span>
-      <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_mapper</span> <span class="o">=</span> <span class="n">_FetchMapper</span><span class="o">.</span><span class="n">for_fetch</span><span class="p">(</span><span class="n">fetches</span><span class="p">)</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">_fetches</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">_targets</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">_feeds</span> <span class="o">=</span> <span class="n">feeds</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">_ops</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_handles</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">fetch</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_mapper</span><span class="o">.</span><span class="n">unique_fetches</span><span class="p">():</span>
-      <span class="n">fetch_name</span> <span class="o">=</span> <span class="n">compat</span><span class="o">.</span><span class="n">as_bytes</span><span class="p">(</span><span class="n">fetch</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-      <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fetch</span><span class="p">,</span> <span class="n">ops</span><span class="o">.</span><span class="n">Operation</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_assert_fetchable</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">fetch</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_targets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fetch_name</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_ops</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-      <span class="k">else</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_assert_fetchable</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">fetch</span><span class="o">.</span><span class="n">op</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_fetches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fetch_name</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_ops</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
-      <span class="c1"># Remember the fetch if it is for a tensor handle.</span>
-      <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fetch</span><span class="p">,</span> <span class="n">ops</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="ow">and</span> <span class="n">fetch</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;GetSessionHandle&#39;</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_handles</span><span class="p">[</span><span class="n">fetch_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">fetch</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">_final_fetches</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fetches</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">feeds</span><span class="p">]</span>
-
-  <span class="k">def</span> <span class="nf">_assert_fetchable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">graph</span><span class="o">.</span><span class="n">is_fetchable</span><span class="p">(</span><span class="n">op</span><span class="p">):</span>
-      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-          <span class="s1">&#39;Operation </span><span class="si">%r</span><span class="s1"> has been marked as not fetchable.&#39;</span> <span class="o">%</span> <span class="n">op</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-
-  <span class="k">def</span> <span class="nf">fetches</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return the unique names of tensors to fetch.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">      A list of strings.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_final_fetches</span>
-
-  <span class="k">def</span> <span class="nf">targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return the unique names of ops to run.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">      A list of strings.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_targets</span>
-
-  <span class="k">def</span> <span class="nf">build_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">tensor_values</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Build results matching the original fetch shape.</span>
-
-<span class="sd">    `tensor_values` must be a list of the same length as</span>
-<span class="sd">    the one returned by `fetches()`, and holding the requested</span>
-<span class="sd">    fetch values.</span>
-
-<span class="sd">    This method builds a struct with the same shape as the original `fetches`</span>
-<span class="sd">    passed to the constructor, in which the fetches are replaced by their</span>
-<span class="sd">    fetched value.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">      session: The enclosing session.  Used for tensor handles.</span>
-<span class="sd">      tensor_values: List of values matching the list returned</span>
-<span class="sd">        by fetches().</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">      A structure of the same shape as the original `fetches` argument but</span>
-<span class="sd">        containing tensors or None (for fetched ops).</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">full_values</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_final_fetches</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">tensor_values</span><span class="p">)</span>
-    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">for</span> <span class="n">is_op</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ops</span><span class="p">:</span>
-      <span class="k">if</span> <span class="n">is_op</span><span class="p">:</span>
-        <span class="n">full_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
-      <span class="k">else</span><span class="p">:</span>
-        <span class="c1"># If the fetch was in the feeds, use the fed value, otherwise</span>
-        <span class="c1"># use the returned value.</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_feeds</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fetches</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-          <span class="n">value</span> <span class="o">=</span> <span class="n">tensor_values</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
-          <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
-        <span class="n">dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_handles</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fetches</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-        <span class="k">if</span> <span class="n">dtype</span><span class="p">:</span>
-          <span class="n">full_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">session_ops</span><span class="o">.</span><span class="n">TensorHandle</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">session</span><span class="p">))</span>
-        <span class="k">else</span><span class="p">:</span>
-          <span class="n">full_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-        <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
-    <span class="k">assert</span> <span class="n">j</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">tensor_values</span><span class="p">)</span>
-    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_mapper</span><span class="o">.</span><span class="n">build_results</span><span class="p">(</span><span class="n">full_values</span><span class="p">)</span>
+      <span class="n">ret</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">flat_values</span><span class="p">[</span><span class="n">used</span><span class="p">]</span>
+      <span class="n">used</span> <span class="o">+=</span> <span class="mi">1</span>
+  <span class="k">assert</span> <span class="n">used</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">flat_values</span><span class="p">)</span>
+  <span class="k">return</span> <span class="n">ret</span>
 
 
 <span class="k">class</span> <span class="nc">BaseSession</span><span class="p">(</span><span class="n">SessionInterface</span><span class="p">):</span>
@@ -492,7 +147,7 @@
 <span class="sd">  execution of Operations and evaluation of Tensors.</span>
 <span class="sd">  &quot;&quot;&quot;</span>
 
-  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">graph</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">graph</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Constructs a new TensorFlow session.</span>
 
 <span class="sd">    Args:</span>
@@ -506,40 +161,40 @@
 <span class="sd">        creating the TensorFlow session.</span>
 <span class="sd">      TypeError: If one of the arguments has the wrong type.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">graph</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">graph</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="n">ops</span><span class="o">.</span><span class="n">get_default_graph</span><span class="p">()</span>
     <span class="k">else</span><span class="p">:</span>
       <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">ops</span><span class="o">.</span><span class="n">Graph</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;graph must be a tf.Graph, but got </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="nb">type</span><span class="p">(</span><span class="n">graph</span><span class="p">))</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="n">graph</span>
 
-    <span class="bp">self</span><span class="o">.</span><span class="n">_opened</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_opened</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span> <span class="o">=</span> <span class="bp">False</span>
 
     <span class="bp">self</span><span class="o">.</span><span class="n">_current_version</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_extend_lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
       <span class="k">try</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_target</span> <span class="o">=</span> <span class="n">compat</span><span class="o">.</span><span class="n">as_bytes</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
       <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;target must be a string, but got </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="nb">type</span><span class="p">(</span><span class="n">target</span><span class="p">))</span>
     <span class="k">else</span><span class="p">:</span>
-      <span class="bp">self</span><span class="o">.</span><span class="n">_target</span> <span class="o">=</span> <span class="kc">None</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_target</span> <span class="o">=</span> <span class="bp">None</span>
 
     <span class="bp">self</span><span class="o">.</span><span class="n">_delete_lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_dead_handles</span> <span class="o">=</span> <span class="p">[]</span>
 
-    <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
       <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">config_pb2</span><span class="o">.</span><span class="n">ConfigProto</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;config must be a tf.ConfigProto, but got </span><span class="si">%s</span><span class="s1">&#39;</span>
                         <span class="o">%</span> <span class="nb">type</span><span class="p">(</span><span class="n">config</span><span class="p">))</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">_config</span> <span class="o">=</span> <span class="n">config</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">_add_shapes</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">graph_options</span><span class="o">.</span><span class="n">infer_shapes</span>
     <span class="k">else</span><span class="p">:</span>
-      <span class="bp">self</span><span class="o">.</span><span class="n">_config</span> <span class="o">=</span> <span class="kc">None</span>
-      <span class="bp">self</span><span class="o">.</span><span class="n">_add_shapes</span> <span class="o">=</span> <span class="kc">False</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_config</span> <span class="o">=</span> <span class="bp">None</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_add_shapes</span> <span class="o">=</span> <span class="bp">False</span>
 
-    <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="bp">None</span>
     <span class="n">opts</span> <span class="o">=</span> <span class="n">tf_session</span><span class="o">.</span><span class="n">TF_NewSessionOptions</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_target</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
       <span class="k">with</span> <span class="n">errors</span><span class="o">.</span><span class="n">raise_exception_on_not_ok_status</span><span class="p">()</span> <span class="k">as</span> <span class="n">status</span><span class="p">:</span>
@@ -558,16 +213,16 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extend_lock</span><span class="p">:</span>
       <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_opened</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span> <span class="o">=</span> <span class="bp">True</span>
         <span class="k">with</span> <span class="n">errors</span><span class="o">.</span><span class="n">raise_exception_on_not_ok_status</span><span class="p">()</span> <span class="k">as</span> <span class="n">status</span><span class="p">:</span>
           <span class="n">tf_session</span><span class="o">.</span><span class="n">TF_CloseSession</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="n">status</span><span class="p">)</span>
 
   <span class="k">def</span> <span class="nf">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
       <span class="k">with</span> <span class="n">errors</span><span class="o">.</span><span class="n">raise_exception_on_not_ok_status</span><span class="p">()</span> <span class="k">as</span> <span class="n">status</span><span class="p">:</span>
         <span class="n">tf_session</span><span class="o">.</span><span class="n">TF_DeleteSession</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="n">status</span><span class="p">)</span>
-      <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="kc">None</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="bp">None</span>
 
   <span class="nd">@property</span>
   <span class="k">def</span> <span class="nf">graph</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -640,56 +295,72 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">ops</span><span class="o">.</span><span class="n">default_session</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
-  <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fetches</span><span class="p">,</span> <span class="n">feed_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">run_metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Runs operations and evaluates tensors in `fetches`.</span>
+  <span class="c1"># Eventually, this registration could be opened up to support custom</span>
+  <span class="c1"># Tensor expansions. Expects tuples of (Type, fetch_fn, feed_fn1, feed_fn2),</span>
+  <span class="c1"># where the signatures are:</span>
+  <span class="c1">#   fetch_fn : Type -&gt; (list of Tensors,</span>
+  <span class="c1">#                       lambda: list of fetched np.ndarray -&gt; TypeVal)</span>
+  <span class="c1">#   feed_fn1 : Type, TypeVal -&gt; list of (Tensor, value)</span>
+  <span class="c1">#   feed_fn2 : Type -&gt; list of Tensors</span>
+  <span class="c1"># Conceptually, fetch_fn describes how to expand fetch into its</span>
+  <span class="c1"># component Tensors and how to contracting the fetched results back into</span>
+  <span class="c1"># a single return value. feed_fn describes how to unpack a single fed</span>
+  <span class="c1"># value and map it to feeds of a Tensor and its corresponding value.</span>
+  <span class="c1"># pylint: disable=g-long-lambda</span>
+  <span class="n">_REGISTERED_EXPANSIONS</span> <span class="o">=</span> <span class="p">[</span>
+      <span class="c1"># SparseTensors are fetched as SparseTensorValues. They can be fed</span>
+      <span class="c1"># SparseTensorValues or normal tuples.</span>
+      <span class="p">(</span><span class="n">ops</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">,</span>
+       <span class="k">lambda</span> <span class="n">fetch</span><span class="p">:</span> <span class="p">(</span>
+           <span class="p">[</span><span class="n">fetch</span><span class="o">.</span><span class="n">indices</span><span class="p">,</span> <span class="n">fetch</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">fetch</span><span class="o">.</span><span class="n">shape</span><span class="p">],</span>
+           <span class="k">lambda</span> <span class="n">fetched_vals</span><span class="p">:</span> <span class="n">ops</span><span class="o">.</span><span class="n">SparseTensorValue</span><span class="p">(</span><span class="o">*</span><span class="n">fetched_vals</span><span class="p">)),</span>
+       <span class="k">lambda</span> <span class="n">feed</span><span class="p">,</span> <span class="n">feed_val</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span>
+           <span class="p">[</span><span class="n">feed</span><span class="o">.</span><span class="n">indices</span><span class="p">,</span> <span class="n">feed</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">feed</span><span class="o">.</span><span class="n">shape</span><span class="p">],</span> <span class="n">feed_val</span><span class="p">)),</span>
+       <span class="k">lambda</span> <span class="n">feed</span><span class="p">:</span> <span class="p">[</span><span class="n">feed</span><span class="o">.</span><span class="n">indices</span><span class="p">,</span> <span class="n">feed</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">feed</span><span class="o">.</span><span class="n">shape</span><span class="p">]),</span>
+      <span class="c1"># IndexedSlices are fetched as IndexedSlicesValues. They can be fed</span>
+      <span class="c1"># IndexedSlicesValues or normal tuples.</span>
+      <span class="p">(</span><span class="n">ops</span><span class="o">.</span><span class="n">IndexedSlices</span><span class="p">,</span>
+       <span class="k">lambda</span> <span class="n">fetch</span><span class="p">:</span> <span class="p">(</span>
+           <span class="p">[</span><span class="n">fetch</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">fetch</span><span class="o">.</span><span class="n">indices</span><span class="p">]</span> <span class="k">if</span> <span class="n">fetch</span><span class="o">.</span><span class="n">dense_shape</span> <span class="ow">is</span> <span class="bp">None</span>
+           <span class="k">else</span> <span class="p">[</span><span class="n">fetch</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">fetch</span><span class="o">.</span><span class="n">indices</span><span class="p">,</span> <span class="n">fetch</span><span class="o">.</span><span class="n">dense_shape</span><span class="p">],</span>
+           <span class="n">_get_indexed_slices_value_from_fetches</span><span class="p">),</span>
+       <span class="n">_get_feeds_for_indexed_slices</span><span class="p">,</span>
+       <span class="k">lambda</span> <span class="n">feed</span><span class="p">:</span> <span class="p">[</span><span class="n">feed</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">feed</span><span class="o">.</span><span class="n">indices</span><span class="p">]</span> <span class="k">if</span> <span class="n">feed</span><span class="o">.</span><span class="n">dense_shape</span> <span class="ow">is</span> <span class="bp">None</span>
+                    <span class="k">else</span> <span class="p">[</span><span class="n">feed</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">feed</span><span class="o">.</span><span class="n">indices</span><span class="p">,</span> <span class="n">feed</span><span class="o">.</span><span class="n">dense_shape</span><span class="p">]),</span>
+      <span class="c1"># The default catches all types and performs no expansions.</span>
+      <span class="p">(</span><span class="nb">object</span><span class="p">,</span>
+       <span class="k">lambda</span> <span class="n">fetch</span><span class="p">:</span> <span class="p">([</span><span class="n">fetch</span><span class="p">],</span> <span class="k">lambda</span> <span class="n">fetched_vals</span><span class="p">:</span> <span class="n">fetched_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+       <span class="k">lambda</span> <span class="n">feed</span><span class="p">,</span> <span class="n">feed_val</span><span class="p">:</span> <span class="p">[(</span><span class="n">feed</span><span class="p">,</span> <span class="n">feed_val</span><span class="p">)],</span>
+       <span class="k">lambda</span> <span class="n">feed</span><span class="p">:</span> <span class="p">[</span><span class="n">feed</span><span class="p">])]</span>
+  <span class="c1"># pylint: enable=g-long-lambda</span>
+
+  <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fetches</span><span class="p">,</span> <span class="n">feed_dict</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">run_metadata</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Runs the operations and evaluates the tensors in `fetches`.</span>
 
 <span class="sd">    This method runs one &quot;step&quot; of TensorFlow computation, by</span>
 <span class="sd">    running the necessary graph fragment to execute every `Operation`</span>
 <span class="sd">    and evaluate every `Tensor` in `fetches`, substituting the values in</span>
 <span class="sd">    `feed_dict` for the corresponding input values.</span>
 
-<span class="sd">    The `fetches` argument may be a single graph element, or an arbitrarily</span>
-<span class="sd">    nested list, tuple, namedtuple, or dict containing graph elements at its</span>
-<span class="sd">    leaves.  A graph element can be one of the following types:</span>
+<span class="sd">    The `fetches` argument may be a single graph element, an arbitrarily nested</span>
+<span class="sd">    list of graph elements, or a dictionary whose values are the above. The type</span>
+<span class="sd">    of `fetches` determines the return value of this method. A graph element can</span>
+<span class="sd">    be one of the following types:</span>
 
-<span class="sd">    * An [`Operation`](../../api_docs/python/framework.md#Operation).</span>
-<span class="sd">      The corresponding fetched value will be `None`.</span>
-<span class="sd">    * A [`Tensor`](../../api_docs/python/framework.md#Tensor).</span>
-<span class="sd">      The corresponding fetched value will be a numpy ndarray containing the</span>
-<span class="sd">      value of that tensor.</span>
-<span class="sd">    * A [`SparseTensor`](../../api_docs/python/sparse_ops.md#SparseTensor).</span>
-<span class="sd">      The corresponding fetched value will be a</span>
+<span class="sd">    * If an element of `fetches` is an</span>
+<span class="sd">      [`Operation`](../../api_docs/python/framework.md#Operation), the</span>
+<span class="sd">      corresponding fetched value will be `None`.</span>
+<span class="sd">    * If an element of `fetches` is a</span>
+<span class="sd">      [`Tensor`](../../api_docs/python/framework.md#Tensor), the corresponding</span>
+<span class="sd">      fetched value will be a numpy ndarray containing the value of that tensor.</span>
+<span class="sd">    * If an element of `fetches` is a</span>
+<span class="sd">      [`SparseTensor`](../../api_docs/python/sparse_ops.md#SparseTensor),</span>
+<span class="sd">      the corresponding fetched value will be a</span>
 <span class="sd">      [`SparseTensorValue`](../../api_docs/python/sparse_ops.md#SparseTensorValue)</span>
 <span class="sd">      containing the value of that sparse tensor.</span>
-<span class="sd">    * A `get_tensor_handle` op.  The corresponding fetched value will be a</span>
-<span class="sd">      numpy ndarray containing the handle of that tensor.</span>
-<span class="sd">    * A `string` which is the name of a tensor or operation in the graph.</span>
-
-<span class="sd">    The value returned by `run()` has the same shape as the `fetches` argument,</span>
-<span class="sd">    where the leaves are replaced by the corresponding values returned by</span>
-<span class="sd">    TensorFlow.</span>
-
-<span class="sd">    Example:</span>
-
-<span class="sd">    ```python</span>
-<span class="sd">       a = tf.constant([10, 20])</span>
-<span class="sd">       b = tf.constant([1.0, 2.0])</span>
-<span class="sd">       # &#39;fetches&#39; can be a singleton</span>
-<span class="sd">       v = session.run(a)</span>
-<span class="sd">       # v is the numpy array [10, 20]</span>
-<span class="sd">       # &#39;fetches&#39; can be a list.</span>
-<span class="sd">       v = session.run([a, b])</span>
-<span class="sd">       # v a Python list with 2 numpy arrays: the numpy array [10, 20] and the</span>
-<span class="sd">       # 1-D array [1.0, 2.0]</span>
-<span class="sd">       # &#39;fetches&#39; can be arbitrary lists, tuples, namedtuple, dicts:</span>
-<span class="sd">       MyData = collections.namedtuple(&#39;MyData&#39;, [&#39;a&#39;, &#39;b&#39;])</span>
-<span class="sd">       v = session.run({&#39;k1&#39;: MyData(a, b), &#39;k2&#39;: [b, a]})</span>
-<span class="sd">       # v is a dict with</span>
-<span class="sd">       # v[&#39;k1&#39;] is a MyData namedtuple with &#39;a&#39; the numpy array [10, 20] and</span>
-<span class="sd">       # &#39;b&#39; the numpy array [1.0, 2.0]</span>
-<span class="sd">       # v[&#39;k2&#39;] is a list with the numpy array [1.0, 2.0] and the numpy array</span>
-<span class="sd">       # [10, 20].</span>
-<span class="sd">    ```</span>
+<span class="sd">    * If an element of `fetches` is produced by a `get_tensor_handle` op,</span>
+<span class="sd">      the corresponding fetched value will be a numpy ndarray containing the</span>
+<span class="sd">      handle of that tensor.</span>
 
 <span class="sd">    The optional `feed_dict` argument allows the caller to override</span>
 <span class="sd">    the value of tensors in the graph. Each key in `feed_dict` can be</span>
@@ -747,10 +418,10 @@
       <span class="n">options_ptr</span> <span class="o">=</span> <span class="n">tf_session</span><span class="o">.</span><span class="n">TF_NewBufferFromString</span><span class="p">(</span>
           <span class="n">compat</span><span class="o">.</span><span class="n">as_bytes</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">SerializeToString</span><span class="p">()))</span>
     <span class="k">else</span><span class="p">:</span>
-      <span class="n">options_ptr</span> <span class="o">=</span> <span class="kc">None</span>
+      <span class="n">options_ptr</span> <span class="o">=</span> <span class="bp">None</span>
 
     <span class="k">try</span><span class="p">:</span>
-      <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">fetches</span><span class="p">,</span> <span class="n">feed_dict</span><span class="p">,</span> <span class="n">options_ptr</span><span class="p">,</span>
+      <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="n">fetches</span><span class="p">,</span> <span class="n">feed_dict</span><span class="p">,</span> <span class="n">options_ptr</span><span class="p">,</span>
                          <span class="n">run_metadata_ptr</span><span class="p">)</span>
       <span class="k">if</span> <span class="n">run_metadata</span><span class="p">:</span>
         <span class="n">proto_data</span> <span class="o">=</span> <span class="n">tf_session</span><span class="o">.</span><span class="n">TF_GetBuffer</span><span class="p">(</span><span class="n">run_metadata_ptr</span><span class="p">)</span>
@@ -761,7 +432,7 @@
         <span class="n">tf_session</span><span class="o">.</span><span class="n">TF_DeleteBuffer</span><span class="p">(</span><span class="n">options_ptr</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">result</span>
 
-  <span class="k">def</span> <span class="nf">partial_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">handle</span><span class="p">,</span> <span class="n">fetches</span><span class="p">,</span> <span class="n">feed_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+  <span class="k">def</span> <span class="nf">partial_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">handle</span><span class="p">,</span> <span class="n">fetches</span><span class="p">,</span> <span class="n">feed_dict</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Continues the execution with more feeds and fetches.</span>
 
 <span class="sd">    This is EXPERIMENTAL and subject to change.</span>
@@ -805,10 +476,9 @@
 <span class="sd">    Raises:</span>
 <span class="sd">      tf.errors.OpError: Or one of its subclasses on error.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># TODO(touts): Support feeding and fetching the same tensor.</span>
-    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="n">fetches</span><span class="p">,</span> <span class="n">feed_dict</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="n">fetches</span><span class="p">,</span> <span class="n">feed_dict</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
 
-  <span class="k">def</span> <span class="nf">partial_run_setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fetches</span><span class="p">,</span> <span class="n">feeds</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+  <span class="k">def</span> <span class="nf">partial_run_setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fetches</span><span class="p">,</span> <span class="n">feeds</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Sets up a graph with feeds and fetches for partial run.</span>
 
 <span class="sd">    This is EXPERIMENTAL and subject to change.</span>
@@ -830,7 +500,7 @@
 <span class="sd">      tf.errors.OpError: Or one of its subclasses if a TensorFlow error happens.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">_feed_fn</span><span class="p">(</span><span class="n">feed</span><span class="p">):</span>
-      <span class="k">for</span> <span class="n">tensor_type</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">feed_fn</span> <span class="ow">in</span> <span class="n">_REGISTERED_EXPANSIONS</span><span class="p">:</span>
+      <span class="k">for</span> <span class="n">tensor_type</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">feed_fn</span> <span class="ow">in</span> <span class="n">BaseSession</span><span class="o">.</span><span class="n">_REGISTERED_EXPANSIONS</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">feed</span><span class="p">,</span> <span class="n">tensor_type</span><span class="p">):</span>
           <span class="k">return</span> <span class="n">feed_fn</span><span class="p">(</span><span class="n">feed</span><span class="p">)</span>
       <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Feed argument </span><span class="si">%r</span><span class="s1"> has invalid type </span><span class="si">%r</span><span class="s1">&#39;</span>
@@ -843,6 +513,9 @@
       <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;The Session graph is empty.  Add operations to the &#39;</span>
                          <span class="s1">&#39;graph before calling run().&#39;</span><span class="p">)</span>
 
+    <span class="c1"># Validate and process fetches.</span>
+    <span class="n">unique_fetches</span><span class="p">,</span> <span class="n">target_list</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_fetches</span><span class="p">(</span><span class="n">fetches</span><span class="p">)</span>
+
     <span class="c1"># Create request.</span>
     <span class="n">feed_list</span> <span class="o">=</span> <span class="p">[]</span>
 
@@ -853,18 +526,14 @@
     <span class="k">for</span> <span class="n">feed</span> <span class="ow">in</span> <span class="n">feeds</span><span class="p">:</span>
       <span class="k">for</span> <span class="n">subfeed</span> <span class="ow">in</span> <span class="n">_feed_fn</span><span class="p">(</span><span class="n">feed</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
-          <span class="n">subfeed_t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">as_graph_element</span><span class="p">(</span><span class="n">subfeed</span><span class="p">,</span> <span class="n">allow_tensor</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                                                  <span class="n">allow_operation</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+          <span class="n">subfeed_t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">as_graph_element</span><span class="p">(</span><span class="n">subfeed</span><span class="p">,</span> <span class="n">allow_tensor</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                                                  <span class="n">allow_operation</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
           <span class="n">feed_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">compat</span><span class="o">.</span><span class="n">as_bytes</span><span class="p">(</span><span class="n">subfeed_t</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
           <span class="n">e</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Cannot interpret feed_list key as Tensor: &#39;</span>
                        <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
           <span class="n">e</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="p">,)</span>
           <span class="k">raise</span> <span class="n">e</span>
-
-    <span class="c1"># Validate and process fetches.</span>
-    <span class="c1"># TODO(touts): Support feeding and fetching the same tensor.</span>
-    <span class="n">fetch_handler</span> <span class="o">=</span> <span class="n">_FetchHandler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">,</span> <span class="n">fetches</span><span class="p">,</span> <span class="p">{})</span>
 
     <span class="c1"># Set up a graph with feeds and fetches for partial run.</span>
     <span class="k">def</span> <span class="nf">_setup_fn</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">feed_list</span><span class="p">,</span> <span class="n">fetch_list</span><span class="p">,</span> <span class="n">target_list</span><span class="p">):</span>
@@ -873,13 +542,71 @@
         <span class="k">return</span> <span class="n">tf_session</span><span class="o">.</span><span class="n">TF_PRunSetup</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">feed_list</span><span class="p">,</span> <span class="n">fetch_list</span><span class="p">,</span>
                                        <span class="n">target_list</span><span class="p">,</span> <span class="n">status</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_call</span><span class="p">(</span><span class="n">_setup_fn</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="n">feed_list</span><span class="p">,</span>
-                         <span class="n">fetch_handler</span><span class="o">.</span><span class="n">fetches</span><span class="p">(),</span> <span class="n">fetch_handler</span><span class="o">.</span><span class="n">targets</span><span class="p">())</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_call</span><span class="p">(</span><span class="n">_setup_fn</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="n">feed_list</span><span class="p">,</span> <span class="n">unique_fetches</span><span class="p">,</span>
+                         <span class="n">target_list</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_assert_fetchable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">is_fetchable</span><span class="p">(</span><span class="n">op</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+          <span class="s1">&#39;Operation </span><span class="si">%r</span><span class="s1"> has been marked as not fetchable.&#39;</span> <span class="o">%</span> <span class="n">op</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_process_fetches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fetches</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Validate and process fetches.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">_fetch_fn</span><span class="p">(</span><span class="n">fetch</span><span class="p">):</span>
+      <span class="k">for</span> <span class="n">tensor_type</span><span class="p">,</span> <span class="n">fetch_fn</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">BaseSession</span><span class="o">.</span><span class="n">_REGISTERED_EXPANSIONS</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fetch</span><span class="p">,</span> <span class="n">tensor_type</span><span class="p">):</span>
+          <span class="k">return</span> <span class="n">fetch_fn</span><span class="p">(</span><span class="n">fetch</span><span class="p">)</span>
+      <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Fetch argument </span><span class="si">%r</span><span class="s1"> has invalid type </span><span class="si">%r</span><span class="s1">&#39;</span>
+                      <span class="o">%</span> <span class="p">(</span><span class="n">fetch</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">fetch</span><span class="p">)))</span>
+
+    <span class="c1"># Validate and process fetches.</span>
+    <span class="n">is_list_fetch</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fetches</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_list_fetch</span><span class="p">:</span>
+      <span class="n">fetches</span> <span class="o">=</span> <span class="p">[</span><span class="n">fetches</span><span class="p">]</span>
+
+    <span class="n">unique_fetch_targets</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">unique_fetch_handles</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">target_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">fetch_info</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">fetch</span> <span class="ow">in</span> <span class="n">fetches</span><span class="p">:</span>
+      <span class="n">subfetches</span><span class="p">,</span> <span class="n">fetch_contraction_fn</span> <span class="o">=</span> <span class="n">_fetch_fn</span><span class="p">(</span><span class="n">fetch</span><span class="p">)</span>
+      <span class="n">subfetch_names</span> <span class="o">=</span> <span class="p">[]</span>
+      <span class="k">for</span> <span class="n">subfetch</span> <span class="ow">in</span> <span class="n">subfetches</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+          <span class="n">fetch_t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">as_graph_element</span><span class="p">(</span><span class="n">subfetch</span><span class="p">,</span> <span class="n">allow_tensor</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                                                <span class="n">allow_operation</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+          <span class="n">fetch_name</span> <span class="o">=</span> <span class="n">compat</span><span class="o">.</span><span class="n">as_bytes</span><span class="p">(</span><span class="n">fetch_t</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+          <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fetch_t</span><span class="p">,</span> <span class="n">ops</span><span class="o">.</span><span class="n">Operation</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_assert_fetchable</span><span class="p">(</span><span class="n">fetch_t</span><span class="p">)</span>
+            <span class="n">target_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fetch_name</span><span class="p">)</span>
+          <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_assert_fetchable</span><span class="p">(</span><span class="n">fetch_t</span><span class="o">.</span><span class="n">op</span><span class="p">)</span>
+            <span class="n">subfetch_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fetch_name</span><span class="p">)</span>
+          <span class="c1"># Remember the fetch if it is for a tensor handle.</span>
+          <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">fetch_t</span><span class="p">,</span> <span class="n">ops</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="ow">and</span>
+              <span class="n">fetch_t</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;GetSessionHandle&#39;</span><span class="p">):</span>
+            <span class="n">unique_fetch_handles</span><span class="p">[</span><span class="n">fetch_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">fetch_t</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+          <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Fetch argument </span><span class="si">%r</span><span class="s1"> of </span><span class="si">%r</span><span class="s1"> has invalid type </span><span class="si">%r</span><span class="s1">, &#39;</span>
+                          <span class="s1">&#39;must be a string or Tensor. (</span><span class="si">%s</span><span class="s1">)&#39;</span>
+                          <span class="o">%</span> <span class="p">(</span><span class="n">subfetch</span><span class="p">,</span> <span class="n">fetch</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">subfetch</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
+        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+          <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Fetch argument </span><span class="si">%r</span><span class="s1"> of </span><span class="si">%r</span><span class="s1"> cannot be interpreted as a &#39;</span>
+                           <span class="s1">&#39;Tensor. (</span><span class="si">%s</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">subfetch</span><span class="p">,</span> <span class="n">fetch</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+          <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Fetch argument </span><span class="si">%r</span><span class="s1"> of </span><span class="si">%r</span><span class="s1"> cannot be interpreted as a &#39;</span>
+                           <span class="s1">&#39;Tensor. (</span><span class="si">%s</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">subfetch</span><span class="p">,</span> <span class="n">fetch</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
+      <span class="n">unique_fetch_targets</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">subfetch_names</span><span class="p">)</span>
+      <span class="n">fetch_info</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">subfetch_names</span><span class="p">,</span> <span class="n">fetch_contraction_fn</span><span class="p">))</span>
+
+    <span class="n">unique_fetch_targets</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">unique_fetch_targets</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">unique_fetch_targets</span><span class="p">,</span> <span class="n">target_list</span><span class="p">,</span> <span class="n">fetch_info</span><span class="p">,</span> <span class="n">unique_fetch_handles</span>
 
   <span class="k">def</span> <span class="nf">_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">handle</span><span class="p">,</span> <span class="n">fetches</span><span class="p">,</span> <span class="n">feed_dict</span><span class="p">,</span> <span class="n">options</span><span class="p">,</span> <span class="n">run_metadata</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Perform either run or partial_run, depending the presence of `handle`.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Perform either run or partial_run, depending the exitence of `handle`.&quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">_feed_fn</span><span class="p">(</span><span class="n">feed</span><span class="p">,</span> <span class="n">feed_val</span><span class="p">):</span>
-      <span class="k">for</span> <span class="n">tensor_type</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">feed_fn</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">_REGISTERED_EXPANSIONS</span><span class="p">:</span>
+      <span class="k">for</span> <span class="n">tensor_type</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">feed_fn</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">BaseSession</span><span class="o">.</span><span class="n">_REGISTERED_EXPANSIONS</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">feed</span><span class="p">,</span> <span class="n">tensor_type</span><span class="p">):</span>
           <span class="k">return</span> <span class="n">feed_fn</span><span class="p">(</span><span class="n">feed</span><span class="p">,</span> <span class="n">feed_val</span><span class="p">)</span>
       <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Feed argument </span><span class="si">%r</span><span class="s1"> has invalid type </span><span class="si">%r</span><span class="s1">&#39;</span>
@@ -892,6 +619,31 @@
       <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;The Session graph is empty.  Add operations to the &#39;</span>
                          <span class="s1">&#39;graph before calling run().&#39;</span><span class="p">)</span>
 
+    <span class="c1"># Flatten/unflatten fetched values.</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fetches</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+      <span class="c1"># fetches is already a list or tuple; nothing to do.</span>
+      <span class="n">orig_fetches</span><span class="p">,</span> <span class="n">fetches</span> <span class="o">=</span> <span class="n">fetches</span><span class="p">,</span> <span class="n">nest</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">fetches</span><span class="p">)</span>
+      <span class="n">unflatten</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">fetched</span><span class="p">:</span> <span class="n">nest</span><span class="o">.</span><span class="n">pack_sequence_as</span><span class="p">(</span><span class="n">orig_fetches</span><span class="p">,</span> <span class="n">fetched</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fetches</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+      <span class="c1"># fetches is a dictionary; flatten the values and map fetched</span>
+      <span class="c1"># values back into to a dictionary.</span>
+      <span class="c1"># nest.flatten does not accept iterators, next line is for python3</span>
+      <span class="c1"># compatibility.</span>
+      <span class="n">fetches_values</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">fetches</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+      <span class="n">orig_fetches</span><span class="p">,</span> <span class="n">fetches</span> <span class="o">=</span> <span class="n">fetches</span><span class="p">,</span> <span class="n">nest</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">fetches_values</span><span class="p">)</span>
+      <span class="n">unflatten</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">fetched</span><span class="p">:</span> <span class="n">_unflatten_fetches</span><span class="p">(</span><span class="n">orig_fetches</span><span class="p">,</span> <span class="n">fetched</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="c1"># fetches is a singleton.</span>
+      <span class="n">fetches</span> <span class="o">=</span> <span class="p">[</span><span class="n">fetches</span><span class="p">]</span>
+      <span class="n">unflatten</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">fetched</span><span class="p">:</span> <span class="n">fetched</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># Validate and process fetches.</span>
+    <span class="n">processed_fetches</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_fetches</span><span class="p">(</span><span class="n">fetches</span><span class="p">)</span>
+    <span class="n">unique_fetches</span> <span class="o">=</span> <span class="n">processed_fetches</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">target_list</span> <span class="o">=</span> <span class="n">processed_fetches</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">fetch_info</span> <span class="o">=</span> <span class="n">processed_fetches</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">unique_handles</span> <span class="o">=</span> <span class="n">processed_fetches</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+
     <span class="c1"># Create request.</span>
     <span class="n">feed_dict_string</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">feed_map</span> <span class="o">=</span> <span class="p">{}</span>
@@ -902,8 +654,8 @@
       <span class="k">for</span> <span class="n">feed</span><span class="p">,</span> <span class="n">feed_val</span> <span class="ow">in</span> <span class="n">feed_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="k">for</span> <span class="n">subfeed</span><span class="p">,</span> <span class="n">subfeed_val</span> <span class="ow">in</span> <span class="n">_feed_fn</span><span class="p">(</span><span class="n">feed</span><span class="p">,</span> <span class="n">feed_val</span><span class="p">):</span>
           <span class="k">try</span><span class="p">:</span>
-            <span class="n">subfeed_t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">as_graph_element</span><span class="p">(</span><span class="n">subfeed</span><span class="p">,</span> <span class="n">allow_tensor</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                                                    <span class="n">allow_operation</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">subfeed_t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">as_graph_element</span><span class="p">(</span><span class="n">subfeed</span><span class="p">,</span> <span class="n">allow_tensor</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                                                    <span class="n">allow_operation</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
           <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Cannot interpret feed_dict key as Tensor: &#39;</span>
                             <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
@@ -935,9 +687,6 @@
           <span class="n">feed_dict_string</span><span class="p">[</span><span class="n">subfeed_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">np_val</span>
           <span class="n">feed_map</span><span class="p">[</span><span class="n">subfeed_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">subfeed_t</span><span class="p">,</span> <span class="n">subfeed_val</span><span class="p">)</span>
 
-    <span class="c1"># Create a fetch handler to take care of the structure of fetches.</span>
-    <span class="n">fetch_handler</span> <span class="o">=</span> <span class="n">_FetchHandler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">,</span> <span class="n">fetches</span><span class="p">,</span> <span class="n">feed_dict_string</span><span class="p">)</span>
-
     <span class="c1"># Run request and get response.</span>
     <span class="c1"># We need to keep the movers alive for the following _do_run().</span>
     <span class="c1"># These movers are no longer needed when _do_run() completes, and</span>
@@ -945,14 +694,29 @@
     <span class="c1"># TODO(yuanbyu, keveman): Revisit whether we should just treat feeding</span>
     <span class="c1"># of a handle from a different device as an error.</span>
     <span class="n">movers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_with_movers</span><span class="p">(</span><span class="n">feed_dict_string</span><span class="p">,</span> <span class="n">feed_map</span><span class="p">)</span>
-    <span class="n">final_fetches</span> <span class="o">=</span> <span class="n">fetch_handler</span><span class="o">.</span><span class="n">fetches</span><span class="p">()</span>
-    <span class="n">final_targets</span> <span class="o">=</span> <span class="n">fetch_handler</span><span class="o">.</span><span class="n">targets</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">final_fetches</span> <span class="ow">or</span> <span class="n">final_targets</span><span class="p">:</span>
-      <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_run</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="n">final_targets</span><span class="p">,</span> <span class="n">final_fetches</span><span class="p">,</span>
-                             <span class="n">feed_dict_string</span><span class="p">,</span> <span class="n">options</span><span class="p">,</span> <span class="n">run_metadata</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-      <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">return</span> <span class="n">fetch_handler</span><span class="o">.</span><span class="n">build_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">results</span><span class="p">)</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_run</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="n">target_list</span><span class="p">,</span> <span class="n">unique_fetches</span><span class="p">,</span>
+                           <span class="n">feed_dict_string</span><span class="p">,</span> <span class="n">options</span><span class="p">,</span> <span class="n">run_metadata</span><span class="p">)</span>
+
+    <span class="c1"># User may have fetched the same tensor multiple times, but we</span>
+    <span class="c1"># only fetch them from the runtime once.  Furthermore, they may</span>
+    <span class="c1"># be wrapped as a tuple of tensors.  Here we map the results back</span>
+    <span class="c1"># to what the client asked for.</span>
+    <span class="c1"># TODO(yuanbyu): Use the contraction_fn in _REGISTERED_EXPANSIONS.</span>
+    <span class="n">fetched_results</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">fetch</span><span class="p">,</span> <span class="n">result</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">unique_fetches</span><span class="p">,</span> <span class="n">results</span><span class="p">):</span>
+      <span class="n">dtype</span> <span class="o">=</span> <span class="n">unique_handles</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">fetch</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">dtype</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">session_ops</span><span class="o">.</span><span class="n">TensorHandle</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+      <span class="n">fetched_results</span><span class="p">[</span><span class="n">fetch</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">fetch_names</span><span class="p">,</span> <span class="n">fetch_contraction_fn</span> <span class="ow">in</span> <span class="n">fetch_info</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">fetch_names</span><span class="p">:</span>
+        <span class="n">fetched_vals</span> <span class="o">=</span> <span class="p">[</span><span class="n">fetched_results</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">fetch_names</span><span class="p">]</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fetch_contraction_fn</span><span class="p">(</span><span class="n">fetched_vals</span><span class="p">))</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">unflatten</span><span class="p">(</span><span class="n">ret</span><span class="p">)</span>
 
   <span class="c1"># Captures the name of a node in an error status.</span>
   <span class="n">_NODEDEF_NAME_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">r&#39;\[\[Node: ([^ ]*?) =&#39;</span><span class="p">)</span>
@@ -997,7 +761,7 @@
         <span class="k">return</span> <span class="n">tf_session</span><span class="o">.</span><span class="n">TF_PRun</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">handle</span><span class="p">,</span> <span class="n">feed_dict</span><span class="p">,</span> <span class="n">fetch_list</span><span class="p">,</span>
                                   <span class="n">status</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">handle</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">handle</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
       <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_call</span><span class="p">(</span><span class="n">_run_fn</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="n">feed_dict</span><span class="p">,</span> <span class="n">fetch_list</span><span class="p">,</span>
                            <span class="n">target_list</span><span class="p">,</span> <span class="n">options</span><span class="p">,</span> <span class="n">run_metadata</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
@@ -1010,9 +774,9 @@
     <span class="k">except</span> <span class="n">errors</span><span class="o">.</span><span class="n">OpError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
       <span class="n">message</span> <span class="o">=</span> <span class="n">compat</span><span class="o">.</span><span class="n">as_text</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
       <span class="n">m</span> <span class="o">=</span> <span class="n">BaseSession</span><span class="o">.</span><span class="n">_NODEDEF_NAME_RE</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
-      <span class="n">node_def</span> <span class="o">=</span> <span class="kc">None</span>
-      <span class="n">op</span> <span class="o">=</span> <span class="kc">None</span>
-      <span class="k">if</span> <span class="n">m</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="n">node_def</span> <span class="o">=</span> <span class="bp">None</span>
+      <span class="n">op</span> <span class="o">=</span> <span class="bp">None</span>
+      <span class="k">if</span> <span class="n">m</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">node_name</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
           <span class="n">op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">get_operation_by_name</span><span class="p">(</span><span class="n">node_name</span><span class="p">)</span>
@@ -1034,7 +798,7 @@
         <span class="k">with</span> <span class="n">errors</span><span class="o">.</span><span class="n">raise_exception_on_not_ok_status</span><span class="p">()</span> <span class="k">as</span> <span class="n">status</span><span class="p">:</span>
           <span class="n">tf_session</span><span class="o">.</span><span class="n">TF_ExtendGraph</span><span class="p">(</span>
               <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">SerializeToString</span><span class="p">(),</span> <span class="n">status</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_opened</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_opened</span> <span class="o">=</span> <span class="bp">True</span>
 
   <span class="c1"># The threshold to run garbage collection to delete dead tensors.</span>
   <span class="n">_DEAD_HANDLES_THRESHOLD</span> <span class="o">=</span> <span class="mi">10</span>
@@ -1042,7 +806,7 @@
   <span class="k">def</span> <span class="nf">_register_dead_handle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">handle</span><span class="p">):</span>
     <span class="c1"># Register a dead handle in the session. Delete the dead tensors when</span>
     <span class="c1"># the number of dead tensors exceeds certain threshold.</span>
-    <span class="n">tensors_to_delete</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">tensors_to_delete</span> <span class="o">=</span> <span class="bp">None</span>
     <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_delete_lock</span><span class="p">:</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">_dead_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
       <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dead_handles</span><span class="p">)</span> <span class="o">==</span> <span class="n">BaseSession</span><span class="o">.</span><span class="n">_DEAD_HANDLES_THRESHOLD</span><span class="p">:</span>
@@ -1151,7 +915,7 @@
 
 <span class="sd">  &quot;&quot;&quot;</span>
 
-  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">graph</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">graph</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Creates a new TensorFlow session.</span>
 
 <span class="sd">    If no `graph` argument is specified when constructing the session,</span>
@@ -1190,7 +954,7 @@
     <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
   <span class="nd">@staticmethod</span>
-  <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">containers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+  <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">containers</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Resets resource containers on `target`, and close all connected sessions.</span>
 
 <span class="sd">    A resource container is distributed across all workers in the</span>
@@ -1215,9 +979,9 @@
 <span class="sd">      tf.errors.OpError: Or one of its subclasses if an error occurs while</span>
 <span class="sd">        resetting containers.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
       <span class="n">target</span> <span class="o">=</span> <span class="n">compat</span><span class="o">.</span><span class="n">as_bytes</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">containers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">containers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
       <span class="n">containers</span> <span class="o">=</span> <span class="p">[</span><span class="n">compat</span><span class="o">.</span><span class="n">as_bytes</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">containers</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
       <span class="n">containers</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1266,7 +1030,7 @@
 <span class="sd">  @@close</span>
 <span class="sd">  &quot;&quot;&quot;</span>
 
-  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">graph</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">graph</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Creates a new interactive TensorFlow session.</span>
 
 <span class="sd">    If no `graph` argument is specified when constructing the session,</span>
@@ -1279,31 +1043,32 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">      target: (Optional.) The execution engine to connect to.</span>
-<span class="sd">        Defaults to using an in-process engine.</span>
+<span class="sd">        Defaults to using an in-process engine. At present, no value</span>
+<span class="sd">        other than the empty string is supported.</span>
 <span class="sd">      graph: (Optional.) The `Graph` to be launched (described above).</span>
 <span class="sd">      config: (Optional) `ConfigProto` proto used to configure the session.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">config</span><span class="p">:</span>
       <span class="n">config</span> <span class="o">=</span> <span class="n">config_pb2</span><span class="o">.</span><span class="n">ConfigProto</span><span class="p">()</span>
     <span class="c1"># Interactive sessions always place pruned graphs.</span>
-    <span class="n">config</span><span class="o">.</span><span class="n">graph_options</span><span class="o">.</span><span class="n">place_pruned_graph</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">graph_options</span><span class="o">.</span><span class="n">place_pruned_graph</span> <span class="o">=</span> <span class="bp">True</span>
 
     <span class="nb">super</span><span class="p">(</span><span class="n">InteractiveSession</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_default_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">as_default</span><span class="p">()</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">_default_session</span><span class="o">.</span><span class="n">enforce_nesting</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_default_session</span><span class="o">.</span><span class="n">enforce_nesting</span> <span class="o">=</span> <span class="bp">False</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_default_session</span><span class="o">.</span><span class="n">__enter__</span><span class="p">()</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_explicit_graph</span> <span class="o">=</span> <span class="n">graph</span>
-    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_explicit_graph</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_explicit_graph</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">_default_graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">as_default</span><span class="p">()</span>
-      <span class="bp">self</span><span class="o">.</span><span class="n">_default_graph</span><span class="o">.</span><span class="n">enforce_nesting</span> <span class="o">=</span> <span class="kc">False</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_default_graph</span><span class="o">.</span><span class="n">enforce_nesting</span> <span class="o">=</span> <span class="bp">False</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">_default_graph</span><span class="o">.</span><span class="n">__enter__</span><span class="p">()</span>
 
   <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Closes an `InteractiveSession`.&quot;&quot;&quot;</span>
     <span class="nb">super</span><span class="p">(</span><span class="n">InteractiveSession</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_explicit_graph</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-      <span class="bp">self</span><span class="o">.</span><span class="n">_default_graph</span><span class="o">.</span><span class="n">__exit__</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">_default_session</span><span class="o">.</span><span class="n">__exit__</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_explicit_graph</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_default_graph</span><span class="o">.</span><span class="n">__exit__</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_default_session</span><span class="o">.</span><span class="n">__exit__</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
 </pre></div>
 
           </div>
@@ -1322,8 +1087,8 @@
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="../../../../search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
@@ -1337,8 +1102,8 @@
       &copy;2016, Blaine Rogers.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.6</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
       
     </div>
 

@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>gptf.core package &#8212; gptf 1.0.0 documentation</title>
+    <title>gptf.core package &mdash; gptf 1.0.0 documentation</title>
     
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -27,7 +27,6 @@
     <link rel="top" title="gptf 1.0.0 documentation" href="index.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-  
   
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
@@ -112,7 +111,7 @@ size of L.</p>
 <p>The absolute value of a kernel.</p>
 <dl class="method">
 <dt id="gptf.core.kernels.Absolute.K">
-<code class="descname">K</code><span class="sig-paren">(</span><em>X</em>, <em>X2=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#Absolute.K"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.Absolute.K" title="Permalink to this definition">¶</a></dt>
+<code class="descname">K</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#Absolute.K"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.Absolute.K" title="Permalink to this definition">¶</a></dt>
 <dd><p>Builds a tensor that computes the covariance function.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -138,7 +137,7 @@ If <code class="code docutils literal"><span class="pre">None</span></code>, the
 
 <dl class="method">
 <dt id="gptf.core.kernels.Absolute.Kdiag">
-<code class="descname">Kdiag</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#Absolute.Kdiag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.Absolute.Kdiag" title="Permalink to this definition">¶</a></dt>
+<code class="descname">Kdiag</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#Absolute.Kdiag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.Absolute.Kdiag" title="Permalink to this definition">¶</a></dt>
 <dd><p>Builds a tensor that computes the diagonal of <code class="code docutils literal"><span class="pre">self.K(X)</span></code></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -163,7 +162,7 @@ If <code class="code docutils literal"><span class="pre">None</span></code>, the
 <p>The addition of mean functions.</p>
 <dl class="method">
 <dt id="gptf.core.kernels.Additive.K">
-<code class="descname">K</code><span class="sig-paren">(</span><em>X</em>, <em>X2=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#Additive.K"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.Additive.K" title="Permalink to this definition">¶</a></dt>
+<code class="descname">K</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#Additive.K"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.Additive.K" title="Permalink to this definition">¶</a></dt>
 <dd><p>Builds a tensor that computes the covariance function.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -189,7 +188,7 @@ If <code class="code docutils literal"><span class="pre">None</span></code>, the
 
 <dl class="method">
 <dt id="gptf.core.kernels.Additive.Kdiag">
-<code class="descname">Kdiag</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#Additive.Kdiag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.Additive.Kdiag" title="Permalink to this definition">¶</a></dt>
+<code class="descname">Kdiag</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#Additive.Kdiag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.Additive.Kdiag" title="Permalink to this definition">¶</a></dt>
 <dd><p>Builds a tensor that computes the diagonal of <code class="code docutils literal"><span class="pre">self.K(X)</span></code></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -240,7 +239,7 @@ If <code class="code docutils literal"><span class="pre">None</span></code>, the
 <p><code class="code docutils literal"><span class="pre">Divisive(a,</span> <span class="pre">b)(X)</span></code> returns <code class="code docutils literal"><span class="pre">a(X)</span> <span class="pre">/</span> <span class="pre">b(X)</span></code>.</p>
 <dl class="method">
 <dt id="gptf.core.kernels.Divisive.K">
-<code class="descname">K</code><span class="sig-paren">(</span><em>X</em>, <em>X2=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#Divisive.K"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.Divisive.K" title="Permalink to this definition">¶</a></dt>
+<code class="descname">K</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#Divisive.K"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.Divisive.K" title="Permalink to this definition">¶</a></dt>
 <dd><p>Builds a tensor that computes the covariance function.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -266,7 +265,7 @@ If <code class="code docutils literal"><span class="pre">None</span></code>, the
 
 <dl class="method">
 <dt id="gptf.core.kernels.Divisive.Kdiag">
-<code class="descname">Kdiag</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#Divisive.Kdiag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.Divisive.Kdiag" title="Permalink to this definition">¶</a></dt>
+<code class="descname">Kdiag</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#Divisive.Kdiag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.Divisive.Kdiag" title="Permalink to this definition">¶</a></dt>
 <dd><p>Builds a tensor that computes the diagonal of <code class="code docutils literal"><span class="pre">self.K(X)</span></code></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -391,19 +390,19 @@ If <code class="code docutils literal"><span class="pre">None</span></code>, the
 
 <dl class="method">
 <dt id="gptf.core.kernels.Kernel.compute_K">
-<code class="descname">compute_K</code><span class="sig-paren">(</span><em>X</em>, <em>Z</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#Kernel.compute_K"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.Kernel.compute_K" title="Permalink to this definition">¶</a></dt>
+<code class="descname">compute_K</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#Kernel.compute_K"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.Kernel.compute_K" title="Permalink to this definition">¶</a></dt>
 <dd><p>An autoflowed version of K(X, Z)</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="gptf.core.kernels.Kernel.compute_K_symm">
-<code class="descname">compute_K_symm</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#Kernel.compute_K_symm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.Kernel.compute_K_symm" title="Permalink to this definition">¶</a></dt>
+<code class="descname">compute_K_symm</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#Kernel.compute_K_symm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.Kernel.compute_K_symm" title="Permalink to this definition">¶</a></dt>
 <dd><p>An autoflowed version of K(X)</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="gptf.core.kernels.Kernel.compute_Kdiag">
-<code class="descname">compute_Kdiag</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#Kernel.compute_Kdiag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.Kernel.compute_Kdiag" title="Permalink to this definition">¶</a></dt>
+<code class="descname">compute_Kdiag</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#Kernel.compute_Kdiag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.Kernel.compute_Kdiag" title="Permalink to this definition">¶</a></dt>
 <dd><p>An autoflowed version of Kdiag(X)</p>
 </dd></dl>
 
@@ -437,7 +436,7 @@ If <code class="code docutils literal"><span class="pre">None</span></code>, the
 <p>The multiplication of kernels.</p>
 <dl class="method">
 <dt id="gptf.core.kernels.Multiplicative.K">
-<code class="descname">K</code><span class="sig-paren">(</span><em>X</em>, <em>X2=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#Multiplicative.K"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.Multiplicative.K" title="Permalink to this definition">¶</a></dt>
+<code class="descname">K</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#Multiplicative.K"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.Multiplicative.K" title="Permalink to this definition">¶</a></dt>
 <dd><p>Builds a tensor that computes the covariance function.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -463,7 +462,7 @@ If <code class="code docutils literal"><span class="pre">None</span></code>, the
 
 <dl class="method">
 <dt id="gptf.core.kernels.Multiplicative.Kdiag">
-<code class="descname">Kdiag</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#Multiplicative.Kdiag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.Multiplicative.Kdiag" title="Permalink to this definition">¶</a></dt>
+<code class="descname">Kdiag</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#Multiplicative.Kdiag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.Multiplicative.Kdiag" title="Permalink to this definition">¶</a></dt>
 <dd><p>Builds a tensor that computes the diagonal of <code class="code docutils literal"><span class="pre">self.K(X)</span></code></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -488,7 +487,7 @@ If <code class="code docutils literal"><span class="pre">None</span></code>, the
 <p>The negative of a kernel.</p>
 <dl class="method">
 <dt id="gptf.core.kernels.Negative.K">
-<code class="descname">K</code><span class="sig-paren">(</span><em>X</em>, <em>X2=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#Negative.K"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.Negative.K" title="Permalink to this definition">¶</a></dt>
+<code class="descname">K</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#Negative.K"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.Negative.K" title="Permalink to this definition">¶</a></dt>
 <dd><p>Builds a tensor that computes the covariance function.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -514,7 +513,7 @@ If <code class="code docutils literal"><span class="pre">None</span></code>, the
 
 <dl class="method">
 <dt id="gptf.core.kernels.Negative.Kdiag">
-<code class="descname">Kdiag</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#Negative.Kdiag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.Negative.Kdiag" title="Permalink to this definition">¶</a></dt>
+<code class="descname">Kdiag</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#Negative.Kdiag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.Negative.Kdiag" title="Permalink to this definition">¶</a></dt>
 <dd><p>Builds a tensor that computes the diagonal of <code class="code docutils literal"><span class="pre">self.K(X)</span></code></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -590,7 +589,7 @@ sequence will be passed through.</p>
 </div>
 <dl class="method">
 <dt id="gptf.core.kernels.PartiallyActive.K">
-<code class="descname">K</code><span class="sig-paren">(</span><em>X</em>, <em>X2=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#PartiallyActive.K"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.PartiallyActive.K" title="Permalink to this definition">¶</a></dt>
+<code class="descname">K</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#PartiallyActive.K"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.PartiallyActive.K" title="Permalink to this definition">¶</a></dt>
 <dd><p>Builds a tensor that computes the covariance function.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -616,7 +615,7 @@ If <code class="code docutils literal"><span class="pre">None</span></code>, the
 
 <dl class="method">
 <dt id="gptf.core.kernels.PartiallyActive.Kdiag">
-<code class="descname">Kdiag</code><span class="sig-paren">(</span><em>X</em>, <em>X2=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#PartiallyActive.Kdiag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.PartiallyActive.Kdiag" title="Permalink to this definition">¶</a></dt>
+<code class="descname">Kdiag</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#PartiallyActive.Kdiag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.PartiallyActive.Kdiag" title="Permalink to this definition">¶</a></dt>
 <dd><p>Builds a tensor that computes the diagonal of <code class="code docutils literal"><span class="pre">self.K(X)</span></code></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -661,7 +660,7 @@ The only parameter they require is a variance.</p>
 
 <dl class="method">
 <dt id="gptf.core.kernels.Static.Kdiag">
-<code class="descname">Kdiag</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#Static.Kdiag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.Static.Kdiag" title="Permalink to this definition">¶</a></dt>
+<code class="descname">Kdiag</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#Static.Kdiag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.Static.Kdiag" title="Permalink to this definition">¶</a></dt>
 <dd><p>Builds a tensor that computes the diagonal of <code class="code docutils literal"><span class="pre">self.K(X)</span></code></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -739,7 +738,7 @@ value of <code class="code docutils literal"><span class="pre">.lengthscales</sp
 </div>
 <dl class="method">
 <dt id="gptf.core.kernels.Stationary.K">
-<code class="descname">K</code><span class="sig-paren">(</span><em>X</em>, <em>X2=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#Stationary.K"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.Stationary.K" title="Permalink to this definition">¶</a></dt>
+<code class="descname">K</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#Stationary.K"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.Stationary.K" title="Permalink to this definition">¶</a></dt>
 <dd><p>Builds a tensor that computes the covariance function.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -765,7 +764,7 @@ If <code class="code docutils literal"><span class="pre">None</span></code>, the
 
 <dl class="method">
 <dt id="gptf.core.kernels.Stationary.Kdiag">
-<code class="descname">Kdiag</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#Stationary.Kdiag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.Stationary.Kdiag" title="Permalink to this definition">¶</a></dt>
+<code class="descname">Kdiag</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#Stationary.Kdiag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.Stationary.Kdiag" title="Permalink to this definition">¶</a></dt>
 <dd><p>Builds a tensor that computes the diagonal of <code class="code docutils literal"><span class="pre">self.K(X)</span></code></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -783,7 +782,7 @@ If <code class="code docutils literal"><span class="pre">None</span></code>, the
 
 <dl class="method">
 <dt id="gptf.core.kernels.Stationary.euclid_dist">
-<code class="descname">euclid_dist</code><span class="sig-paren">(</span><em>X</em>, <em>X2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#Stationary.euclid_dist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.Stationary.euclid_dist" title="Permalink to this definition">¶</a></dt>
+<code class="descname">euclid_dist</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#Stationary.euclid_dist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.Stationary.euclid_dist" title="Permalink to this definition">¶</a></dt>
 <dd><p>The Euclidean distances between X and X2.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -810,7 +809,7 @@ between <code class="code docutils literal"><span class="pre">X[a]</span></code>
 
 <dl class="method">
 <dt id="gptf.core.kernels.Stationary.square_dist">
-<code class="descname">square_dist</code><span class="sig-paren">(</span><em>X</em>, <em>X2=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#Stationary.square_dist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.Stationary.square_dist" title="Permalink to this definition">¶</a></dt>
+<code class="descname">square_dist</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/kernels.html#Stationary.square_dist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.kernels.Stationary.square_dist" title="Permalink to this definition">¶</a></dt>
 <dd><p>The squared distances between X and X2.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -859,7 +858,7 @@ between <code class="code docutils literal"><span class="pre">X[a]</span></code>
 <dd><p>Bases: <a class="reference internal" href="#gptf.core.likelihoods.Likelihood" title="gptf.core.likelihoods.Likelihood"><code class="xref py py-class docutils literal"><span class="pre">gptf.core.likelihoods.Likelihood</span></code></a>, <a class="reference internal" href="#gptf.core.params.ParamAttributes" title="gptf.core.params.ParamAttributes"><code class="xref py py-class docutils literal"><span class="pre">gptf.core.params.ParamAttributes</span></code></a></p>
 <dl class="method">
 <dt id="gptf.core.likelihoods.Gaussian.conditional_mean">
-<code class="descname">conditional_mean</code><span class="sig-paren">(</span><em>F</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Gaussian.conditional_mean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.likelihoods.Gaussian.conditional_mean" title="Permalink to this definition">¶</a></dt>
+<code class="descname">conditional_mean</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Gaussian.conditional_mean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.likelihoods.Gaussian.conditional_mean" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the mean of the data given values of the latent func.</p>
 <p>If this object represents <span class="math">\(p(y|f)\)</span>, then this method
 computes</p>
@@ -882,7 +881,7 @@ latent function.</td>
 
 <dl class="method">
 <dt id="gptf.core.likelihoods.Gaussian.conditional_variance">
-<code class="descname">conditional_variance</code><span class="sig-paren">(</span><em>F</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Gaussian.conditional_variance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.likelihoods.Gaussian.conditional_variance" title="Permalink to this definition">¶</a></dt>
+<code class="descname">conditional_variance</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Gaussian.conditional_variance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.likelihoods.Gaussian.conditional_variance" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the variance of the data given values of the latent func.</p>
 <p>If this object represents <span class="math">\(p(y|f)\)</span>, then this method
 computes</p>
@@ -905,7 +904,7 @@ latent function.</td>
 
 <dl class="method">
 <dt id="gptf.core.likelihoods.Gaussian.logp">
-<code class="descname">logp</code><span class="sig-paren">(</span><em>F</em>, <em>Y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Gaussian.logp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.likelihoods.Gaussian.logp" title="Permalink to this definition">¶</a></dt>
+<code class="descname">logp</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Gaussian.logp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.likelihoods.Gaussian.logp" title="Permalink to this definition">¶</a></dt>
 <dd><p>The log density of the data given the function values.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -929,19 +928,19 @@ latent function.</td>
 
 <dl class="method">
 <dt id="gptf.core.likelihoods.Gaussian.predict_density">
-<code class="descname">predict_density</code><span class="sig-paren">(</span><em>mu_F</em>, <em>var_F</em>, <em>Y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Gaussian.predict_density"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.likelihoods.Gaussian.predict_density" title="Permalink to this definition">¶</a></dt>
+<code class="descname">predict_density</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Gaussian.predict_density"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.likelihoods.Gaussian.predict_density" title="Permalink to this definition">¶</a></dt>
 <dd><p>The (log) density of Y given a mean &amp; variance of the f.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="gptf.core.likelihoods.Gaussian.predict_mean_and_var">
-<code class="descname">predict_mean_and_var</code><span class="sig-paren">(</span><em>mu_F</em>, <em>var_F</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Gaussian.predict_mean_and_var"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.likelihoods.Gaussian.predict_mean_and_var" title="Permalink to this definition">¶</a></dt>
+<code class="descname">predict_mean_and_var</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Gaussian.predict_mean_and_var"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.likelihoods.Gaussian.predict_mean_and_var" title="Permalink to this definition">¶</a></dt>
 <dd><p>The mean &amp; variance of Y given a mean &amp; variance of the f.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="gptf.core.likelihoods.Gaussian.variational_expectations">
-<code class="descname">variational_expectations</code><span class="sig-paren">(</span><em>mu_F</em>, <em>var_F</em>, <em>Y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Gaussian.variational_expectations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.likelihoods.Gaussian.variational_expectations" title="Permalink to this definition">¶</a></dt>
+<code class="descname">variational_expectations</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Gaussian.variational_expectations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.likelihoods.Gaussian.variational_expectations" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the expected log density of the data.</p>
 </dd></dl>
 
@@ -1026,7 +1025,7 @@ latent function.</td>
 
 <dl class="method">
 <dt id="gptf.core.likelihoods.Likelihood.predict_density">
-<code class="descname">predict_density</code><span class="sig-paren">(</span><em>mu_F</em>, <em>var_F</em>, <em>Y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Likelihood.predict_density"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.likelihoods.Likelihood.predict_density" title="Permalink to this definition">¶</a></dt>
+<code class="descname">predict_density</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Likelihood.predict_density"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.likelihoods.Likelihood.predict_density" title="Permalink to this definition">¶</a></dt>
 <dd><p>The (log) density of Y given a mean &amp; variance of the latent func.</p>
 <p>if <span class="math">\(q(f) = N(mu_F, var_F)\)</span> and this object represents
 <span class="math">\(p(y|f)\)</span>,
@@ -1039,7 +1038,7 @@ likelihoods (e.g. Gaussian, Poisson) will implement specific cases.</p>
 
 <dl class="method">
 <dt id="gptf.core.likelihoods.Likelihood.predict_mean_and_var">
-<code class="descname">predict_mean_and_var</code><span class="sig-paren">(</span><em>mu_F</em>, <em>var_F</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Likelihood.predict_mean_and_var"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.likelihoods.Likelihood.predict_mean_and_var" title="Permalink to this definition">¶</a></dt>
+<code class="descname">predict_mean_and_var</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Likelihood.predict_mean_and_var"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.likelihoods.Likelihood.predict_mean_and_var" title="Permalink to this definition">¶</a></dt>
 <dd><p>The mean &amp; variance of Y given a mean &amp; variance of the latent func.</p>
 <p>if <span class="math">\(q(f) = N(mu_F, var_F)\)</span> and this object represents
 <span class="math">\(p(y|f)\)</span>,
@@ -1056,7 +1055,7 @@ likelihoods (e.g. Gaussian) will implement specific cases.</p>
 
 <dl class="method">
 <dt id="gptf.core.likelihoods.Likelihood.variational_expectations">
-<code class="descname">variational_expectations</code><span class="sig-paren">(</span><em>mu_F</em>, <em>var_F</em>, <em>Y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Likelihood.variational_expectations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.likelihoods.Likelihood.variational_expectations" title="Permalink to this definition">¶</a></dt>
+<code class="descname">variational_expectations</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/likelihoods.html#Likelihood.variational_expectations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.likelihoods.Likelihood.variational_expectations" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the expected log density of the data.</p>
 <p>if <span class="math">\(q(f) = N(mu_F, var_F)\)</span> and this object represents
 <span class="math">\(p(y|f)\)</span>,
@@ -1277,7 +1276,7 @@ Both tensors have the same dtype.</p>
 
 <dl class="method">
 <dt id="gptf.core.models.GPModel.compute_posterior_mean_cov">
-<code class="descname">compute_posterior_mean_cov</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em>, <em>test_points</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#GPModel.compute_posterior_mean_cov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.models.GPModel.compute_posterior_mean_cov" title="Permalink to this definition">¶</a></dt>
+<code class="descname">compute_posterior_mean_cov</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#GPModel.compute_posterior_mean_cov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.models.GPModel.compute_posterior_mean_cov" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the means and full covariance matrices.</p>
 <p>This is just an autoflowed version of
 <code class="code docutils literal"><span class="pre">.build_predict(X,</span> <span class="pre">Y,</span> <span class="pre">test_points,</span> <span class="pre">full_cov=True)</span></code>.</p>
@@ -1310,7 +1309,7 @@ matri(x|ces) for the posterior distribution(s)
 
 <dl class="method">
 <dt id="gptf.core.models.GPModel.compute_posterior_mean_var">
-<code class="descname">compute_posterior_mean_var</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em>, <em>test_points</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#GPModel.compute_posterior_mean_var"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.models.GPModel.compute_posterior_mean_var" title="Permalink to this definition">¶</a></dt>
+<code class="descname">compute_posterior_mean_var</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#GPModel.compute_posterior_mean_var"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.models.GPModel.compute_posterior_mean_var" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the means and variances of the posterior(s).</p>
 <p>This is just an autoflowed version of
 <code class="code docutils literal"><span class="pre">.build_posterior_mean_var(X,</span> <span class="pre">Y,</span> <span class="pre">test_points)</span></code>.</p>
@@ -1342,7 +1341,7 @@ of the posterior distribution(s), shape
 
 <dl class="method">
 <dt id="gptf.core.models.GPModel.compute_posterior_samples">
-<code class="descname">compute_posterior_samples</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em>, <em>test_points</em>, <em>num_samples</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#GPModel.compute_posterior_samples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.models.GPModel.compute_posterior_samples" title="Permalink to this definition">¶</a></dt>
+<code class="descname">compute_posterior_samples</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#GPModel.compute_posterior_samples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.models.GPModel.compute_posterior_samples" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes samples from the posterior distribution(s).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1438,7 +1437,7 @@ returned by <code class="code docutils literal"><span class="pre">.build_predict
 
 <dl class="method">
 <dt id="gptf.core.models.GPModel.compute_prior_mean_cov">
-<code class="descname">compute_prior_mean_cov</code><span class="sig-paren">(</span><em>test_points</em>, <em>num_latent</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#GPModel.compute_prior_mean_cov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.models.GPModel.compute_prior_mean_cov" title="Permalink to this definition">¶</a></dt>
+<code class="descname">compute_prior_mean_cov</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#GPModel.compute_prior_mean_cov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.models.GPModel.compute_prior_mean_cov" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the means and full covariance matrices.</p>
 <p>This is just an autoflowed version of
 <code class="code docutils literal"><span class="pre">.build_prior_mean_var(test_points,</span> <span class="pre">num_latent,</span> <span class="pre">True)</span></code>.</p>
@@ -1470,7 +1469,7 @@ matri(x|ces) for the prior distribution(s) (shape
 
 <dl class="method">
 <dt id="gptf.core.models.GPModel.compute_prior_mean_var">
-<code class="descname">compute_prior_mean_var</code><span class="sig-paren">(</span><em>test_points</em>, <em>num_latent</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#GPModel.compute_prior_mean_var"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.models.GPModel.compute_prior_mean_var" title="Permalink to this definition">¶</a></dt>
+<code class="descname">compute_prior_mean_var</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#GPModel.compute_prior_mean_var"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.models.GPModel.compute_prior_mean_var" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the means and variances of the prior(s).</p>
 <p>This is just an autoflowed version of
 <code class="code docutils literal"><span class="pre">.build_prior_mean_var(test_points,</span> <span class="pre">num_latent)</span></code>.</p>
@@ -1501,7 +1500,7 @@ points (shape <code class="code docutils literal"><span class="pre">[m,</span> <
 
 <dl class="method">
 <dt id="gptf.core.models.GPModel.compute_prior_samples">
-<code class="descname">compute_prior_samples</code><span class="sig-paren">(</span><em>test_points</em>, <em>num_latent</em>, <em>num_samples</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#GPModel.compute_prior_samples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.models.GPModel.compute_prior_samples" title="Permalink to this definition">¶</a></dt>
+<code class="descname">compute_prior_samples</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#GPModel.compute_prior_samples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.models.GPModel.compute_prior_samples" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes samples from the prior distribution(s).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1593,13 +1592,13 @@ returned by <code class="code docutils literal"><span class="pre">.build_predict
 
 <dl class="method">
 <dt id="gptf.core.models.GPModel.predict_density">
-<code class="descname">predict_density</code><span class="sig-paren">(</span><em>test_points</em>, <em>test_values</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#GPModel.predict_density"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.models.GPModel.predict_density" title="Permalink to this definition">¶</a></dt>
+<code class="descname">predict_density</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#GPModel.predict_density"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.models.GPModel.predict_density" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the (log) density of the test values at the test points.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="gptf.core.models.GPModel.predict_y">
-<code class="descname">predict_y</code><span class="sig-paren">(</span><em>test_points</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#GPModel.predict_y"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.models.GPModel.predict_y" title="Permalink to this definition">¶</a></dt>
+<code class="descname">predict_y</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#GPModel.predict_y"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.models.GPModel.predict_y" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the mean and variance of held-out data.</p>
 </dd></dl>
 
@@ -1628,14 +1627,14 @@ defined like so:</p>
 </pre></div>
 </div>
 <p>The <code class="code docutils literal"><span class="pre">.optimize</span></code> method can be used to optimize the parameters of the
-model to minimise the likelihood. The loss function (the negative of
-the sum of the likelihood and any priors) is cached in the WrappedTF
+model to minimize the negative log-marginal likelihood. The loss function (the negative of
+the sum of the log-marginal likelihood and any priors) is cached in the WrappedTF
 cache, and lazily recompiled when the cache is cleared, e.g. on
 recompile.</p>
 <dl class="method">
 <dt id="gptf.core.models.Model.build_log_likelihood">
 <code class="descname">build_log_likelihood</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#Model.build_log_likelihood"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.models.Model.build_log_likelihood" title="Permalink to this definition">¶</a></dt>
-<dd><p>Builds the log likelihood of the model w.r.t. the data.</p>
+<dd><p>Builds the log-marginal likelihood of the model w.r.t. the data.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1646,7 +1645,7 @@ recompile.</p>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A tensor that, when run, calculates the log
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A tensor that, when run, calculates the log-marginal
 likelihood of the model.</p>
 </td>
 </tr>
@@ -1659,13 +1658,13 @@ likelihood of the model.</p>
 
 <dl class="method">
 <dt id="gptf.core.models.Model.build_log_prior">
-<code class="descname">build_log_prior</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#Model.build_log_prior"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.models.Model.build_log_prior" title="Permalink to this definition">¶</a></dt>
+<code class="descname">build_log_prior</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#Model.build_log_prior"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.models.Model.build_log_prior" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="gptf.core.models.Model.compute_log_likelihood">
-<code class="descname">compute_log_likelihood</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#Model.compute_log_likelihood"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.models.Model.compute_log_likelihood" title="Permalink to this definition">¶</a></dt>
-<dd><p>Computes the likelihood of the model w.r.t. the data.</p>
+<code class="descname">compute_log_likelihood</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#Model.compute_log_likelihood"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.models.Model.compute_log_likelihood" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the marginal likelihood of the model w.r.t. the data.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1680,14 +1679,14 @@ likelihood of the model.</p>
 
 <dl class="method">
 <dt id="gptf.core.models.Model.compute_log_prior">
-<code class="descname">compute_log_prior</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#Model.compute_log_prior"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.models.Model.compute_log_prior" title="Permalink to this definition">¶</a></dt>
+<code class="descname">compute_log_prior</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#Model.compute_log_prior"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.models.Model.compute_log_prior" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="gptf.core.models.Model.optimize">
-<code class="descname">optimize</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em>, <em>method='L-BFGS-B'</em>, <em>callback=None</em>, <em>maxiter=1000</em>, <em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#Model.optimize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.models.Model.optimize" title="Permalink to this definition">¶</a></dt>
-<dd><p>Optimize the model by maximising the log likelihood.</p>
-<p>Maximises the sum of the log likelihood given X &amp; Y and any
+<code class="descname">optimize</code><span class="sig-paren">(</span><em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/models.html#Model.optimize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.models.Model.optimize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Optimize the model by minimizing the negative log-marginal likelihood.</p>
+<p>Minimizes the (negative) sum of the log-marginal likelihood given X &amp; Y and any
 priors with respect to any free variables.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1869,7 +1868,7 @@ session targets.</p>
 <dl class="exception">
 <dt id="gptf.core.params.DTypeChangeError">
 <em class="property">exception </em><code class="descclassname">gptf.core.params.</code><code class="descname">DTypeChangeError</code><a class="reference internal" href="_modules/gptf/core/params.html#DTypeChangeError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.params.DTypeChangeError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">Exception</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></code></p>
 <p>Raised when the dtype of a Param or DataHolder changes.</p>
 </dd></dl>
 
@@ -1997,7 +1996,7 @@ to <code class="code docutils literal"><span class="pre">DataHolder.__init__()</
 <dl class="exception">
 <dt id="gptf.core.params.FixedParameterError">
 <em class="property">exception </em><code class="descclassname">gptf.core.params.</code><code class="descname">FixedParameterError</code><a class="reference internal" href="_modules/gptf/core/params.html#FixedParameterError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.params.FixedParameterError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">Exception</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></code></p>
 <p>Raised when the free state of a fixed parameter is accessed.</p>
 </dd></dl>
 
@@ -2637,7 +2636,7 @@ drawing characters and ANSI terminal escape codes.
 <dl class="class">
 <dt id="gptf.core.params.Proxy.Shared">
 <em class="property">class </em><code class="descname">Shared</code><a class="reference internal" href="_modules/gptf/core/params.html#Proxy.Shared"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.params.Proxy.Shared" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">future.types.newobject.newobject</span></code></p>
 </dd></dl>
 
 <dl class="method">
@@ -2703,7 +2702,7 @@ drawing characters and ANSI terminal escape codes.
 <dl class="exception">
 <dt id="gptf.core.params.ShapeChangeError">
 <em class="property">exception </em><code class="descclassname">gptf.core.params.</code><code class="descname">ShapeChangeError</code><a class="reference internal" href="_modules/gptf/core/params.html#ShapeChangeError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.params.ShapeChangeError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">Exception</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></code></p>
 <p>Raised when the shape of a Param or DataHolder changes.</p>
 </dd></dl>
 
@@ -2844,7 +2843,7 @@ is <code class="code docutils literal"><span class="pre">5</span></code>.</p>
 
 <dl class="function">
 <dt id="gptf.core.params.no_gc">
-<code class="descclassname">gptf.core.params.</code><code class="descname">no_gc</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/params.html#no_gc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.params.no_gc" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">gptf.core.params.</code><code class="descname">no_gc</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/params.html#no_gc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.params.no_gc" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
@@ -2973,7 +2972,7 @@ be constructed.</td>
 <dl class="class">
 <dt id="gptf.core.transforms.Transform">
 <em class="property">class </em><code class="descclassname">gptf.core.transforms.</code><code class="descname">Transform</code><a class="reference internal" href="_modules/gptf/core/transforms.html#Transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.transforms.Transform" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">future.types.newobject.newobject</span></code></p>
 <p>A transform, used to constrain the optimisation of a <code class="code docutils literal"><span class="pre">Param</span></code>.</p>
 <p>NB: Unless otherwise stated, attributes of transforms are read-only
 and should be treated as such. If you wish to change the transform
@@ -3172,14 +3171,14 @@ to <code class="code docutils literal"><span class="pre">'p'</span></code> evalu
 <dl class="exception">
 <dt id="gptf.core.trees.BadParentError">
 <em class="property">exception </em><code class="descclassname">gptf.core.trees.</code><code class="descname">BadParentError</code><a class="reference internal" href="_modules/gptf/core/trees.html#BadParentError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.trees.BadParentError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">Exception</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></code></p>
 <p>Raised when a parent does not have a reference to a requested child.</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="gptf.core.trees.BreadthFirstTreeIterator">
 <em class="property">class </em><code class="descclassname">gptf.core.trees.</code><code class="descname">BreadthFirstTreeIterator</code><span class="sig-paren">(</span><em>tree</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/trees.html#BreadthFirstTreeIterator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.trees.BreadthFirstTreeIterator" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">future.types.newobject.newobject</span></code></p>
 <p>Walks the tree, breadth first.</p>
 </dd></dl>
 
@@ -3242,7 +3241,7 @@ to <code class="code docutils literal"><span class="pre">'p'</span></code> evalu
 <dl class="class">
 <dt id="gptf.core.trees.ListTree">
 <em class="property">class </em><code class="descclassname">gptf.core.trees.</code><code class="descname">ListTree</code><a class="reference internal" href="_modules/gptf/core/trees.html#ListTree"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.trees.ListTree" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#gptf.core.trees.Tree" title="gptf.core.trees.Tree"><code class="xref py py-class docutils literal"><span class="pre">gptf.core.trees.Tree</span></code></a>, <code class="xref py py-class docutils literal"><span class="pre">collections.abc.MutableSequence</span></code></p>
+<dd><p>Bases: <a class="reference internal" href="#gptf.core.trees.Tree" title="gptf.core.trees.Tree"><code class="xref py py-class docutils literal"><span class="pre">gptf.core.trees.Tree</span></code></a>, <code class="xref py py-class docutils literal"><span class="pre">_abcoll.MutableSequence</span></code></p>
 <p>A <code class="code docutils literal"><span class="pre">Tree</span></code> that uses numeric indexes to track its children.</p>
 <p class="rubric">Examples</p>
 <p><code class="code docutils literal"><span class="pre">ListTree</span></code>s know their parent and their name:</p>
@@ -3375,7 +3374,7 @@ attributes are shallowly copied (as references).</p>
 <dl class="method">
 <dt id="gptf.core.trees.ListTree.insert">
 <code class="descname">insert</code><span class="sig-paren">(</span><em>index</em>, <em>value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/trees.html#ListTree.insert"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.trees.ListTree.insert" title="Permalink to this definition">¶</a></dt>
-<dd><p>S.insert(index, value) &#8211; insert value before index</p>
+<dd><p>S.insert(index, object) &#8211; insert object before index</p>
 </dd></dl>
 
 <dl class="method">
@@ -3438,7 +3437,7 @@ where <code class="code docutils literal"><span class="pre">x</span></code> is <
 <dl class="class">
 <dt id="gptf.core.trees.Tree">
 <em class="property">class </em><code class="descclassname">gptf.core.trees.</code><code class="descname">Tree</code><a class="reference internal" href="_modules/gptf/core/trees.html#Tree"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.trees.Tree" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">collections.abc.Iterable</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">_abcoll.Iterable</span></code></p>
 <p>Base class for trees.</p>
 <dl class="attribute">
 <dt id="gptf.core.trees.Tree.children">
@@ -3867,7 +3866,7 @@ the cache exceeds the capacity, the least recently used
 <dl class="class">
 <dt id="gptf.core.utils.LRUCache">
 <em class="property">class </em><code class="descclassname">gptf.core.utils.</code><code class="descname">LRUCache</code><span class="sig-paren">(</span><em>capacity</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/utils.html#LRUCache"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.utils.LRUCache" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">collections.abc.MutableMapping</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">_abcoll.MutableMapping</span></code></p>
 <p>A least-recently-used cache.</p>
 <p>Implementation stolen from <a class="reference external" href="https://www.kunxi.org/blog/2014/05/lru-cache-in-python/">this article</a>.</p>
 </dd></dl>
@@ -4020,7 +4019,7 @@ sequence.</td>
 <dl class="class">
 <dt id="gptf.core.wrappedtf.NullContextWrapper">
 <em class="property">class </em><code class="descclassname">gptf.core.wrappedtf.</code><code class="descname">NullContextWrapper</code><span class="sig-paren">(</span><em>wrapped</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/wrappedtf.html#NullContextWrapper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.wrappedtf.NullContextWrapper" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">future.types.newobject.newobject</span></code></p>
 <p>Wraps an object so that its context does nothing.</p>
 <dl class="attribute">
 <dt id="gptf.core.wrappedtf.NullContextWrapper._NullContextWrapped__wrapped">
@@ -4289,7 +4288,7 @@ the root is set correctly, anything lower in the tree that uses
 
 <dl class="method">
 <dt id="gptf.core.wrappedtf.WrappedTF.op_placement_context">
-<code class="descname">op_placement_context</code><span class="sig-paren">(</span><em>name_scope=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/wrappedtf.html#WrappedTF.op_placement_context"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.wrappedtf.WrappedTF.op_placement_context" title="Permalink to this definition">¶</a></dt>
+<code class="descname">op_placement_context</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/wrappedtf.html#WrappedTF.op_placement_context"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.wrappedtf.WrappedTF.op_placement_context" title="Permalink to this definition">¶</a></dt>
 <dd><p>Applies op placement rules based on the object hierarchy.</p>
 <p class="rubric">Examples</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gptf.core.trees</span> <span class="k">import</span> <span class="n">AttributeTree</span>
@@ -4392,7 +4391,7 @@ hierachy:</p>
 
 <dl class="class">
 <dt id="gptf.core.wrappedtf.WrappedTFSession">
-<em class="property">class </em><code class="descclassname">gptf.core.wrappedtf.</code><code class="descname">WrappedTFSession</code><span class="sig-paren">(</span><em>target=''</em>, <em>graph=None</em>, <em>config=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/wrappedtf.html#WrappedTFSession"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.wrappedtf.WrappedTFSession" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">gptf.core.wrappedtf.</code><code class="descname">WrappedTFSession</code><span class="sig-paren">(</span><em>wrappedtf</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/wrappedtf.html#WrappedTFSession"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.wrappedtf.WrappedTFSession" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">tensorflow.python.client.session.Session</span></code></p>
 <dl class="method">
 <dt id="gptf.core.wrappedtf.WrappedTFSession.close">
@@ -4581,8 +4580,8 @@ will be returned.</p>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
@@ -4596,8 +4595,8 @@ will be returned.</p>
       &copy;2016, Blaine Rogers.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.6</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
       
       |
       <a href="_sources/gptf.core.txt"

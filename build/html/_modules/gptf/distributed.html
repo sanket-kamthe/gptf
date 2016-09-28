@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>gptf.distributed &#8212; gptf 1.0.0 documentation</title>
+    <title>gptf.distributed &mdash; gptf 1.0.0 documentation</title>
     
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
@@ -29,7 +29,6 @@
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
-  
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
   </head>
@@ -45,26 +44,26 @@
 <span></span><span class="c1"># -*- encoding: utf-8 -*-</span>
 <span class="sd">&quot;&quot;&quot;Provides classes for Robust Bayesian Committee Machines.&quot;&quot;&quot;</span>
 <span class="c1">#TODO: Work out the maths for a non-zero prior mean function?</span>
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
-<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">super</span><span class="p">,</span> <span class="nb">zip</span><span class="p">,</span> <span class="nb">map</span><span class="p">,</span> <span class="nb">range</span>
-<span class="kn">from</span> <span class="nn">future.utils</span> <span class="k">import</span> <span class="n">with_metaclass</span>
-<span class="kn">from</span> <span class="nn">abc</span> <span class="k">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span>
-<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">reduce</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="kn">import</span> <span class="nb">super</span><span class="p">,</span> <span class="nb">zip</span><span class="p">,</span> <span class="nb">map</span><span class="p">,</span> <span class="nb">range</span>
+<span class="kn">from</span> <span class="nn">future.utils</span> <span class="kn">import</span> <span class="n">with_metaclass</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="nb">reduce</span>
 <span class="kn">import</span> <span class="nn">operator</span>
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">collections.abc</span> <span class="k">import</span> <span class="n">Sequence</span>
+    <span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Sequence</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">Sequence</span>
+    <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">Sequence</span>
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">zip_longest</span>
+    <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">zip_longest</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">izip_longest</span> <span class="k">as</span> <span class="n">zip_longest</span>
+    <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">izip_longest</span> <span class="k">as</span> <span class="n">zip_longest</span>
 
-<span class="kn">from</span> <span class="nn">overrides</span> <span class="k">import</span> <span class="n">overrides</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">from</span> <span class="nn">overrides</span> <span class="kn">import</span> <span class="n">overrides</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="kn">as</span> <span class="nn">tf</span>
 
-<span class="kn">from</span> <span class="nn">gptf</span> <span class="k">import</span> <span class="n">GPModel</span><span class="p">,</span> <span class="n">Parameterized</span><span class="p">,</span> <span class="n">ParamList</span><span class="p">,</span> <span class="n">ParamAttributes</span><span class="p">,</span> <span class="n">tf_method</span>
+<span class="kn">from</span> <span class="nn">gptf</span> <span class="kn">import</span> <span class="n">GPModel</span><span class="p">,</span> <span class="n">Parameterized</span><span class="p">,</span> <span class="n">ParamList</span><span class="p">,</span> <span class="n">ParamAttributes</span><span class="p">,</span> <span class="n">tf_method</span>
 
 <div class="viewcode-block" id="cao_fleet_weights"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.cao_fleet_weights">[docs]</a><span class="k">def</span> <span class="nf">cao_fleet_weights</span><span class="p">(</span><span class="n">experts</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">points</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;The predictive power of the experts at the points.</span>
@@ -165,7 +164,7 @@
 
     <span class="nd">@tf_method</span><span class="p">()</span>
     <span class="nd">@overrides</span>
-<div class="viewcode-block" id="Reduction.build_prior_mean_var"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.Reduction.build_prior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_prior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">num_latent</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="Reduction.build_prior_mean_var"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.Reduction.build_prior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_prior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">num_latent</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;The arithetic mean of the prior mean / variance of the chilren.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">full_cov</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Full covariance matrix not yet&quot;</span>
@@ -218,7 +217,7 @@
 
     <span class="nd">@tf_method</span><span class="p">()</span>
     <span class="nd">@overrides</span>
-<div class="viewcode-block" id="PoEReduction.build_posterior_mean_var"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.PoEReduction.build_posterior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_posterior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="PoEReduction.build_posterior_mean_var"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.PoEReduction.build_posterior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_posterior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">full_cov</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Full covariance matrix not yet&quot;</span>
                     <span class="s2">&quot;implemented for distributed GPs.&quot;</span><span class="p">)</span>
@@ -296,7 +295,7 @@
 
     <span class="nd">@tf_method</span><span class="p">()</span>
     <span class="nd">@overrides</span>
-<div class="viewcode-block" id="gPoEReduction.build_posterior_mean_var"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.gPoEReduction.build_posterior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_posterior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="gPoEReduction.build_posterior_mean_var"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.gPoEReduction.build_posterior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_posterior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">full_cov</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Full covariance matrix not yet&quot;</span>
                     <span class="s2">&quot;implemented for distributed GPs.&quot;</span><span class="p">)</span>
@@ -348,7 +347,7 @@
 
     <span class="nd">@tf_method</span><span class="p">()</span>
     <span class="nd">@overrides</span>
-<div class="viewcode-block" id="BCMReduction.build_posterior_mean_var"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.BCMReduction.build_posterior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_posterior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="BCMReduction.build_posterior_mean_var"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.BCMReduction.build_posterior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_posterior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">full_cov</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Full covariance matrix not yet&quot;</span>
                     <span class="s2">&quot;implemented for distributed GPs.&quot;</span><span class="p">)</span>
@@ -432,7 +431,7 @@
 
     <span class="nd">@tf_method</span><span class="p">()</span>
     <span class="nd">@overrides</span>
-<div class="viewcode-block" id="rBCMReduction.build_posterior_mean_var"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.rBCMReduction.build_posterior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_posterior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="rBCMReduction.build_posterior_mean_var"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.rBCMReduction.build_posterior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_posterior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">full_cov</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Full covariance matrix not yet&quot;</span>
                     <span class="s2">&quot;implemented for distributed GPs.&quot;</span><span class="p">)</span>
@@ -484,13 +483,13 @@
 
     <span class="nd">@tf_method</span><span class="p">()</span>
     <span class="nd">@overrides</span>
-<div class="viewcode-block" id="PriorDivisorReduction.build_prior_mean_var"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.PriorDivisorReduction.build_prior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_prior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">num_latent</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="PriorDivisorReduction.build_prior_mean_var"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.PriorDivisorReduction.build_prior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_prior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">num_latent</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">build_prior_mean_var</span><span class="p">(</span>
                 <span class="n">test_points</span><span class="p">,</span> <span class="n">num_latent</span><span class="p">,</span> <span class="n">full_cov</span><span class="p">)</span></div>
 
     <span class="nd">@tf_method</span><span class="p">()</span>
     <span class="nd">@overrides</span>
-<div class="viewcode-block" id="PriorDivisorReduction.build_posterior_mean_var"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.PriorDivisorReduction.build_posterior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_posterior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="PriorDivisorReduction.build_posterior_mean_var"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.PriorDivisorReduction.build_posterior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_posterior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">full_cov</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Full covariance matrix not yet&quot;</span>
                     <span class="s2">&quot;implemented for distributed GPs.&quot;</span><span class="p">)</span>
@@ -505,7 +504,7 @@
         <span class="n">joint_mu</span> <span class="o">=</span> <span class="n">joint_var</span> <span class="o">*</span> <span class="n">mu</span> <span class="o">/</span> <span class="n">var</span>
         <span class="k">return</span> <span class="n">joint_mu</span><span class="p">,</span> <span class="n">joint_var</span></div></div>
 
-<div class="viewcode-block" id="chunks"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.chunks">[docs]</a><span class="k">def</span> <span class="nf">chunks</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">iterable</span><span class="p">,</span> <span class="n">padvalue</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="chunks"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.chunks">[docs]</a><span class="k">def</span> <span class="nf">chunks</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">iterable</span><span class="p">,</span> <span class="n">padvalue</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Iterator for equal-sized chunks of an iterable.</span>
 
 <span class="sd">    Args:</span>
@@ -545,7 +544,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># make sure there are enough experts</span>
     <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">architecture</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
-    <span class="n">num_experts</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">mul</span><span class="p">,</span> <span class="n">architecture</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">num_experts</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">mul</span><span class="p">,</span> <span class="n">architecture</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">experts</span><span class="p">,</span> <span class="n">GPModel</span><span class="p">):</span>
         <span class="n">experts</span> <span class="o">=</span> <span class="p">(</span><span class="n">experts</span><span class="p">,)</span> <span class="o">*</span> <span class="n">num_experts</span>
     <span class="k">else</span><span class="p">:</span>
@@ -567,7 +566,7 @@
 
 <div class="viewcode-block" id="distributed_tree_rBCM"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.distributed_tree_rBCM">[docs]</a><span class="k">def</span> <span class="nf">distributed_tree_rBCM</span><span class="p">(</span><span class="n">experts</span><span class="p">,</span> <span class="n">weightfunction</span><span class="p">,</span> 
         <span class="n">clusterspec</span><span class="p">,</span> <span class="n">worker_job</span><span class="o">=</span><span class="s1">&#39;worker&#39;</span><span class="p">,</span> <span class="n">param_server_job</span><span class="o">=</span><span class="s1">&#39;ps&#39;</span><span class="p">,</span> 
-        <span class="n">target_job</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">target_protocol</span><span class="o">=</span><span class="s1">&#39;grpc&#39;</span><span class="p">):</span>
+        <span class="n">target_job</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">target_protocol</span><span class="o">=</span><span class="s1">&#39;grpc&#39;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Constructs a TreerBCM and distributes its computations.</span>
 
 <span class="sd">    Preconditions:</span>
@@ -628,7 +627,7 @@
     
     <span class="n">target</span> <span class="o">=</span> <span class="p">(</span><span class="n">clusterspec</span><span class="o">.</span><span class="n">job_tasks</span><span class="p">(</span><span class="n">target_job</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">target_job</span> 
               <span class="k">else</span> <span class="n">clusterspec</span><span class="o">.</span><span class="n">job_tasks</span><span class="p">(</span><span class="n">parameter_server_job</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
-    <span class="n">rBCM</span><span class="o">.</span><span class="n">tf_session_target</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">://</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">target_protocol</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+    <span class="n">rBCM</span><span class="o">.</span><span class="n">tf_session_target</span> <span class="o">=</span> <span class="s1">&#39;{}://{}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">target_protocol</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">child</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">rBCM</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">children</span><span class="p">):</span>
         <span class="n">child</span><span class="o">.</span><span class="n">tf_device</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">DeviceSpec</span><span class="p">(</span><span class="n">job</span><span class="o">=</span><span class="n">worker_job</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="n">index</span><span class="p">)</span>
@@ -656,8 +655,8 @@
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="../../search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
@@ -671,8 +670,8 @@
       &copy;2016, Blaine Rogers.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.6</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
       
     </div>
 

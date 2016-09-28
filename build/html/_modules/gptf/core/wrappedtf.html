@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>gptf.core.wrappedtf &#8212; gptf 1.0.0 documentation</title>
+    <title>gptf.core.wrappedtf &mdash; gptf 1.0.0 documentation</title>
     
     <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
@@ -29,7 +29,6 @@
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
-  
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
   </head>
@@ -43,24 +42,24 @@
             
   <h1>Source code for gptf.core.wrappedtf</h1><div class="highlight"><pre>
 <span></span><span class="c1"># standard library</span>
-<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">super</span><span class="p">,</span> <span class="nb">object</span>
-<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">wraps</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="kn">import</span> <span class="nb">super</span><span class="p">,</span> <span class="nb">object</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">wraps</span>
 <span class="k">try</span><span class="p">:</span>  <span class="c1"># in case of rogue Python 2.7, use collections instead of collections.abc</span>
-    <span class="kn">from</span> <span class="nn">collections.abc</span> <span class="k">import</span> <span class="n">Sequence</span>
+    <span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Sequence</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">Sequence</span>
+    <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">Sequence</span>
 <span class="k">try</span><span class="p">:</span>  <span class="c1"># in case of rogue Python 2.7, use contextlib2 instead of contextlib</span>
-    <span class="kn">from</span> <span class="nn">contextlib</span> <span class="k">import</span> <span class="n">contextmanager</span><span class="p">,</span> <span class="n">ExitStack</span>
+    <span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span><span class="p">,</span> <span class="n">ExitStack</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">contextlib2</span> <span class="k">import</span> <span class="n">contextmanager</span><span class="p">,</span> <span class="n">ExitStack</span>
+    <span class="kn">from</span> <span class="nn">contextlib2</span> <span class="kn">import</span> <span class="n">contextmanager</span><span class="p">,</span> <span class="n">ExitStack</span>
 <span class="kn">import</span> <span class="nn">re</span>
 
 <span class="c1"># nonstandard library</span>
-<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
-<span class="kn">from</span> <span class="nn">overrides</span> <span class="k">import</span> <span class="n">overrides</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="kn">as</span> <span class="nn">tf</span>
+<span class="kn">from</span> <span class="nn">overrides</span> <span class="kn">import</span> <span class="n">overrides</span>
 
 <span class="c1"># local</span>
-<span class="kn">from</span> <span class="nn">.trees</span> <span class="k">import</span> <span class="n">TreeWithCache</span><span class="p">,</span> <span class="n">cache_method</span>
+<span class="kn">from</span> <span class="nn">.trees</span> <span class="kn">import</span> <span class="n">TreeWithCache</span><span class="p">,</span> <span class="n">cache_method</span>
 
 
 <span class="n">INVALID_NAME_SCOPE_CHAR</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">r&quot;[^\w.</span><span class="se">\\</span><span class="s2">\-/]&quot;</span><span class="p">)</span>
@@ -72,7 +71,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">wrappedtf</span> <span class="o">=</span> <span class="n">wrappedtf</span>
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">wrappedtf</span><span class="p">:</span>
             <span class="n">node</span><span class="o">.</span><span class="n">on_session_birth</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dead</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dead</span> <span class="o">=</span> <span class="bp">False</span>
 
     <span class="nd">@wraps</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="o">.</span><span class="n">__enter__</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -94,7 +93,7 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">dead</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">wrappedtf</span><span class="p">:</span>
                 <span class="n">node</span><span class="o">.</span><span class="n">on_session_death</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dead</span> <span class="o">=</span> <span class="kc">True</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dead</span> <span class="o">=</span> <span class="bp">True</span></div>
 
 <div class="viewcode-block" id="NullContextWrapper"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.wrappedtf.NullContextWrapper">[docs]</a><span class="k">class</span> <span class="nc">NullContextWrapper</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Wraps an object so that its context does nothing.</span>
@@ -153,7 +152,8 @@
                 <span class="s1">&#39;_NullContextWrapper__wrapped&#39;</span><span class="p">}:</span>
             <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__wrapped</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__setattr__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+            <span class="c1">#super().__setattr__(name, value)</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">NullContextWrapper</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__setattr__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__delattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">&#39;__enter__&#39;</span><span class="p">,</span> <span class="s1">&#39;__exit__&#39;</span><span class="p">,</span>
@@ -202,9 +202,9 @@
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_tf_graph</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_tf_device</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_tf_session_target</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tf_graph</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tf_device</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tf_session_target</span> <span class="o">=</span> <span class="bp">None</span>
 
     <span class="c1"># This is an attempt to guard against assignment to _NO_DEVICE</span>
     <span class="nd">@property</span>
@@ -218,7 +218,7 @@
         <span class="sd">&quot;&quot;&quot;The device context onto which this object&#39;s ops should be pinned.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tf_device</span>
 
-    <span class="nd">@tf_device</span><span class="o">.</span><span class="n">setter</span>
+    <span class="nd">@tf_device.setter</span>
     <span class="k">def</span> <span class="nf">tf_device</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_on_op_placement_context_change</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_tf_device</span> <span class="o">=</span> <span class="n">value</span>
@@ -228,7 +228,7 @@
         <span class="sd">&quot;&quot;&quot;The graph to place ops in.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tf_graph</span>
 
-    <span class="nd">@tf_graph</span><span class="o">.</span><span class="n">setter</span>
+    <span class="nd">@tf_graph.setter</span>
     <span class="k">def</span> <span class="nf">tf_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_on_op_placement_context_change</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_tf_graph</span> <span class="o">=</span> <span class="n">value</span>
@@ -238,12 +238,12 @@
         <span class="sd">&quot;&quot;&quot;The target under which sessions should be run.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tf_session_target</span>
 
-    <span class="nd">@tf_session_target</span><span class="o">.</span><span class="n">setter</span>
+    <span class="nd">@tf_session_target.setter</span>
     <span class="k">def</span> <span class="nf">tf_session_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_tf_session_target</span> <span class="o">=</span> <span class="n">value</span>
 
     <span class="nd">@contextmanager</span>
-<div class="viewcode-block" id="WrappedTF.op_placement_context"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.wrappedtf.WrappedTF.op_placement_context">[docs]</a>    <span class="k">def</span> <span class="nf">op_placement_context</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name_scope</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="WrappedTF.op_placement_context"><a class="viewcode-back" href="../../../gptf.core.html#gptf.core.wrappedtf.WrappedTF.op_placement_context">[docs]</a>    <span class="k">def</span> <span class="nf">op_placement_context</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name_scope</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Applies op placement rules based on the object hierarchy.</span>
 
 <span class="sd">        Examples:</span>
@@ -325,16 +325,16 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="n">ExitStack</span><span class="p">()</span> <span class="k">as</span> <span class="n">stack</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">tf_graph</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">tf_graph</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
                 <span class="n">stack</span><span class="o">.</span><span class="n">enter_context</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tf_graph</span><span class="o">.</span><span class="n">as_default</span><span class="p">())</span>
-            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
                 <span class="n">parent_context</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">op_placement_context</span><span class="p">(</span><span class="n">name_scope</span><span class="p">)</span>
                 <span class="n">stack</span><span class="o">.</span><span class="n">enter_context</span><span class="p">(</span><span class="n">parent_context</span><span class="p">)</span>
 
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tf_device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tf_device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
                 <span class="n">dev</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tf_device</span>
                 <span class="k">if</span> <span class="n">dev</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">NO_DEVICE</span><span class="p">:</span>
-                    <span class="n">dev</span> <span class="o">=</span> <span class="kc">None</span>
+                    <span class="n">dev</span> <span class="o">=</span> <span class="bp">None</span>
                 <span class="n">stack</span><span class="o">.</span><span class="n">enter_context</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">dev</span><span class="p">))</span>
 
             <span class="k">if</span> <span class="n">name_scope</span><span class="p">:</span>
@@ -477,7 +477,7 @@
 <span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">def</span> <span class="nf">new_session</span><span class="p">():</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tf_session_target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tf_session_target</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
                 <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;graph&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tf_graph</span><span class="p">}</span>
             <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tf_session_target</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
                 <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tf_session_target</span>
@@ -489,10 +489,10 @@
             <span class="k">return</span> <span class="n">WrappedTFSession</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="n">default</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">get_default_session</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">NullContextWrapper</span><span class="p">(</span><span class="n">default</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">new_session</span><span class="p">()</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">highest_parent</span><span class="o">.</span><span class="n">get_session</span><span class="p">()</span></div>
@@ -607,8 +607,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_on_op_placement_context_change</span><span class="p">()</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_set_parent</span><span class="p">(</span><span class="n">new_parent</span><span class="p">)</span>  <span class="c1"># move to new tree</span></div>
 
-<div class="viewcode-block" id="tf_method"><a class="viewcode-back" href="../../../public_api.html#gptf.core.wrappedtf.tf_method">[docs]</a><span class="k">def</span> <span class="nf">tf_method</span><span class="p">(</span><span class="n">name_scope</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rename_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
-        <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cache_limit</span><span class="o">=</span><span class="mi">128</span><span class="p">):</span>
+<div class="viewcode-block" id="tf_method"><a class="viewcode-back" href="../../../public_api.html#gptf.core.wrappedtf.tf_method">[docs]</a><span class="k">def</span> <span class="nf">tf_method</span><span class="p">(</span><span class="n">name_scope</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">rename_output</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> 
+        <span class="n">cache</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">cache_limit</span><span class="o">=</span><span class="mi">128</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Decorator version of `WrappedTF.op_placement_context`.</span>
 <span class="sd">    </span>
 <span class="sd">    Applies `instance.op_placement_context(name_scope=False)` </span>
@@ -725,10 +725,10 @@
         <span class="nd">@wraps</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
         <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
             <span class="k">with</span> <span class="n">ExitStack</span><span class="p">()</span> <span class="k">as</span> <span class="n">stack</span><span class="p">:</span>
-                <span class="n">op_cntxt</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">op_placement_context</span><span class="p">(</span><span class="n">name_scope</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="n">op_cntxt</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">op_placement_context</span><span class="p">(</span><span class="n">name_scope</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
                 <span class="n">stack</span><span class="o">.</span><span class="n">enter_context</span><span class="p">(</span><span class="n">op_cntxt</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">name_scope</span><span class="p">:</span>
-                    <span class="n">scope</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">.</span><span class="si">{}</span><span class="s2">/&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">long_name</span><span class="p">,</span><span class="n">method</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+                    <span class="n">scope</span> <span class="o">=</span> <span class="s2">&quot;{}.{}/&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">long_name</span><span class="p">,</span><span class="n">method</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
                     <span class="n">scope</span> <span class="o">=</span> <span class="n">INVALID_NAME_SCOPE_CHAR</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">scope</span><span class="p">)</span>
                     <span class="n">stack</span><span class="o">.</span><span class="n">enter_context</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">name_scope</span><span class="p">(</span><span class="n">scope</span><span class="p">))</span>
 
@@ -764,8 +764,8 @@
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="../../../search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
@@ -779,8 +779,8 @@
       &copy;2016, Blaine Rogers.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.6</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
       
     </div>
 

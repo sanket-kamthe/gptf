@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>gptf.gpr &#8212; gptf 1.0.0 documentation</title>
+    <title>gptf.gpr &mdash; gptf 1.0.0 documentation</title>
     
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
@@ -29,7 +29,6 @@
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
-  
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
   </head>
@@ -43,14 +42,14 @@
             
   <h1>Source code for gptf.gpr</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;GP regression with Gaussian noise.&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">super</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="kn">import</span> <span class="nb">super</span>
 
-<span class="kn">from</span> <span class="nn">overrides</span> <span class="k">import</span> <span class="n">overrides</span>
-<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">from</span> <span class="nn">overrides</span> <span class="kn">import</span> <span class="n">overrides</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="kn">as</span> <span class="nn">tf</span>
 
-<span class="kn">from</span> <span class="nn">gptf</span> <span class="k">import</span> <span class="n">GPModel</span><span class="p">,</span> <span class="n">ParamAttributes</span><span class="p">,</span> <span class="n">tf_method</span>
-<span class="kn">from</span> <span class="nn">gptf</span> <span class="k">import</span> <span class="n">likelihoods</span><span class="p">,</span> <span class="n">densities</span><span class="p">,</span> <span class="n">meanfunctions</span>
-<span class="kn">from</span> <span class="nn">gptf</span> <span class="k">import</span> <span class="n">tfhacks</span>
+<span class="kn">from</span> <span class="nn">gptf</span> <span class="kn">import</span> <span class="n">GPModel</span><span class="p">,</span> <span class="n">ParamAttributes</span><span class="p">,</span> <span class="n">tf_method</span>
+<span class="kn">from</span> <span class="nn">gptf</span> <span class="kn">import</span> <span class="n">likelihoods</span><span class="p">,</span> <span class="n">densities</span><span class="p">,</span> <span class="n">meanfunctions</span>
+<span class="kn">from</span> <span class="nn">gptf</span> <span class="kn">import</span> <span class="n">tfhacks</span>
 
 
 <span class="c1">#TODO: Write tests.</span>
@@ -145,7 +144,7 @@
 
     <span class="nd">@tf_method</span><span class="p">()</span>
     <span class="nd">@overrides</span>
-<div class="viewcode-block" id="GPR.build_prior_mean_var"><a class="viewcode-back" href="../../public_api.html#gptf.gpr.GPR.build_prior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_prior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">num_latent</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="GPR.build_prior_mean_var"><a class="viewcode-back" href="../../public_api.html#gptf.gpr.GPR.build_prior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_prior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">num_latent</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
         <span class="n">noise_var</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">variance</span><span class="o">.</span><span class="n">tensor</span>
         <span class="n">X</span> <span class="o">=</span> <span class="n">test_points</span>
         <span class="n">fmean</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">meanfunction</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
@@ -160,15 +159,15 @@
 
     <span class="nd">@tf_method</span><span class="p">()</span>
     <span class="nd">@overrides</span>
-<div class="viewcode-block" id="GPR.build_posterior_mean_var"><a class="viewcode-back" href="../../public_api.html#gptf.gpr.GPR.build_posterior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_posterior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="GPR.build_posterior_mean_var"><a class="viewcode-back" href="../../public_api.html#gptf.gpr.GPR.build_posterior_mean_var">[docs]</a>    <span class="k">def</span> <span class="nf">build_posterior_mean_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">test_points</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
         <span class="n">noise_var</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">variance</span><span class="o">.</span><span class="n">tensor</span>
         <span class="n">Kx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">K</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">test_points</span><span class="p">)</span>
         <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">K</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
         <span class="n">K</span> <span class="o">+=</span> <span class="n">tfhacks</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">X</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">X</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="o">*</span> <span class="n">noise_var</span>
         <span class="n">L</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="n">K</span><span class="p">)</span>
-        <span class="n">A</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">matrix_triangular_solve</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">Kx</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">matrix_triangular_solve</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">Kx</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
         <span class="n">V</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">matrix_triangular_solve</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">Y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">meanfunction</span><span class="p">(</span><span class="n">X</span><span class="p">))</span>
-        <span class="n">fmean</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">transpose_a</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">fmean</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">transpose_a</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
         <span class="n">fmean</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">meanfunction</span><span class="p">(</span><span class="n">test_points</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">full_cov</span><span class="p">:</span>
             <span class="n">fvar</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">K</span><span class="p">(</span><span class="n">test_points</span><span class="p">)</span> <span class="o">-</span> <span class="n">tf</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">transpose_a</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
@@ -196,8 +195,8 @@
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="../../search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
@@ -211,8 +210,8 @@
       &copy;2016, Blaine Rogers.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.6</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
       
     </div>
 
