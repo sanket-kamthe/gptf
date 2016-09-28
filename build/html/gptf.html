@@ -414,8 +414,8 @@ different worker task.</p>
 be <code class="code docutils literal"><span class="pre">[n]</span></code>, where <code class="code docutils literal"><span class="pre">n</span></code> is the number of worker tasks. <code class="code docutils literal"><span class="pre">experts</span></code> will be
 copied to fill out the architecture, with each copy being pinned to
 a different worker task.</p>
-<p><code class="code docutils literal"><span class="pre">Param`s</span> <span class="pre">will</span> <span class="pre">be</span> <span class="pre">pinned</span> <span class="pre">to</span> <span class="pre">parameter</span> <span class="pre">server</span> <span class="pre">tasks</span> <span class="pre">in</span> <span class="pre">a</span> <span class="pre">round-robin</span>
-<span class="pre">fashion,</span> <span class="pre">based</span> <span class="pre">on</span> <span class="pre">the</span> <span class="pre">order</span> <span class="pre">they</span> <span class="pre">appear</span> <span class="pre">in</span> <span class="pre">`TreerBCM.params</span></code>.</p>
+<p><code class="code docutils literal"><span class="pre">Param</span></code>s will be pinned to parameter server tasks in a round-robin
+fashion, based on the order they appear in <code class="code docutils literal"><span class="pre">TreerBCM.params</span></code>.</p>
 <p>Additionally, the <code class="code docutils literal"><span class="pre">.tf_graph</span></code> of the <code class="code docutils literal"><span class="pre">TreerBCM</span></code> will be set to a
 new graph and the <code class="code docutils literal"><span class="pre">.tf_session_target</span></code> will be set to either the
 first task of the target job or the first task of the parameter
@@ -428,7 +428,7 @@ server job.</p>
 <li><strong>experts</strong> (<em>GPModel | Sequence[GPModel]</em>) &#8211; The experts to
 combine the opinions of. If this is a <code class="code docutils literal"><span class="pre">GPModel</span></code>, then it
 will be shallow-copied to fill out the architecture.
-If it is a sequence of <a href="#id1"><span class="problematic" id="id2">`</span></a>GPModel`s, then the architecture
+If it is a sequence of <code class="code docutils literal"><span class="pre">GPModel</span></code>s, then the architecture
 will have as many nodes in its final layer as
 there are in the sequence.</li>
 <li><strong>weightfunction</strong> (<em>Callable[[Sequence[GPModel], tf.Tensor, tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]</em>) &#8211; A function used to calculate the weight of the experts.</li>
@@ -686,23 +686,9 @@ layer of the rBCM.</li>
 <p>GP regression with Gaussian noise.</p>
 <dl class="class">
 <dt id="gptf.gpr.GPR">
-<em class="property">class </em><code class="descclassname">gptf.gpr.</code><code class="descname">GPR</code><span class="sig-paren">(</span><em>kernel</em>, <em>meanfunction=&lt;gptf.core.meanfunctions.Zero object</em>, <em>fallback_name unnamed</em>, <em>id 0x7f72b32c7128&gt;</em>, <em>noise_variance=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/gpr.html#GPR"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.gpr.GPR" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">gptf.gpr.</code><code class="descname">GPR</code><span class="sig-paren">(</span><em>kernel</em>, <em>meanfunction=&lt;gptf.core.meanfunctions.Zero object</em>, <em>fallback_name unnamed</em>, <em>id 0x7fa38d42b588&gt;</em>, <em>noise_variance=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/gpr.html#GPR"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.gpr.GPR" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="gptf.core.html#gptf.core.models.GPModel" title="gptf.core.models.GPModel"><code class="xref py py-class docutils literal"><span class="pre">gptf.core.models.GPModel</span></code></a>, <a class="reference internal" href="gptf.core.html#gptf.core.params.ParamAttributes" title="gptf.core.params.ParamAttributes"><code class="xref py py-class docutils literal"><span class="pre">gptf.core.params.ParamAttributes</span></code></a></p>
 <p>Gaussian process regression with Gaussian noise.</p>
-<dl class="attribute">
-<dt id="gptf.gpr.GPR.inputs">
-<code class="descname">inputs</code><a class="headerlink" href="#gptf.gpr.GPR.inputs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>DataHolder</em> &#8211; The input data, size <code class="code docutils literal"><span class="pre">N`x`D</span></code>. By default,
-this is set to recompile the model if the shape changes.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="gptf.gpr.GPR.values">
-<code class="descname">values</code><a class="headerlink" href="#gptf.gpr.GPR.values" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>DataHolder</em> &#8211; The input data, size <code class="code docutils literal"><span class="pre">N`x`D</span></code>. By default,
-this is set to recompile the model if the shape changes.</p>
-</dd></dl>
-
 <dl class="attribute">
 <dt id="gptf.gpr.GPR.kernel">
 <code class="descname">kernel</code><a class="headerlink" href="#gptf.gpr.GPR.kernel" title="Permalink to this definition">¶</a></dt>

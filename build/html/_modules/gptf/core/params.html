@@ -116,6 +116,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The (NumPy) value of the object.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_value</span><span class="p">()</span>
 
     <span class="nd">@value</span><span class="o">.</span><span class="n">setter</span>
@@ -208,6 +209,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">on_shape_change</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The action to take when the value changes.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_shape_change</span>
 
     <span class="nd">@on_shape_change</span><span class="o">.</span><span class="n">setter</span>
@@ -221,6 +223,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">on_dtype_change</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The action to take when the dtype changes.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_dtype_change</span>
 
     <span class="nd">@on_dtype_change</span><span class="o">.</span><span class="n">setter</span>
@@ -341,6 +344,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">cache</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Contains cached tensorflow functions etc.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">cache</span>
 
     <span class="nd">@cache</span><span class="o">.</span><span class="n">setter</span>
@@ -424,7 +428,7 @@
 <span class="sd">        ...     print(sess.run(p.free_state))</span>
 <span class="sd">        4.0</span>
 
-<span class="sd">        If we have multiple `Param`s, as long as they are in the same</span>
+<span class="sd">        If we have multiple `Param`\ s, as long as they are in the same</span>
 <span class="sd">        tree of `WrappedTF`, each `Param`&#39;s `.get_session()` will return</span>
 <span class="sd">        the same session, and every `Param` in the tree will have its free</span>
 <span class="sd">        state maintained in that session.</span>
@@ -505,7 +509,7 @@
 
 <span class="sd">        .. rubric:: Transforms</span>
 
-<span class="sd">        Constraints can be applied to a parameter in the form of `Transform`s.</span>
+<span class="sd">        Constraints can be applied to a parameter in the form of `Transform`\ s.</span>
 <span class="sd">        A `Transform` is used to transform the parameter into a free state,</span>
 <span class="sd">        where it can then be optimized. The transform can be set either by</span>
 <span class="sd">        specifying `transform` paramater of the constructor or after creation</span>
@@ -630,7 +634,7 @@
 <span class="sd">        &gt;&gt;&gt; notacopy = Param(p.value, transform=p.transform)</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-<div class="viewcode-block" id="Param.__init__"><a class="viewcode-back" href="../../../public_api.html#gptf.core.params.Param.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">initial_value</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">Identity</span><span class="p">(),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">initial_value</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">Identity</span><span class="p">(),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initialiser.</span>
 
 <span class="sd">        Args:</span>
@@ -644,7 +648,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">numpy_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">initial_value</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">transform</span> <span class="o">=</span> <span class="n">transform</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">fixed</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="kc">None</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="nd">@tf_method</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="nd">@overrides</span>
@@ -684,6 +688,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">feed_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;An empty dictionary.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">{}</span>
 
     <span class="nd">@property</span>
@@ -698,6 +703,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">fixed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Whether or not the parameter is fixed.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">fixed</span>
 
     <span class="nd">@fixed</span><span class="o">.</span><span class="n">setter</span>
@@ -876,7 +882,7 @@
 <span class="sd">        &gt;&gt;&gt; d.tensor is copy.tensor</span>
 <span class="sd">        True</span>
 
-<span class="sd">        This means that it, just in the case of `Param`s, it is </span>
+<span class="sd">        This means that it, just in the case of `Param`\ s, it is </span>
 <span class="sd">        *very important* that every copy of a `DataHolder` has the</span>
 <span class="sd">        same device context and graph, or odd things happen.</span>
 
@@ -904,7 +910,7 @@
 <span class="sd">        </span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="DataHolder.__init__"><a class="viewcode-back" href="../../../public_api.html#gptf.core.params.DataHolder.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">initial_value</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">initial_value</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initialiser.</span>
 
 <span class="sd">        Args:</span>
@@ -914,7 +920,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">numpy_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">initial_value</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_placeholder</span> <span class="o">=</span> <span class="kc">None</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_placeholder</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="nd">@overrides</span>
     <span class="k">def</span> <span class="nf">_get_value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -926,11 +932,13 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The placeholder that the data will be fed into.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_assert_placeholder</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_placeholder</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">feed_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A dict that feeds the value of the data into its placeholder.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_assert_placeholder</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">{</span> <span class="bp">self</span><span class="o">.</span><span class="n">_placeholder</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shared</span><span class="o">.</span><span class="n">numpy_value</span> <span class="p">}</span>
 
@@ -987,14 +995,15 @@
 <span class="sd">        True</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">ARRAY_DISPLAY_LENGTH</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">ARRAY_DISPLAY_LENGTH</span> <span class="o">=</span> <span class="mi">5</span>  <span class="c1">#: The default array display length.</span>
 
-<div class="viewcode-block" id="Parameterized.__init__"><a class="viewcode-back" href="../../../public_api.html#gptf.core.params.Parameterized.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_fixed</span> <span class="o">=</span> <span class="kc">False</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fixed</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">fixed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Whether or not params lower in the heirarchy should be fixed.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fixed</span>
 
     <span class="nd">@fixed</span><span class="o">.</span><span class="n">setter</span>
@@ -1263,7 +1272,7 @@
     <span class="sd">&quot;&quot;&quot;Parameters are accessed using attributes.&quot;&quot;&quot;</span>
     <span class="nd">@overrides</span>
 <div class="viewcode-block" id="ParamAttributes.__setattr__"><a class="viewcode-back" href="../../../public_api.html#gptf.core.params.ParamAttributes.__setattr__">[docs]</a>    <span class="k">def</span> <span class="nf">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Set the value of `Param`s and `DataHolder`s on assignment.</span>
+        <span class="sd">&quot;&quot;&quot;Set the value of `Param`\ s and `DataHolder`\ s on assignment.</span>
 <span class="sd">        </span>
 <span class="sd">        Args:</span>
 <span class="sd">            name (str): The name of the attribute.</span>
@@ -1341,7 +1350,7 @@
 <span class="sd">        False</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-<div class="viewcode-block" id="ParamList.__init__"><a class="viewcode-back" href="../../../public_api.html#gptf.core.params.ParamList.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">initial_values</span><span class="o">=</span><span class="p">()):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">initial_values</span><span class="o">=</span><span class="p">()):</span>
         <span class="sd">&quot;&quot;&quot;Initialiser.</span>
 
 <span class="sd">        Args:</span>
@@ -1350,10 +1359,10 @@
 <span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">ListTree</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">initial_values</span><span class="p">)</span></div>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ListTree</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">initial_values</span><span class="p">)</span>
 
     <span class="nd">@overrides</span>
-<div class="viewcode-block" id="ParamList.__setitem__"><a class="viewcode-back" href="../../../public_api.html#gptf.core.params.ParamList.__setitem__">[docs]</a>    <span class="k">def</span> <span class="nf">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;If `self[key]` is `Param` or `DataHolder` and value is </span>
 <span class="sd">        `np.array_like`, set `self[key].value` instead.&quot;&quot;&quot;</span>
         <span class="n">curr</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
@@ -1362,7 +1371,7 @@
             <span class="c1"># okay to assign to curr.value</span>
             <span class="n">curr</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__setitem__</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div></div>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__setitem__</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="autoflow"><a class="viewcode-back" href="../../../public_api.html#gptf.core.params.autoflow">[docs]</a><span class="k">def</span> <span class="nf">autoflow</span><span class="p">(</span><span class="o">*</span><span class="n">placeholder_specs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Wraps up a TensorFlow method so that it takes NumPy and gives NumPy.</span>

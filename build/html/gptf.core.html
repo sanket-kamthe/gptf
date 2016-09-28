@@ -119,13 +119,14 @@ size of L.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <code class="code docutils literal"><span class="pre">N`x`D</span></code>.</li>
-<li><strong>X2</strong> (<em>tf.Tensor | None</em>) &#8211; A tensor of shape <code class="code docutils literal"><span class="pre">M`x`D</span></code>. If <code class="code docutils literal"><span class="pre">None</span></code>,
-the second argument will be assumed symmetrical.</li>
+<li><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <span class="math">\(N \times D\)</span>.</li>
+<li><strong>X2</strong> (<em>tf.Tensor | None</em>) &#8211; A tensor of shape <span class="math">\(M \times D\)</span>.
+If <code class="code docutils literal"><span class="pre">None</span></code>, the second argument will be assumed symmetrical.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The covariance function K(X, X2). Shape <code class="code docutils literal"><span class="pre">N`x`M</span></code></p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The covariance function K(X, X2). Shape
+<span class="math">\(N \times M\)</span></p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(tf.Tensor)</p>
@@ -143,7 +144,7 @@ the second argument will be assumed symmetrical.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <code class="code docutils literal"><span class="pre">N`x`D</span></code>.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <span class="math">\(N \times D\)</span>.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The diagonal of <code class="code docutils literal"><span class="pre">self.K(X)</span></code>. Shape <code class="code docutils literal"><span class="pre">N</span></code>.</td>
 </tr>
@@ -169,13 +170,14 @@ the second argument will be assumed symmetrical.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <code class="code docutils literal"><span class="pre">N`x`D</span></code>.</li>
-<li><strong>X2</strong> (<em>tf.Tensor | None</em>) &#8211; A tensor of shape <code class="code docutils literal"><span class="pre">M`x`D</span></code>. If <code class="code docutils literal"><span class="pre">None</span></code>,
-the second argument will be assumed symmetrical.</li>
+<li><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <span class="math">\(N \times D\)</span>.</li>
+<li><strong>X2</strong> (<em>tf.Tensor | None</em>) &#8211; A tensor of shape <span class="math">\(M \times D\)</span>.
+If <code class="code docutils literal"><span class="pre">None</span></code>, the second argument will be assumed symmetrical.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The covariance function K(X, X2). Shape <code class="code docutils literal"><span class="pre">N`x`M</span></code></p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The covariance function K(X, X2). Shape
+<span class="math">\(N \times M\)</span></p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(tf.Tensor)</p>
@@ -193,7 +195,7 @@ the second argument will be assumed symmetrical.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <code class="code docutils literal"><span class="pre">N`x`D</span></code>.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <span class="math">\(N \times D\)</span>.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The diagonal of <code class="code docutils literal"><span class="pre">self.K(X)</span></code>. Shape <code class="code docutils literal"><span class="pre">N</span></code>.</td>
 </tr>
@@ -245,13 +247,14 @@ the second argument will be assumed symmetrical.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <code class="code docutils literal"><span class="pre">N`x`D</span></code>.</li>
-<li><strong>X2</strong> (<em>tf.Tensor | None</em>) &#8211; A tensor of shape <code class="code docutils literal"><span class="pre">M`x`D</span></code>. If <code class="code docutils literal"><span class="pre">None</span></code>,
-the second argument will be assumed symmetrical.</li>
+<li><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <span class="math">\(N \times D\)</span>.</li>
+<li><strong>X2</strong> (<em>tf.Tensor | None</em>) &#8211; A tensor of shape <span class="math">\(M \times D\)</span>.
+If <code class="code docutils literal"><span class="pre">None</span></code>, the second argument will be assumed symmetrical.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The covariance function K(X, X2). Shape <code class="code docutils literal"><span class="pre">N`x`M</span></code></p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The covariance function K(X, X2). Shape
+<span class="math">\(N \times M\)</span></p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(tf.Tensor)</p>
@@ -269,7 +272,7 @@ the second argument will be assumed symmetrical.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <code class="code docutils literal"><span class="pre">N`x`D</span></code>.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <span class="math">\(N \times D\)</span>.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The diagonal of <code class="code docutils literal"><span class="pre">self.K(X)</span></code>. Shape <code class="code docutils literal"><span class="pre">N</span></code>.</td>
 </tr>
@@ -351,13 +354,14 @@ the second argument will be assumed symmetrical.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <code class="code docutils literal"><span class="pre">N`x`D</span></code>.</li>
-<li><strong>X2</strong> (<em>tf.Tensor | None</em>) &#8211; A tensor of shape <code class="code docutils literal"><span class="pre">M`x`D</span></code>. If <code class="code docutils literal"><span class="pre">None</span></code>,
-the second argument will be assumed symmetrical.</li>
+<li><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <span class="math">\(N \times D\)</span>.</li>
+<li><strong>X2</strong> (<em>tf.Tensor | None</em>) &#8211; A tensor of shape <span class="math">\(M \times D\)</span>.
+If <code class="code docutils literal"><span class="pre">None</span></code>, the second argument will be assumed symmetrical.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The covariance function K(X, X2). Shape <code class="code docutils literal"><span class="pre">N`x`M</span></code></p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The covariance function K(X, X2). Shape
+<span class="math">\(N \times M\)</span></p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(tf.Tensor)</p>
@@ -375,7 +379,7 @@ the second argument will be assumed symmetrical.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <code class="code docutils literal"><span class="pre">N`x`D</span></code>.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <span class="math">\(N \times D\)</span>.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The diagonal of <code class="code docutils literal"><span class="pre">self.K(X)</span></code>. Shape <code class="code docutils literal"><span class="pre">N</span></code>.</td>
 </tr>
@@ -440,13 +444,14 @@ the second argument will be assumed symmetrical.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <code class="code docutils literal"><span class="pre">N`x`D</span></code>.</li>
-<li><strong>X2</strong> (<em>tf.Tensor | None</em>) &#8211; A tensor of shape <code class="code docutils literal"><span class="pre">M`x`D</span></code>. If <code class="code docutils literal"><span class="pre">None</span></code>,
-the second argument will be assumed symmetrical.</li>
+<li><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <span class="math">\(N \times D\)</span>.</li>
+<li><strong>X2</strong> (<em>tf.Tensor | None</em>) &#8211; A tensor of shape <span class="math">\(M \times D\)</span>.
+If <code class="code docutils literal"><span class="pre">None</span></code>, the second argument will be assumed symmetrical.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The covariance function K(X, X2). Shape <code class="code docutils literal"><span class="pre">N`x`M</span></code></p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The covariance function K(X, X2). Shape
+<span class="math">\(N \times M\)</span></p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(tf.Tensor)</p>
@@ -464,7 +469,7 @@ the second argument will be assumed symmetrical.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <code class="code docutils literal"><span class="pre">N`x`D</span></code>.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <span class="math">\(N \times D\)</span>.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The diagonal of <code class="code docutils literal"><span class="pre">self.K(X)</span></code>. Shape <code class="code docutils literal"><span class="pre">N</span></code>.</td>
 </tr>
@@ -490,13 +495,14 @@ the second argument will be assumed symmetrical.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <code class="code docutils literal"><span class="pre">N`x`D</span></code>.</li>
-<li><strong>X2</strong> (<em>tf.Tensor | None</em>) &#8211; A tensor of shape <code class="code docutils literal"><span class="pre">M`x`D</span></code>. If <code class="code docutils literal"><span class="pre">None</span></code>,
-the second argument will be assumed symmetrical.</li>
+<li><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <span class="math">\(N \times D\)</span>.</li>
+<li><strong>X2</strong> (<em>tf.Tensor | None</em>) &#8211; A tensor of shape <span class="math">\(M \times D\)</span>.
+If <code class="code docutils literal"><span class="pre">None</span></code>, the second argument will be assumed symmetrical.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The covariance function K(X, X2). Shape <code class="code docutils literal"><span class="pre">N`x`M</span></code></p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The covariance function K(X, X2). Shape
+<span class="math">\(N \times M\)</span></p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(tf.Tensor)</p>
@@ -514,7 +520,7 @@ the second argument will be assumed symmetrical.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <code class="code docutils literal"><span class="pre">N`x`D</span></code>.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <span class="math">\(N \times D\)</span>.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The diagonal of <code class="code docutils literal"><span class="pre">self.K(X)</span></code>. Shape <code class="code docutils literal"><span class="pre">N</span></code>.</td>
 </tr>
@@ -591,13 +597,14 @@ sequence will be passed through.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <code class="code docutils literal"><span class="pre">N`x`D</span></code>.</li>
-<li><strong>X2</strong> (<em>tf.Tensor | None</em>) &#8211; A tensor of shape <code class="code docutils literal"><span class="pre">M`x`D</span></code>. If <code class="code docutils literal"><span class="pre">None</span></code>,
-the second argument will be assumed symmetrical.</li>
+<li><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <span class="math">\(N \times D\)</span>.</li>
+<li><strong>X2</strong> (<em>tf.Tensor | None</em>) &#8211; A tensor of shape <span class="math">\(M \times D\)</span>.
+If <code class="code docutils literal"><span class="pre">None</span></code>, the second argument will be assumed symmetrical.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The covariance function K(X, X2). Shape <code class="code docutils literal"><span class="pre">N`x`M</span></code></p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The covariance function K(X, X2). Shape
+<span class="math">\(N \times M\)</span></p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(tf.Tensor)</p>
@@ -615,7 +622,7 @@ the second argument will be assumed symmetrical.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <code class="code docutils literal"><span class="pre">N`x`D</span></code>.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <span class="math">\(N \times D\)</span>.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The diagonal of <code class="code docutils literal"><span class="pre">self.K(X)</span></code>. Shape <code class="code docutils literal"><span class="pre">N</span></code>.</td>
 </tr>
@@ -660,7 +667,7 @@ The only parameter they require is a variance.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <code class="code docutils literal"><span class="pre">N`x`D</span></code>.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <span class="math">\(N \times D\)</span>.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The diagonal of <code class="code docutils literal"><span class="pre">self.K(X)</span></code>. Shape <code class="code docutils literal"><span class="pre">N</span></code>.</td>
 </tr>
@@ -739,13 +746,14 @@ value of <code class="code docutils literal"><span class="pre">.lengthscales</sp
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <code class="code docutils literal"><span class="pre">N`x`D</span></code>.</li>
-<li><strong>X2</strong> (<em>tf.Tensor | None</em>) &#8211; A tensor of shape <code class="code docutils literal"><span class="pre">M`x`D</span></code>. If <code class="code docutils literal"><span class="pre">None</span></code>,
-the second argument will be assumed symmetrical.</li>
+<li><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <span class="math">\(N \times D\)</span>.</li>
+<li><strong>X2</strong> (<em>tf.Tensor | None</em>) &#8211; A tensor of shape <span class="math">\(M \times D\)</span>.
+If <code class="code docutils literal"><span class="pre">None</span></code>, the second argument will be assumed symmetrical.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The covariance function K(X, X2). Shape <code class="code docutils literal"><span class="pre">N`x`M</span></code></p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The covariance function K(X, X2). Shape
+<span class="math">\(N \times M\)</span></p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(tf.Tensor)</p>
@@ -763,7 +771,7 @@ the second argument will be assumed symmetrical.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <code class="code docutils literal"><span class="pre">N`x`D</span></code>.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <span class="math">\(N \times D\)</span>.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The diagonal of <code class="code docutils literal"><span class="pre">self.K(X)</span></code>. Shape <code class="code docutils literal"><span class="pre">N</span></code>.</td>
 </tr>
@@ -782,13 +790,13 @@ the second argument will be assumed symmetrical.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <code class="code docutils literal"><span class="pre">N`x`D</span></code>.</li>
-<li><strong>X2</strong> (<em>Tf.Tensor | None</em>) &#8211; A tensor of shape <code class="code docutils literal"><span class="pre">M`x`D</span></code>. If none,
-assumed to be symmetrical.</li>
+<li><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <span class="math">\(N \times D\)</span>.</li>
+<li><strong>X2</strong> (<em>Tf.Tensor | None</em>) &#8211; A tensor of shape <span class="math">\(M \times D\)</span>.
+If none, assumed to be symmetrical.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A tensor of shape <code class="code docutils literal"><span class="pre">N`x`M</span></code>, where
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A tensor of shape <span class="math">\(N \times M\)</span>, where
 <code class="code docutils literal"><span class="pre">self.square_dist(X,</span> <span class="pre">X2)[a,</span> <span class="pre">b]</span></code> is the Euclidean distance
 between <code class="code docutils literal"><span class="pre">X[a]</span></code> and <code class="code docutils literal"><span class="pre">X2[b]</span></code>.</p>
 </td>
@@ -809,13 +817,13 @@ between <code class="code docutils literal"><span class="pre">X[a]</span></code>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <code class="code docutils literal"><span class="pre">N`x`D</span></code>.</li>
-<li><strong>X2</strong> (<em>Tf.Tensor | None</em>) &#8211; A tensor of shape <code class="code docutils literal"><span class="pre">M`x`D</span></code>. If none,
-assumed to be symmetrical.</li>
+<li><strong>X</strong> (<em>tf.Tensor</em>) &#8211; A tensor of shape <span class="math">\(N \times D\)</span>.</li>
+<li><strong>X2</strong> (<em>Tf.Tensor | None</em>) &#8211; A tensor of shape <span class="math">\(M \times D\)</span>.
+If none, assumed to be symmetrical.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A tensor of shape <code class="code docutils literal"><span class="pre">N`x`M</span></code>, where
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A tensor of shape <span class="math">\(N \times M\)</span>, where
 <code class="code docutils literal"><span class="pre">self.square_dist(X,</span> <span class="pre">X2)[a,</span> <span class="pre">b]</span></code> is the squared distance
 between <code class="code docutils literal"><span class="pre">X[a]</span></code> and <code class="code docutils literal"><span class="pre">X2[b]</span></code>.</p>
 </td>
@@ -1724,7 +1732,7 @@ step.</li>
 be called at each optimization step with the current value
 of the variable vector (a vector constructed by flattening
 the free state of each free <code class="code docutils literal"><span class="pre">Param</span></code> and then concatenating
-them in the order the <code class="code docutils literal"><span class="pre">Param`s</span> <span class="pre">are</span> <span class="pre">returned</span> <span class="pre">by</span> <span class="pre">`.params</span></code>.</li>
+them in the order the <code class="code docutils literal"><span class="pre">Param</span></code>s are returned by <code class="code docutils literal"><span class="pre">.params</span></code>.</li>
 <li><strong>maxiter</strong> (<em>int</em>) &#8211; The maximum number of iterations of the optimizer.</li>
 <li><strong>**kw</strong> &#8211; Additional keyword arguments are passed through to the
 optimizer.</li>
@@ -1971,8 +1979,8 @@ value of the copy updates the value of the original.</p>
 <span class="go">True</span>
 </pre></div>
 </div>
-<p>This means that it, just in the case of <code class="code docutils literal"><span class="pre">Param`s,</span> <span class="pre">it</span> <span class="pre">is</span>
-<span class="pre">*very</span> <span class="pre">important*</span> <span class="pre">that</span> <span class="pre">every</span> <span class="pre">copy</span> <span class="pre">of</span> <span class="pre">a</span> <span class="pre">`DataHolder</span></code> has the
+<p>This means that it, just in the case of <code class="code docutils literal"><span class="pre">Param</span></code>s, it is
+<em>very important</em> that every copy of a <code class="code docutils literal"><span class="pre">DataHolder</span></code> has the
 same device context and graph, or odd things happen.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">AttributeWrappedTF</span><span class="p">(</span><span class="n">AttributeTree</span><span class="p">,</span> <span class="n">WrappedTF</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="k">pass</span>
@@ -2000,12 +2008,14 @@ to <code class="code docutils literal"><span class="pre">DataHolder.__init__()</
 <dl class="attribute">
 <dt>
 <code class="descname">feed_dict</code></dt>
-<dd></dd></dl>
+<dd><p>A dict that feeds the value of the data into its placeholder.</p>
+</dd></dl>
 
 <dl class="attribute">
 <dt>
 <code class="descname">tensor</code></dt>
-<dd></dd></dl>
+<dd><p>The placeholder that the data will be fed into.</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -2111,8 +2121,8 @@ variable into a free state where it can be optimised.</p>
 <span class="go">4.0</span>
 </pre></div>
 </div>
-<p>If we have multiple <code class="code docutils literal"><span class="pre">Param`s,</span> <span class="pre">as</span> <span class="pre">long</span> <span class="pre">as</span> <span class="pre">they</span> <span class="pre">are</span> <span class="pre">in</span> <span class="pre">the</span> <span class="pre">same</span>
-<span class="pre">tree</span> <span class="pre">of</span> <span class="pre">`WrappedTF</span></code>, each <code class="code docutils literal"><span class="pre">Param</span></code>&#8216;s <code class="code docutils literal"><span class="pre">.get_session()</span></code> will return
+<p>If we have multiple <code class="code docutils literal"><span class="pre">Param</span></code>s, as long as they are in the same
+tree of <code class="code docutils literal"><span class="pre">WrappedTF</span></code>, each <code class="code docutils literal"><span class="pre">Param</span></code>&#8216;s <code class="code docutils literal"><span class="pre">.get_session()</span></code> will return
 the same session, and every <code class="code docutils literal"><span class="pre">Param</span></code> in the tree will have its free
 state maintained in that session.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">AttributeWrappedTF</span><span class="p">(</span><span class="n">WrappedTF</span><span class="p">,</span> <span class="n">AttributeTree</span><span class="p">):</span>
@@ -2188,8 +2198,8 @@ in a <code class="code docutils literal"><span class="pre">FixedParameterError</
 respect this flag. See the <code class="code docutils literal"><span class="pre">Parameterised</span></code> and <code class="code docutils literal"><span class="pre">Model</span></code> classes for
 more details.</p>
 <p class="rubric">Transforms</p>
-<p>Constraints can be applied to a parameter in the form of <code class="code docutils literal"><span class="pre">Transform`s.</span>
-<span class="pre">A</span> <span class="pre">`Transform</span></code> is used to transform the parameter into a free state,
+<p>Constraints can be applied to a parameter in the form of <code class="code docutils literal"><span class="pre">Transform</span></code>s.
+A <code class="code docutils literal"><span class="pre">Transform</span></code> is used to transform the parameter into a free state,
 where it can then be optimized. The transform can be set either by
 specifying <code class="code docutils literal"><span class="pre">transform</span></code> paramater of the constructor or after creation
 using the <code class="code docutils literal"><span class="pre">.transform</span></code> attribute. The default transform is
@@ -2320,12 +2330,14 @@ device context of <code class="code docutils literal"><span class="pre">treepara
 <dl class="attribute">
 <dt>
 <code class="descname">feed_dict</code></dt>
-<dd></dd></dl>
+<dd><p>An empty dictionary.</p>
+</dd></dl>
 
 <dl class="attribute">
 <dt>
 <code class="descname">fixed</code></dt>
-<dd></dd></dl>
+<dd><p>Whether or not the parameter is fixed.</p>
+</dd></dl>
 
 <dl class="attribute">
 <dt>
@@ -2496,7 +2508,8 @@ associated types lower in the tree.</p>
 <dl class="attribute">
 <dt id="gptf.core.params.Parameterized.ARRAY_DISPLAY_LENGTH">
 <code class="descname">ARRAY_DISPLAY_LENGTH</code><em class="property"> = 5</em><a class="headerlink" href="#gptf.core.params.Parameterized.ARRAY_DISPLAY_LENGTH" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>The default array display length.</p>
+</dd></dl>
 
 <dl class="attribute">
 <dt>
@@ -2560,7 +2573,8 @@ value, transform and prior of each parameter.</p>
 <dl class="attribute">
 <dt>
 <code class="descname">fixed</code></dt>
-<dd></dd></dl>
+<dd><p>Whether or not params lower in the heirarchy should be fixed.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="gptf.core.params.Parameterized.param_summary">
@@ -2670,7 +2684,8 @@ drawing characters and ANSI terminal escape codes.
 <dl class="attribute">
 <dt id="gptf.core.params.ProxyWrappedValue.cache">
 <code class="descname">cache</code><a class="headerlink" href="#gptf.core.params.ProxyWrappedValue.cache" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Contains cached tensorflow functions etc.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="gptf.core.params.ProxyWrappedValue.clear_all_ancestor_caches">
@@ -2681,27 +2696,32 @@ drawing characters and ANSI terminal escape codes.
 <dl class="attribute">
 <dt id="gptf.core.params.ProxyWrappedValue.on_dtype_change">
 <code class="descname">on_dtype_change</code><a class="headerlink" href="#gptf.core.params.ProxyWrappedValue.on_dtype_change" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>The action to take when the dtype changes.</p>
+</dd></dl>
 
 <dl class="attribute">
 <dt id="gptf.core.params.ProxyWrappedValue.on_shape_change">
 <code class="descname">on_shape_change</code><a class="headerlink" href="#gptf.core.params.ProxyWrappedValue.on_shape_change" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>The action to take when the value changes.</p>
+</dd></dl>
 
 <dl class="attribute">
 <dt id="gptf.core.params.ProxyWrappedValue.tf_device">
 <code class="descname">tf_device</code><a class="headerlink" href="#gptf.core.params.ProxyWrappedValue.tf_device" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>The device context onto which this object&#8217;s ops should be pinned.</p>
+</dd></dl>
 
 <dl class="attribute">
 <dt id="gptf.core.params.ProxyWrappedValue.tf_graph">
 <code class="descname">tf_graph</code><a class="headerlink" href="#gptf.core.params.ProxyWrappedValue.tf_graph" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>The graph to place ops in.</p>
+</dd></dl>
 
 <dl class="attribute">
 <dt id="gptf.core.params.ProxyWrappedValue.tf_session_target">
 <code class="descname">tf_session_target</code><a class="headerlink" href="#gptf.core.params.ProxyWrappedValue.tf_session_target" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>The target under which sessions should be run.</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -2740,17 +2760,20 @@ when the shape of the data changes; see the setter for <code class="code docutil
 <dl class="attribute">
 <dt id="gptf.core.params.WrappedValue.on_dtype_change">
 <code class="descname">on_dtype_change</code><a class="headerlink" href="#gptf.core.params.WrappedValue.on_dtype_change" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>The action to take when the dtype changes.</p>
+</dd></dl>
 
 <dl class="attribute">
 <dt>
 <code class="descname">on_shape_change</code></dt>
-<dd></dd></dl>
+<dd><p>The action to take when the value changes.</p>
+</dd></dl>
 
 <dl class="attribute">
 <dt>
 <code class="descname">value</code></dt>
-<dd></dd></dl>
+<dd><p>The (NumPy) value of the object.</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -2933,7 +2956,7 @@ be constructed.</td>
 </div>
 <div class="section" id="module-gptf.core.transforms">
 <span id="gptf-core-transforms-module"></span><h2>gptf.core.transforms module<a class="headerlink" href="#module-gptf.core.transforms" title="Permalink to this headline">¶</a></h2>
-<p>Provides a number of transforms that can be used to constrain <a href="#id1"><span class="problematic" id="id2">`</span></a>Param`s.</p>
+<p>Provides a number of transforms that can be used to constrain <code class="code docutils literal"><span class="pre">Param</span></code>s.</p>
 <dl class="class">
 <dt id="gptf.core.transforms.Exp">
 <em class="property">class </em><code class="descclassname">gptf.core.transforms.</code><code class="descname">Exp</code><span class="sig-paren">(</span><em>lower=1e-06</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/transforms.html#Exp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.transforms.Exp" title="Permalink to this definition">¶</a></dt>
@@ -4115,12 +4138,8 @@ Else, this will be the sole argument for
 <dl class="attribute">
 <dt>
 <code class="descname">NO_DEVICE</code></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="gptf.core.wrappedtf.WrappedTF.copy">
-<code class="descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gptf/core/wrappedtf.html#WrappedTF.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gptf.core.wrappedtf.WrappedTF.copy" title="Permalink to this definition">¶</a></dt>
-<dd><p>Copies have empty caches.</p>
+<dd><p>When <code class="code docutils literal"><span class="pre">.tf_device</span></code> is set to <code class="code docutils literal"><span class="pre">.NO_DEVICE</span></code>, <code class="code docutils literal"><span class="pre">None</span></code> will be passed
+to <code class="code docutils literal"><span class="pre">tf.device()</span></code></p>
 </dd></dl>
 
 <dl class="method">
@@ -4379,17 +4398,20 @@ hierachy:</p>
 <dl class="attribute">
 <dt>
 <code class="descname">tf_device</code></dt>
-<dd></dd></dl>
+<dd><p>The device context onto which this object&#8217;s ops should be pinned.</p>
+</dd></dl>
 
 <dl class="attribute">
 <dt>
 <code class="descname">tf_graph</code></dt>
-<dd></dd></dl>
+<dd><p>The graph to place ops in.</p>
+</dd></dl>
 
 <dl class="attribute">
 <dt>
 <code class="descname">tf_session_target</code></dt>
-<dd></dd></dl>
+<dd><p>The target under which sessions should be run.</p>
+</dd></dl>
 
 </dd></dl>
 

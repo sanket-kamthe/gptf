@@ -205,7 +205,7 @@
 <span class="sd">    Attributes: See :obj:`GPModel` and :obj:`ParamList`.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-<div class="viewcode-block" id="PoEReduction.__init__"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.PoEReduction.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">children</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">children</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initialiser.</span>
 
 <span class="sd">        Args:</span>
@@ -214,7 +214,7 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">children</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">children</span><span class="p">)</span>
 
     <span class="nd">@tf_method</span><span class="p">()</span>
     <span class="nd">@overrides</span>
@@ -262,7 +262,7 @@
 <span class="sd">    For other attributes, see `GPModel` and `ParamList`.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-<div class="viewcode-block" id="gPoEReduction.__init__"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.gPoEReduction.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">children</span><span class="p">,</span> <span class="n">weightfunction</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">children</span><span class="p">,</span> <span class="n">weightfunction</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initialiser.</span>
 
 <span class="sd">        Args:</span>
@@ -274,7 +274,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">children</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">weightfunction</span> <span class="o">=</span> <span class="n">weightfunction</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weightfunction</span> <span class="o">=</span> <span class="n">weightfunction</span>
     <span class="c1">#TODO: better weight functions that don&#39;t need X and Y</span>
     <span class="c1">#@tf_method()</span>
     <span class="c1">#@overrides</span>
@@ -335,7 +335,7 @@
 <span class="sd">    Attributes: See `GPModel` and `ParamList`.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-<div class="viewcode-block" id="BCMReduction.__init__"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.BCMReduction.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">children</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">children</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initialiser.</span>
 
 <span class="sd">        Args:</span>
@@ -344,7 +344,7 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">children</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">children</span><span class="p">)</span>
 
     <span class="nd">@tf_method</span><span class="p">()</span>
     <span class="nd">@overrides</span>
@@ -397,7 +397,7 @@
 <span class="sd">    For other attributes, see `GPModel` and `ParamList`.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-<div class="viewcode-block" id="rBCMReduction.__init__"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.rBCMReduction.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">children</span><span class="p">,</span> <span class="n">weightfunction</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">children</span><span class="p">,</span> <span class="n">weightfunction</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initialiser.</span>
 
 <span class="sd">        Args:</span>
@@ -409,7 +409,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">children</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">weightfunction</span> <span class="o">=</span> <span class="n">weightfunction</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weightfunction</span> <span class="o">=</span> <span class="n">weightfunction</span>
 
     <span class="c1">#TODO: better weight functions that don&#39;t need X and Y</span>
     <span class="c1">#@tf_method()</span>
@@ -464,7 +464,7 @@
 <span class="sd">            A function used to calculate the weight of the expert.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-<div class="viewcode-block" id="PriorDivisorReduction.__init__"><a class="viewcode-back" href="../../public_api.html#gptf.distributed.PriorDivisorReduction.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">child</span><span class="p">,</span> <span class="n">weightfunction</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">child</span><span class="p">,</span> <span class="n">weightfunction</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initialiser.</span>
 
 <span class="sd">        Args:</span>
@@ -475,7 +475,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">child</span> <span class="o">=</span> <span class="n">child</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">weightfunction</span> <span class="o">=</span> <span class="n">weightfunction</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weightfunction</span> <span class="o">=</span> <span class="n">weightfunction</span>
 
     <span class="nd">@tf_method</span><span class="p">()</span>
     <span class="nd">@overrides</span>
@@ -584,7 +584,7 @@
 <span class="sd">    copied to fill out the architecture, with each copy being pinned to </span>
 <span class="sd">    a different worker task.</span>
 
-<span class="sd">    `Param`s will be pinned to parameter server tasks in a round-robin</span>
+<span class="sd">    `Param`\ s will be pinned to parameter server tasks in a round-robin</span>
 <span class="sd">    fashion, based on the order they appear in `TreerBCM.params`.</span>
 
 <span class="sd">    Additionally, the `.tf_graph` of the `TreerBCM` will be set to a</span>
@@ -596,7 +596,7 @@
 <span class="sd">        experts (GPModel | Sequence[GPModel]): The experts to </span>
 <span class="sd">            combine the opinions of. If this is a `GPModel`, then it</span>
 <span class="sd">            will be shallow-copied to fill out the architecture.</span>
-<span class="sd">            If it is a sequence of `GPModel`s, then the architecture</span>
+<span class="sd">            If it is a sequence of `GPModel`\ s, then the architecture</span>
 <span class="sd">            will have as many nodes in its final layer as</span>
 <span class="sd">            there are in the sequence.</span>
 <span class="sd">        weightfunction (Callable[[Sequence[GPModel], tf.Tensor, tf.Tensor, tf.Tensor], Tuple[tf.Tensor]]): </span>
