@@ -214,15 +214,18 @@ class Gaussian(Likelihood, ParamAttributes):
     @tf_method()
     @overrides
     def predict_mean_and_var(self, mu_F, var_F):
+        """The mean & variance of Y given a mean & variance of the f."""
         return tf.identity(mu_F), var_F + self.variance.tensor
 
     @tf_method()
     @overrides
     def predict_density(self, mu_F, var_F, Y):
+        """The (log) density of Y given a mean & variance of the f."""
         return densities.gaussian(mu_F, Y, var_F + self.variance.tensor)
 
     @tf_method()
     @overrides
     def variational_expectations(self, mu_F, var_F, Y):
+        """Compute the expected log density of the data."""
         return (-.5 * tf.log(2*np.pi) - .5 * tf.log(self.variance.tensor) -
                 .5 * (tf.square(Y - mu_F) + var_F) / self.variance.tensor)
