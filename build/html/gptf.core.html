@@ -1731,6 +1731,7 @@ which are constrained to be positive, and its likelihood is
 <p>We won&#8217;t care about the values of X and Y.
 &gt;&gt;&gt; X = np.array(0.)
 &gt;&gt;&gt; Y = np.array(0.)</p>
+<p class="rubric">TensorFlow optimizers</p>
 <p>We can optimise the parameters of the model using a TensorFlow
 optimizer like so:
 &gt;&gt;&gt; m = Example(3., 4.)
@@ -1762,6 +1763,7 @@ success: True</p>
 <span class="go">m.b: 1.000</span>
 </pre></div>
 </div>
+<p class="rubric">SciPy optimizers</p>
 <p>We can optimise the parameters of the model using a SciPy
 optimizer by provided a string value for <code class="code docutils literal"><span class="pre">method</span></code>:
 &gt;&gt;&gt; m = Example(3., 4.)
@@ -1792,6 +1794,7 @@ success: True</p>
 <span class="go">m.b: 1.000</span>
 </pre></div>
 </div>
+<p class="rubric">Miscellaneous</p>
 <p>Optimisation still works, even with weird device contexts and
 session targets.
 &gt;&gt;&gt; # set up a distributed execution environment
@@ -1883,6 +1886,7 @@ when the shape of the data changes; see the setter for <code class="code docutil
 </dd></dl>
 
 <p class="rubric">Examples</p>
+<p class="rubric">Getting and setting values</p>
 <p>To get and set the value of the data, use the <code class="code docutils literal"><span class="pre">.value</span></code> property:
 &gt;&gt;&gt; a = np.array([1,2,3])
 &gt;&gt;&gt; b = np.array([4,5,6])
@@ -1902,6 +1906,7 @@ to <code class="code docutils literal"><span class="pre">tf.Session.run()</span>
 &gt;&gt;&gt; with d.get_session() as sess:
 ...     sess.run(op, feed_dict=d.feed_dict)
 array([2, 3, 4])</p>
+<p class="rubric">Copies</p>
 <p>You can create a copy of a <code class="code docutils literal"><span class="pre">DataHolder</span></code> using <code class="code docutils literal"><span class="pre">.copy()</span></code>. The
 new copy represents the same data, so the value and
 various items of state (see below) are the same.
@@ -2003,6 +2008,7 @@ variable into a free state where it can be optimised.</p>
 </dd></dl>
 
 <p class="rubric">Examples</p>
+<p class="rubric">Getting and setting values</p>
 <p>You can get and set the (numpy) value of a <code class="code docutils literal"><span class="pre">Param</span></code> using its
 <code class="code docutils literal"><span class="pre">value</span></code> attribute:
 &gt;&gt;&gt; p = Param(1.0)
@@ -2098,6 +2104,7 @@ Traceback (most recent call last):</p>
 <blockquote>
 <div>...</div></blockquote>
 <p>AttributeError: can&#8217;t set attribute</p>
+<p class="rubric">Fixing parameters</p>
 <p>A parameter can be fixed by setting the <code class="code docutils literal"><span class="pre">.fixed</span></code> attribute to <code class="code docutils literal"><span class="pre">True</span></code>.
 A fixed parameter should not be optimised. Attempting to
 access the <code class="code docutils literal"><span class="pre">.free_state</span></code> attribute of a fixed parameter will result
@@ -2112,6 +2119,7 @@ Traceback (most recent call last):</p>
 <p>Ultimately, however, it is the responsibility of the optimiser to
 respect this flag. See the <code class="code docutils literal"><span class="pre">Parameterised</span></code> and <code class="code docutils literal"><span class="pre">Model</span></code> classes for
 more details.</p>
+<p class="rubric">Transforms</p>
 <p>Constraints can be applied to a parameter in the form of <code class="code docutils literal"><span class="pre">Transform`s.</span>
 <span class="pre">A</span> <span class="pre">`Transform</span></code> is used to transform the parameter into a free state,
 where it can then be optimized. The transform can be set either by
@@ -2159,6 +2167,7 @@ the derivative of <code class="code docutils literal"><span class="pre">p.tensor
 &gt;&gt;&gt; with p.get_session() as sess:
 ...     print(&#8220;{:.3f}&#8221;.format(sess.run(grad_exp)))
 2.718</p>
+<p class="rubric">Copies</p>
 <p>You can create a copy of a <code class="code docutils literal"><span class="pre">Param</span></code> using <code class="code docutils literal"><span class="pre">Param.copy()</span></code>. The
 new copy represents the same parameter, so the value and
 various items of state (see below) are the same.
