@@ -32,6 +32,7 @@
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.napoleon',
     'sphinx.ext.doctest',
     'sphinx.ext.todo',
     'sphinx.ext.coverage',
@@ -94,7 +95,7 @@ exclude_patterns = []
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
 #
-# default_role = None
+default_role = 'code'
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
 #
@@ -345,3 +346,6 @@ texinfo_documents = [
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #
 # texinfo_no_detailmenu = False
+
+# Napoleon config
+napoleon_numpy_docstring = False
