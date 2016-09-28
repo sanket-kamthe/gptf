@@ -384,7 +384,7 @@ class Leaf(Tree):
 class AttributeTree(Tree):
     """A tree that uses attributes to assign/track children.
     
-    A tree can be constructed by simply assigning `Tree`s to the
+    A tree can be constructed by simply assigning `Tree`\ s to the
     attributes of an `AttributeTree`:
         
         >>> p = AttributeTree()
@@ -663,7 +663,7 @@ class ListTree(Tree, MutableSequence):
     """A `Tree` that uses numeric indexes to track its children.
     
     Examples:
-        `ListTree`s know their parent and their name:
+        `ListTree`\ s know their parent and their name:
 
         >>> root = AttributeTree()
         >>> root.fallback_name = "root"
@@ -992,9 +992,9 @@ class TreeWithCache(Tree):
             ...     t.child_1.cache[0] = '789'
             ...     t.child_0.child.cache[0] = 'ABC'
 
-            Clearing `t.child_0.child`'s ancestor's cache clears
-            `t`'s cache and `t.child_0`'s cache, but not `t.child_1`'s or
-            `t.child_0.child`'s.
+            Clearing `t.child_0.child`\ 's ancestor's cache clears
+            `t`\ 's cache and `t.child_0`\ 's cache, but not `t.child_1`\ 's or
+            `t.child_0.child`\ 's.
 
             >>> fill_cache()
             >>> t.child_0.child.clear_ancestor_caches()
