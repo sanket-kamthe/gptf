@@ -56,7 +56,7 @@ class NullContextWrapper(object):
     """Wraps an object so that its context does nothing.
 
     Attributes:
-        _NullContextWrapped__wrapped: the wrapped context manager.
+        _NullContextWrapper__wrapped: the wrapped context manager.
     
     Examples:
         >>> class Example(object):
