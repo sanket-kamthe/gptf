@@ -137,19 +137,7 @@ class Zero(MeanFunction, ParamAttributes):
     def __call__(self, X):
         """Calls the mean function.
 
-        Examples:
-            >>> X = tf.constant([[ 1.], 
-            ...                  [ 2.],
-            ...                  [ 3.],
-            ...                  [ 4.]], dtype=tf.float64)
-            >>> mean_func = Zero()
-            >>> sess = mean_func.get_session()
-            >>> sess.run(mean_func(X))
-            array([[ 0.], 
-                   [ 0.], 
-                   [ 0.],
-                   [ 0.]])
-
+        
         """
         return tf.zeros([tf.shape(X)[0], 1], dtype=tf.as_dtype(X.dtype))
 
