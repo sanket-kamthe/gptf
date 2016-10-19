@@ -6,11 +6,12 @@ from abc import ABCMeta, abstractmethod
 from overrides import overrides
 import numpy as np
 import tensorflow as tf
+from nose.tools import nottest
 
 from .params import Parameterized, ParamAttributes, ParamList, Param
 from .wrappedtf import tf_method
 
-
+@nottest
 class MeanFunction(with_metaclass(ABCMeta, Parameterized)):
     """Abstract base class for mean functions.
 
