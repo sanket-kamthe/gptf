@@ -133,6 +133,7 @@ class Zero(MeanFunction, ParamAttributes):
 
     @tf_method()
     @overrides
+    @nottest
     def __call__(self, X):
         """Calls the mean function.
 
