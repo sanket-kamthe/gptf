@@ -9,6 +9,8 @@ GPflow include:
 - Autoflow that plays nicely with the distributed runtime.
 - Better trees for a better world.
 
+[![Build Status](https://travis-ci.org/sanket-kamthe/gptf.svg?branch=master)](https://travis-ci.org/sanket-kamthe/gptf)
+
 Explanatory notebooks can be found in the [notebooks directory][notebooks],
 and documentation can be found [here][documentation].
 
