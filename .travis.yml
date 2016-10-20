@@ -1,0 +1,36 @@
+
+sudo: required
+dist: trusty 
+language: python
+python:
+  # We don't actually use the Travis Python, but this keeps it organized.
+  #- "2.6"
+  #- "2.7"
+  #- "3.3"
+  - "3.5"
+  
+install:
+  - sudo apt-get update  
+  - sudo apt-get install software-properties-common
+  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+  - sudo apt-get update
+  # - sudo apt-get upgrade
+  # - sudo apt-get dist-upgrade
+  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - hash -r
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  # Useful for debugging any issues with conda
+  - conda info -a
+
+  # Replace dep1 dep2 ... with your dependencies
+  - conda create -q -n test-environment python=3.5 numpy scipy future nomkl nose 
+  - conda install libgcc
+  - source activate test-environment
+  #- conda install -c conda-forge tensorflow
+  - pip install https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-0.10.0-cp35-cp35m-linux_x86_64.whl
+  - python setup.py develop
+script:
+- nosetests --verbosity=5  

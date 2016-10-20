@@ -6,11 +6,12 @@ from abc import ABCMeta, abstractmethod
 from overrides import overrides
 import numpy as np
 import tensorflow as tf
+from nose.tools import nottest
 
 from .params import Parameterized, ParamAttributes, ParamList, Param
 from .wrappedtf import tf_method
 
-
+@nottest
 class MeanFunction(with_metaclass(ABCMeta, Parameterized)):
     """Abstract base class for mean functions.
 
@@ -132,22 +133,11 @@ class Zero(MeanFunction, ParamAttributes):
 
     @tf_method()
     @overrides
+    @nottest
     def __call__(self, X):
         """Calls the mean function.
 
-        Examples:
-            >>> X = tf.constant([[ 1.], 
-            ...                  [ 2.],
-            ...                  [ 3.],
-            ...                  [ 4.]], dtype=tf.float64)
-            >>> mean_func = Zero()
-            >>> sess = mean_func.get_session()
-            >>> sess.run(mean_func(X))
-            array([[ 0.], 
-                   [ 0.], 
-                   [ 0.],
-                   [ 0.]])
-
+        
         """
         return tf.zeros([tf.shape(X)[0], 1], dtype=tf.as_dtype(X.dtype))
 
@@ -196,21 +186,6 @@ class Linear(MeanFunction, ParamAttributes):
     def __call__(self, X):
         """Calls the mean function.
 
-        Examples:
-            >>> X = tf.constant([[ 1., 2.], 
-            ...                  [ 3., 4.],
-            ...                  [ 0., 0.],
-            ...                  [ 1., 3.]], dtype=tf.float64)            
-            >>> A = np.array([[ 1., 2., 3., 4.],
-            ...               [ 1., 1., 1., 1.]])
-            >>> b = np.array([ 1., 2., 3., 4.])
-            >>> mean_func = Linear(A, b)
-            >>> sess = mean_func.get_session()
-            >>> sess.run(mean_func(X))
-            array([[  4.,   6.,   8.,  10.], 
-                   [  8.,  12.,  16.,  20.], 
-                   [  1.,   2.,   3.,   4.],
-                   [  5.,   7.,   9.,  11.]])
 
         """
         return tf.matmul(X, self.A.tensor) + self.b.tensor
@@ -233,19 +208,7 @@ class Constant(MeanFunction, ParamAttributes):
     def __call__(self, X):
         """Calls the mean function.
 
-        Examples:
-            >>> X = tf.constant([[ 1.], 
-            ...                  [ 2.],
-            ...                  [ 3.],
-            ...                  [ 4.]], dtype=tf.float64)            
-            >>> c = np.array([ 1., 2., 3.])
-            >>> mean_func = Constant(c)
-            >>> sess = mean_func.get_session()
-            >>> sess.run(mean_func(X))
-            array([[ 1., 2., 3.], 
-                   [ 1., 2., 3.], 
-                   [ 1., 2., 3.],
-                   [ 1., 2., 3.]])
+        
 
         """
         return tf.tile(tf.expand_dims(self.c.tensor, 0), (tf.shape(X)[0], 1))
