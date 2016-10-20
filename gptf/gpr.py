@@ -40,7 +40,7 @@ class GPR(GPModel, ParamAttributes):
         sample from the prior with one latent function at our
         training inputs.
         
-        >>> X = np.random.uniform(0., 5., (50, 1)) # 500 unique 1d points
+        >>> X = np.random.uniform(0., 5., (500, 1)) # 500 unique 1d points
         >>> Y = gp.compute_prior_samples(X, 1, 1)[0]
 
         Then we'll add some noise:
