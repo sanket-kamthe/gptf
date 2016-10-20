@@ -34,5 +34,8 @@ install:
   - pip install coveralls
   - python setup.py develop
 script:
-  - coverage run --source=gptf setup.py nosetests --verbosity=5  
+  - coverage run --source=gptf setup.py nosetests --verbosity=5
+  
+after_success:
+  coveralls  
 
