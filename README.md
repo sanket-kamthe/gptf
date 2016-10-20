@@ -9,9 +9,7 @@ GPflow include:
 - Autoflow that plays nicely with the distributed runtime.
 - Better trees for a better world.
 
-[![Build Status](https://travis-ci.org/sanket-kamthe/gptf.svg?branch=master)](https://travis-ci.org/sanket-kamthe/gptf)
-
-[![Coverage Status](https://coveralls.io/repos/github/sanket-kamthe/gptf/badge.svg?branch=master)](https://coveralls.io/github/sanket-kamthe/gptf?branch=master)
+[![Build Status](https://travis-ci.org/sanket-kamthe/gptf.svg?branch=master)](https://travis-ci.org/sanket-kamthe/gptf [![Coverage Status](https://coveralls.io/repos/github/sanket-kamthe/gptf/badge.svg?branch=master)](https://coveralls.io/github/sanket-kamthe/gptf?branch=master)
 
 Explanatory notebooks can be found in the [notebooks directory][notebooks],
 and documentation can be found [here][documentation].
