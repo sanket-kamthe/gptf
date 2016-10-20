@@ -33,4 +33,5 @@ install:
   - pip install https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-0.10.0-cp35-cp35m-linux_x86_64.whl
   - python setup.py develop
 script:
-- nosetests --verbosity=5  
+  - coverage run --source=gptf setup.py nosetests --verbosity=5  
+
